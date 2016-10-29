@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-03/schema",
+  "id": "http://jsonschema.net",
+  "required": true,
+  "properties": {
+    "user_id": {
+      "description": "Identifier of user",
+      "type": "string",
+      "required": false
+    },
+    "username": {
+      "description": "User name",
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "description": "Email of the user",
+      "type": "string",
+      "required": true
+    }
+  }
+}

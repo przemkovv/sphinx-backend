@@ -1,0 +1,101 @@
+#%RAML 0.8
+---
+title: Sphinx Backend REST API
+baseUri: http://localhost:9998/{version}
+version: v1
+mediaType: application/json
+protocols: [HTTP]
+
+schemas:
+  - User: !include schema/user.json
+  - Users: !include schema/users.json
+  - Solution: !include schema/solution.json
+  - Courses: !include schema/courses.json
+  - Course: !include schema/course.json
+  - Modules: !include schema/modules.json
+  - Module: !include schema/module.json
+
+/users:
+  description: Manage users.
+  get:
+    description: Get list of users.
+    responses:
+      200:
+        body:
+          application/json:
+            schema: Users
+        
+  post:
+    description: Create a user.
+    body:
+      application/json:
+        schema: User
+  /{user_id}:
+    get:
+      description: Get information about user {user_id}.
+      responses:
+        200:
+          body:
+            application/json:
+              schema: User
+    put:
+      description: Modify user profile..
+      body:
+        application/json:
+          schema: User
+
+/courses:
+  description: Manages courses.
+  get:
+    description: List courses.
+    responses:
+      200:
+        body:
+          application/json:
+            schema: Courses
+  post:
+    description: Create course.
+    body:
+      application/json:
+        schema: Course
+  /{course_id}:
+    get:
+      description: Get course information.
+      responses:
+        200:
+          body:
+            application/json:
+              schema: Course
+    /modules:
+      get:
+        description: Get modules lists.
+        responses:
+          200:
+            body:
+              application/json:
+                schema: Modules
+      post:
+        description: Create module.
+        body:
+          application/json:
+            schema: Module
+      /{module_id}:
+        /tasks:
+          get:
+            description: Get list of tasks in module.
+            body:
+              application/json:
+                schema: Module
+          /{task_id}:
+            get:
+              description: Get task information.
+            /solutions:
+                get:
+                  description: List submitted solutions.
+                post:
+                  desciption: Submit a solution to the task.
+              /{solution_id}:
+                get:
+                  description: Get info about solution.
+
+

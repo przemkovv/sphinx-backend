@@ -4,6 +4,7 @@ project(Sphinx)
 
 enable_testing()
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 add_definitions(
     -std=c++1z
@@ -23,8 +24,10 @@ add_definitions(
     -DSPDLOG_FMT_EXTERNAL
     )
 find_library(FMT fmt libfmt)
-find_package (Threads REQUIRED)
-find_package(Boost 1.60 COMPONENTS filesystem program_options)
+find_library(SQLPP11_SQLITE3 sqlpp11-connector-sqlite3 libsqlpp11-connector-sqlite3)
+find_package(Threads REQUIRED)
+find_package(Boost 1.61 COMPONENTS filesystem program_options)
+find_package(Sqlite3 REQUIRED)
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
