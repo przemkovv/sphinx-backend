@@ -1,0 +1,15 @@
+{
+  "server": {
+    "port": 9998,
+    "version": "v1"
+  },
+  "database": {
+    "engine": "sqlite3",
+    "path": "/home/przemkovv/projects/sphinx/backend/data/sphinx_backend.sqlite",
+    "debug": true,
+    "password": ""
+  },
+  "loggers": {
+    "Sphinx::Backend": 1
+  }
+}

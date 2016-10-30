@@ -6,6 +6,9 @@
 #include "db/db.h"
 #include <crow.h>
 
+using json_pointer = nlohmann::json::json_pointer;
+using std::literals::operator""s;
+
 namespace Sphinx::Backend {
 
 class BackendApp : public Application {
@@ -26,14 +29,19 @@ protected:
 
   crow::SimpleApp app_;
 
-  const std::uint16_t SPHINX_BACKEND_PORT = 9998;
-  const std::string API_VERSION = "/v1";
+  const json_pointer REST_API_PORT_PATH = "/server/port"_json_pointer;
+  const json_pointer REST_API_VERSION_PATH = "/server/version"_json_pointer;
+  const std::uint16_t REST_API_PORT;
+  const std::string REST_API_VERSION;
 
 private:
   template <typename... Methods>
   auto &add_route(const std::string &path, const Methods... methods)
   {
-    return app_.route_dynamic(API_VERSION + path).methods(methods...);
+    const auto route = REST_API_VERSION + path;
+    logger()->debug("Adding route {} (methods:{})", route,
+                    ((" "s + crow::method_name(methods)) + ...));
+    return app_.route_dynamic(REST_API_VERSION + path).methods(methods...);
   }
 
   std::string get_users();
