@@ -9,14 +9,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 add_definitions(
     -std=c++1z
     -g
-    #-O3
+    -O1
     #-Wall
     -Weverything
     -Wno-c++98-compat
     -Wno-c++98-compat-pedantic
     # -Wno-exit-time-destructors
     # -Wno-global-constructors
-    # -Wno-padded
+    -Wno-padded
     -Wno-weak-vtables
     # -Wno-shadow
     -Weffc++
