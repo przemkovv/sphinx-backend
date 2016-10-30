@@ -4,9 +4,13 @@
 #include <crow.h>
 #include <fmt/format.h>
 
+#include <json_diag.hpp>
+
 #include <sqlpp11/sqlite3/sqlite3.h>
 #include <sqlpp11/sqlpp11.h>
 #include <string>
+#include <tuple>
+#include <vector>
 
 using std::literals::operator""s;
 
@@ -31,15 +35,15 @@ int main()
 
   app.route_dynamic(REST_API_VERSION + "/users")([&](const crow::request &req) {
     if (req.method == "GET"_method) {
-      std::string response;
+      nlohmann::json response;
       for (const auto &row : db(select(users.username, users.email)
                                     .from(users)
                                     .unconditionally())) {
-        response += fmt::format("{0} - {1}\n", row.username, row.email);
+        response.push_back({{"username", row.username}, {"email", row.email}});
       }
-      return response;
+      return response.dump(2);
     }
-    return "no users"s;
+    return ""s;
   });
 
   app.port(SPHINX_BACKEND_PORT).run();
