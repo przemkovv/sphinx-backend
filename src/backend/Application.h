@@ -9,6 +9,7 @@
 #include <json_diag.hpp>
 
 using json = nlohmann::json;
+using json_pointer = nlohmann::json::json_pointer;
 
 namespace Sphinx {
 
@@ -24,16 +25,18 @@ private:
   json parse_config_file();
 
 protected:
-
+  template <typename T>
+  auto config(const json_pointer &path)
+  {
+    return config_[path].get<T>();
+  }
   auto &logger() { return logger_; }
   auto &config() { return config_; }
   auto &config_cli() { return config_cli_; }
   auto &options_description_cli() { return options_description_cli_; }
 
-
 private:
   Logger logger_;
-
 
   const std::string application_name_;
   const std::vector<std::string> args_;
@@ -41,7 +44,6 @@ private:
   po::variables_map config_cli_;
 
   json config_;
-
 
 public:
   Application(const std::string &application_name,

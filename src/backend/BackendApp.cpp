@@ -17,8 +17,8 @@ BackendApp::BackendApp(const std::string &application_name,
   : Application(application_name, args),
     db_config_(prepare_db_config()),
     db_(db_config_),
-    REST_API_PORT(config()[REST_API_PORT_PATH].get<std::uint16_t>()),
-    REST_API_VERSION("/"s + config()[REST_API_VERSION_PATH].get<std::string>())
+    REST_API_PORT(config<std::uint16_t>(REST_API_PORT_PATH)),
+    REST_API_VERSION("/"s + config<std::string>(REST_API_VERSION_PATH))
 
 {
 }
@@ -26,8 +26,7 @@ BackendApp::BackendApp(const std::string &application_name,
 Db::connection_config BackendApp::prepare_db_config()
 {
   const auto db_engine_path = "/database/engine"_json_pointer;
-  if (auto engine = config()[db_engine_path].get<std::string>();
-      engine != "sqlite3") {
+  if (auto engine = config<std::string>(db_engine_path); engine != "sqlite3") {
     throw std::invalid_argument("Unsupported database engine.");
   }
   else {
@@ -35,9 +34,8 @@ Db::connection_config BackendApp::prepare_db_config()
     const auto db_debug_path = "/database/debug"_json_pointer;
     const auto db_password_path = "/database/password"_json_pointer;
 
-    return {config()[db_path_path].get<std::string>(), SQLITE_OPEN_READWRITE,
-            "", config()[db_debug_path].get<bool>(),
-            config()[db_password_path].get<std::string>()};
+    return {config<std::string>(db_path_path), SQLITE_OPEN_READWRITE, "",
+            config<bool>(db_debug_path), config<std::string>(db_password_path)};
   }
 }
 
