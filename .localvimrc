@@ -21,9 +21,10 @@ let g:cmake_set_makeprg = 1
 " let g:cmake_build_toolchain = 'ninja'
 
 
-let g:neomake_cpp_enabled_makers=['clangtidy', 'clangcheck']
+let g:neomake_enabled_makers=['clang']
+let g:neomake_cpp_enabled_makers=['clang', 'clangtidy', 'clangcheck']
 let g:neomake_cpp_clangcheck_args = ['-p=build/']
-let g:neomake_cpp_clangtidy_args = ['-p=build/', 
-                                  \ '--checks=*', 
+let g:neomake_cpp_clangtidy_args = ['-p=build/',
+                                  \ '--checks=*',
                                   \ '--header-filter="(?!pprint.hpp).*"',
                                   \ '--export-fixes=clang-tidy-fixes']
