@@ -1,0 +1,3 @@
+[submodule "src/shared_lib"]
+	path = src/shared_lib
+	url = https://przemkovv@bitbucket.org/przemkovv/sphinx-shared-lib.git
