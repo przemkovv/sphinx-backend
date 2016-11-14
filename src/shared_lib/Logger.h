@@ -14,7 +14,7 @@ typedef std::shared_ptr<spdlog::logger> Logger;
 inline auto make_logger(const std::string &name)
 {
   try {
-    return spdlog::stdout_logger_st(name, true);
+    return spdlog::stdout_color_st(name);
   }
   catch (spdlog::spdlog_ex &) {
     return spdlog::get(name);
@@ -25,7 +25,7 @@ inline auto make_logger(const std::string &name,
                         const spdlog::level::level_enum &level)
 {
   try {
-    auto logger = spdlog::stdout_logger_st(name, true);
+    auto logger = spdlog::stdout_color_st(name);
     logger->set_level(level);
     return logger;
   }

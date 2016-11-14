@@ -6,6 +6,8 @@
 #include "db/db.h"
 #include <crow.h>
 
+#include <cstdint>
+
 using json_pointer = nlohmann::json::json_pointer;
 using std::literals::operator""s;
 
@@ -25,7 +27,7 @@ protected:
   Db::connection_config prepare_db_config();
 
   Db::connection_config db_config_;
-  Db::connection db_;
+  Db::Db db_;
 
   crow::SimpleApp app_;
 
@@ -45,6 +47,7 @@ private:
   }
 
   std::string get_users();
+  void create_user(const std::string& data);
 };
 
 } // namespace Sphinx::Backend

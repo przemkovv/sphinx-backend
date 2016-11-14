@@ -1,12 +1,20 @@
 
 #pragma once
 
+#include <type_traits>
+
+template <typename T>
+struct assert_false : std::false_type { };
+
 #ifndef SPHINX_NDEBUG
 
 #include "Logger.h"
 #include <exception>
 #include <fmt/format.h>
 #include <string>
+
+
+
 
 #define THROWASSERT_LOGGER(MESSAGE)                                            \
   {                                                                            \
@@ -16,10 +24,10 @@
 /// Exception type for assertion failures
 class AssertionFailureException : public std::exception {
 private:
-  const char *expression;
-  const char *file;
-  int line;
-  std::string message;
+  const char *expression_;
+  const char *file_;
+  int line_;
+  std::string message_;
   std::string report;
 
 public:
@@ -36,7 +44,7 @@ public:
                             const char *file,
                             int line,
                             const std::string &message)
-    : expression(expression), file(file), line(line), message(message)
+    : expression_(expression), file_(file), line_(line), message_(message)
   {
     fmt::MemoryWriter outputStream;
 
@@ -63,16 +71,16 @@ public:
   virtual const char *what() const noexcept(true) { return report.c_str(); }
 
   /// The expression which was asserted to be true
-  const char *Expression() const { return expression; }
+  const char *Expression() const { return expression_; }
 
   /// Source file
-  const char *File() const { return file; }
+  const char *File() const { return file_; }
 
   /// Source line
-  int Line() const { return line; }
+  int Line() const { return line_; }
 
   /// Description of failure
-  const char *Message() const { return message.c_str(); }
+  const char *Message() const { return message_.c_str(); }
 };
 
 /// Assert that EXPRESSION evaluates to true, otherwise raise

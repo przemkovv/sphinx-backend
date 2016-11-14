@@ -32,7 +32,7 @@ po::options_description Application::prepare_options_description_cli()
   po::options_description desc("Allowed options");
   /* clang-format off */
   desc.add_options()
-    ("help,I", "Display help information")
+    ("help,h", "Display help information")
     ("log_level", po::value<int>()->default_value(spdlog::level::info), "Logging level")
     ("config", po::value<std::string>(), "Configuration file");
   /* clang-format on */

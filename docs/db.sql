@@ -1,6 +1,5 @@
-
 --
--- File generated with SQLiteStudio v3.1.0 on Sun Oct 30 00:48:39 2016
+-- File generated with SQLiteStudio v3.1.0 on Mon Oct 31 20:20:09 2016
 --
 -- Text encoding used: UTF-8
 --
@@ -18,8 +17,10 @@ CREATE TABLE courses (
 
 -- Table: modules
 CREATE TABLE modules (
-    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    course_id INTEGER NOT NULL,
+    id        INTEGER PRIMARY KEY AUTOINCREMENT
+                      NOT NULL,
+    course_id INTEGER NOT NULL
+                      REFERENCES courses (id),
     name      TEXT
 );
 
@@ -30,6 +31,7 @@ CREATE TABLE users (
                      PRIMARY KEY AUTOINCREMENT,
     username TEXT    NOT NULL,
     email    TEXT    NOT NULL
+                     UNIQUE
 );
 
 

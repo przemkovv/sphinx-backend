@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-#include <json_diag.hpp>
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 using json_pointer = nlohmann::json::json_pointer;
@@ -26,7 +26,7 @@ private:
 
 protected:
   template <typename T>
-  auto config(const json_pointer &path)
+  auto config_get(const json_pointer &path)
   {
     return config_[path].get<T>();
   }
