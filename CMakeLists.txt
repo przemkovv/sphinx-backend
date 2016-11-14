@@ -53,11 +53,6 @@ ExternalProject_Add(json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     INSTALL_DIR ${PROJECT_BINARY_DIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DBuildTests=OFF
-    LOG_DOWNLOAD OFF
-    LOG_INSTALL OFF
-    TEST_BEFORE_INSTALL 0
-    TEST_EXCLUDE_FROM_MAIN 1
-    TEST_AFTER_INSTALL 0
     )
 
 
@@ -66,8 +61,6 @@ ExternalProject_Add(hh_date
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
-    LOG_DOWNLOAD OFF
-    TEST_EXCLUDE_FROM_MAIN 1
     )
 
 ExternalProject_Get_Property(hh_date source_dir)
@@ -83,9 +76,6 @@ ExternalProject_Add(sqlpp11
     INSTALL_DIR ${PROJECT_BINARY_DIR}
     BUILD_COMMAND DATE_INCLUDE_DIR=${DateIncludeDir} ${MAKE} 
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DHinnantDate_ROOT_DIR=${HinnantDate_ROOT_DIR} -DENABLE_TESTS=Off
-    LOG_DOWNLOAD OFF
-    LOG_INSTALL OFF
-    TEST_EXCLUDE_FROM_MAIN 1
     DEPENDS hh_date)
 
 ExternalProject_Get_Property(sqlpp11 source_dir)
@@ -96,9 +86,6 @@ ExternalProject_Add(sqlpp11-connector-sqlite3
     INSTALL_DIR ${PROJECT_BINARY_DIR}
     BUILD_COMMAND DATE_INCLUDE_DIR=${DateIncludeDir} ${MAKE}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DDATE_INCLUDE_DIR=${HinnantDate_ROOT_DIR} -DSQLPP11_INCLUDE_DIR=${sqlpp11_SOURCE_DIR}/include -DENABLE_TESTS=Off
-    LOG_DOWNLOAD OFF
-    LOG_INSTALL OFF
-    TEST_EXCLUDE_FROM_MAIN 1
     DEPENDS sqlpp11 hh_date)
 
 # find_library(SQLPP11_SQLITE3 sqlpp11-connector-sqlite3 libsqlpp11-connector-sqlite3 ${PROJECT_BINARY_DIR}/lib)
