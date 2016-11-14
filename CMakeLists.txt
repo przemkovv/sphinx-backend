@@ -6,8 +6,8 @@ enable_testing()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gdb-index")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--gdb-index")
+# set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gdb-index")
+# set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--gdb-index")
 # set(CMAKE_EXE_LINKER_FLAGS "-Wl,-cache_path_lto,${CMAKE_BINARY_DIR}/cache")
 
 add_definitions(
@@ -27,8 +27,8 @@ add_definitions(
   -Weffc++
   -Werror
   -DSPDLOG_FMT_EXTERNAL
-  -flto=thin
-  -fvisibility=hidden
+  # -flto=thin
+  # -fvisibility=hidden
   # -fsanitize=undefined,cfi,safe-stack,dataflow,address
   # -fsanitize=undefined
   )
@@ -49,12 +49,25 @@ include_directories(SYSTEM ${PROJECT_BINARY_DIR}/include)
 
 include(ExternalProject)
 
+ExternalProject_Add(json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    INSTALL_DIR ${PROJECT_BINARY_DIR}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DBuildTests=OFF
+    LOG_DOWNLOAD OFF
+    LOG_INSTALL OFF
+    TEST_BEFORE_INSTALL 0
+    TEST_EXCLUDE_FROM_MAIN 1
+    TEST_AFTER_INSTALL 0
+    )
+
+
 ExternalProject_Add(hh_date
     GIT_REPOSITORY https://github.com/HowardHinnant/date.git
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     LOG_DOWNLOAD OFF
+    TEST_EXCLUDE_FROM_MAIN 1
     )
 
 ExternalProject_Get_Property(hh_date source_dir)
@@ -69,9 +82,10 @@ ExternalProject_Add(sqlpp11
     GIT_REPOSITORY https://github.com/rbock/sqlpp11.git
     INSTALL_DIR ${PROJECT_BINARY_DIR}
     BUILD_COMMAND DATE_INCLUDE_DIR=${DateIncludeDir} ${MAKE} 
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DHinnantDate_ROOT_DIR=${HinnantDate_ROOT_DIR}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DHinnantDate_ROOT_DIR=${HinnantDate_ROOT_DIR} -DENABLE_TESTS=Off
     LOG_DOWNLOAD OFF
     LOG_INSTALL OFF
+    TEST_EXCLUDE_FROM_MAIN 1
     DEPENDS hh_date)
 
 ExternalProject_Get_Property(sqlpp11 source_dir)
@@ -81,9 +95,10 @@ ExternalProject_Add(sqlpp11-connector-sqlite3
     GIT_REPOSITORY https://github.com/przemkovv/sqlpp11-connector-sqlite3.git
     INSTALL_DIR ${PROJECT_BINARY_DIR}
     BUILD_COMMAND DATE_INCLUDE_DIR=${DateIncludeDir} ${MAKE}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DDATE_INCLUDE_DIR=${HinnantDate_ROOT_DIR} -DSQLPP11_INCLUDE_DIR=${sqlpp11_SOURCE_DIR}/include
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DDATE_INCLUDE_DIR=${HinnantDate_ROOT_DIR} -DSQLPP11_INCLUDE_DIR=${sqlpp11_SOURCE_DIR}/include -DENABLE_TESTS=Off
     LOG_DOWNLOAD OFF
     LOG_INSTALL OFF
+    TEST_EXCLUDE_FROM_MAIN 1
     DEPENDS sqlpp11 hh_date)
 
 # find_library(SQLPP11_SQLITE3 sqlpp11-connector-sqlite3 libsqlpp11-connector-sqlite3 ${PROJECT_BINARY_DIR}/lib)
