@@ -33,8 +33,11 @@ protected:
 
   const json_pointer REST_API_PORT_PATH = "/server/port"_json_pointer;
   const json_pointer REST_API_VERSION_PATH = "/server/version"_json_pointer;
+  const json_pointer DUMP_LEVEL_PATH = "/debug/dump_level"_json_pointer;
   const std::uint16_t REST_API_PORT;
   const std::string REST_API_VERSION;
+
+  const int dump_indent_;
 
 private:
   template <typename... Methods>
@@ -47,7 +50,7 @@ private:
   }
 
   std::string get_users();
-  void create_user(const std::string& data);
+  [[noreturn]] void create_user(const std::string& data);
 };
 
 } // namespace Sphinx::Backend

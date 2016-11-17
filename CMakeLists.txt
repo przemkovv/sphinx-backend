@@ -27,6 +27,7 @@ add_definitions(
   -Weffc++
   -Werror
   -DSPDLOG_FMT_EXTERNAL
+  # -DSPHINX_NDEBUG
   # -flto=thin
   # -fvisibility=hidden
   # -fsanitize=undefined,cfi,safe-stack,dataflow,address
@@ -35,7 +36,7 @@ add_definitions(
 find_library(FMT fmt libfmt)
 find_package(Threads REQUIRED)
 find_package(Boost 1.62 COMPONENTS system filesystem program_options)
-find_package(Sqlite3 REQUIRED)
+find_package(PostgreSQL REQUIRED)
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
@@ -55,55 +56,6 @@ ExternalProject_Add(json
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DBuildTests=OFF
     UPDATE_COMMAND ""
     )
-
-
-ExternalProject_Add(hh_date
-    GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    )
-
-ExternalProject_Get_Property(hh_date source_dir)
-set(HinnantDate_ROOT_DIR ${source_dir})
-
-include_directories(AFTER SYSTEM ${HinnantDate_ROOT_DIR})
-
-
-ExternalProject_Add(sqlpp11
-    GIT_REPOSITORY https://github.com/rbock/sqlpp11.git
-    INSTALL_DIR ${PROJECT_BINARY_DIR}
-    BUILD_COMMAND DATE_INCLUDE_DIR=${HinnantDate_ROOT_DIR} ${MAKE} 
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DHinnantDate_ROOT_DIR=${HinnantDate_ROOT_DIR} -DENABLE_TESTS=Off
-    UPDATE_COMMAND ""
-    DEPENDS hh_date)
-
-ExternalProject_Get_Property(sqlpp11 source_dir)
-set(sqlpp11_SOURCE_DIR ${source_dir})
-
-ExternalProject_Add(sqlpp11-connector-sqlite3
-    GIT_REPOSITORY https://github.com/przemkovv/sqlpp11-connector-sqlite3.git
-    INSTALL_DIR ${PROJECT_BINARY_DIR}
-    BUILD_COMMAND DATE_INCLUDE_DIR=${HinnantDate_ROOT_DIR} ${MAKE}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DDATE_INCLUDE_DIR=${HinnantDate_ROOT_DIR} -DSQLPP11_INCLUDE_DIR=${sqlpp11_SOURCE_DIR}/include -DENABLE_TESTS=Off
-    UPDATE_COMMAND ""
-    DEPENDS sqlpp11 hh_date)
-
-# find_library(SQLPP11_SQLITE3 sqlpp11-connector-sqlite3 libsqlpp11-connector-sqlite3 ${PROJECT_BINARY_DIR}/lib)
-set(SQLPP11_SQLITE3 ${PROJECT_BINARY_DIR}/lib/libsqlpp11-connector-sqlite3.a)
-
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/db/tables.h
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/docs/db.sql
-  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/sqlite_ddl2cpp ${CMAKE_CURRENT_SOURCE_DIR}/docs/db.sql ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/db/tables Sphinx::Db::Tables
-  COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/db/tables.cpp
-  )
-
-add_custom_target(
-  gen_tables_header
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/backend/db/tables.h
-  )
 
 add_subdirectory(src/shared_lib)
 add_subdirectory(src/backend)

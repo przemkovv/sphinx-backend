@@ -1,13 +1,18 @@
 {
+  "debug": {
+    "dump_level": 0
+  },
   "server": {
     "port": 9998,
     "version": "v1"
   },
   "database": {
-    "engine": "sqlite3",
-    "path": "/home/przemkovv/projects/sphinx/backend/data/sphinx_backend.sqlite",
-    "debug": true,
-    "password": ""
+    "engine": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "user": "sphinx",
+    "password": "sphinx.123",
+    "dbname": "sphinx_backend"
   },
   "loggers": {
     "Sphinx::Backend": 1

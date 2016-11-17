@@ -34,7 +34,7 @@ po::options_description Application::prepare_options_description_cli()
   desc.add_options()
     ("help,h", "Display help information")
     ("log_level", po::value<int>()->default_value(spdlog::level::info), "Logging level")
-    ("config", po::value<std::string>(), "Configuration file");
+    ("config", po::value<std::string>()->required(), "Configuration file");
   /* clang-format on */
   return desc;
 }

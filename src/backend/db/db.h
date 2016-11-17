@@ -2,48 +2,56 @@
 #pragma once
 
 #include "data.h"
-#include "tables.h"
 
+#include <fmt/format.h>
+#include <Logger.h>
+#include <libpq-fe.h>
 #include <nlohmann/json.hpp>
 
-#include <sqlpp11/sqlpp11.h>
-#include <sqlpp11/sqlite3/sqlite3.h>
-
-#include <algorithm>
-#include <iterator>
-#include <utility>
 #include <vector>
+
+#include <experimental/propagate_const>
+#include <memory>
 
 namespace Sphinx::Db {
 
-using connection_config = sqlpp::sqlite3::connection_config;
-using connection = sqlpp::sqlite3::connection;
+struct connection_config {
+  std::string host;
+  std::uint16_t port;
+  std::string user;
+  std::string password;
+  std::string db_name;
+
+  std::string get_connection_string() const
+  {
+    return fmt::format("postgresql://{0}:{1}@{2}:{3}/{4}", user, password,
+                       host, port, db_name);
+  }
+};
+
 
 class Db {
 
 public:
   Db(const connection_config &db_config);
+  ~Db();
 
 private:
   const connection_config db_config_;
-  connection db_;
+
+  PGconn *conn;
 
 public:
-  std::vector<User> get_users();
-  nlohmann::json get_users_json();
-  void create_user(const User &user);
+  // std::vector<User> get_users();
+  // nlohmann::json get_users_json();
+  // void create_user(const User &user);
 
 private:
-  auto get_users_query()
-  {
-    const auto users = Tables::Users{};
-    const auto total = static_cast<std::size_t>(
-        db_(select(sqlpp::count(users.id)).from(users).unconditionally())
-            .front()
-            .count);
-    auto rows = db_(sqlpp::select(all_of(users)).from(users).unconditionally());
-    return std::make_tuple(total, std::move(rows));
-  }
+  // struct Queries;
+  // std::experimental::propagate_const<std::unique_ptr<Queries>> queries_;
+
+
+  Logger logger_;
 };
 
 } // namespace Sphinx::Db

@@ -1,39 +1,31 @@
---
--- File generated with SQLiteStudio v3.1.0 on Mon Oct 31 20:20:09 2016
---
--- Text encoding used: UTF-8
---
-PRAGMA foreign_keys = off;
-BEGIN TRANSACTION;
+﻿-- Schema: public
 
--- Table: courses
+DROP TABLE users;
+DROP TABLE modules;
+DROP TABLE courses;
+
+
+CREATE TABLE users (
+	id	SERIAL PRIMARY KEY,
+	username  varchar(50) NOT NULL,
+	email varchar(50) NOT NULL,
+
+	CONSTRAINT email_unique UNIQUE(email)
+);
+
 CREATE TABLE courses (
-    id          INTEGER NOT NULL
-                        PRIMARY KEY AUTOINCREMENT,
-    name        TEXT    NOT NULL,
-    description TEXT
+    id          SERIAL PRIMARY KEY ,
+    name        varchar(100)    NOT NULL,
+    description text
 );
 
 
 -- Table: modules
 CREATE TABLE modules (
-    id        INTEGER PRIMARY KEY AUTOINCREMENT
-                      NOT NULL,
+    id        SERIAL PRIMARY KEY,
     course_id INTEGER NOT NULL
                       REFERENCES courses (id),
     name      TEXT
 );
 
 
--- Table: users
-CREATE TABLE users (
-    id       INTEGER NOT NULL
-                     PRIMARY KEY AUTOINCREMENT,
-    username TEXT    NOT NULL,
-    email    TEXT    NOT NULL
-                     UNIQUE
-);
-
-
-COMMIT TRANSACTION;
-PRAGMA foreign_keys = on;
