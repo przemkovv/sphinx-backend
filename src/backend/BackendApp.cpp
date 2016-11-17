@@ -55,8 +55,7 @@ Db::connection_config BackendApp::prepare_db_config()
 
 std::string BackendApp::get_users()
 {
-  // return db_.get_users_json().dump(dump_indent_);
-  SPHINX_ASSERT(false, "not implemented");
+  return db_.get_users_json().dump(dump_indent_);
 }
 
 void BackendApp::create_user(const std::string &data) {

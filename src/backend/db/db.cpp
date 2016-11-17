@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iterator>
 #include <utility>
+#include <cstdlib>
 
 namespace Sphinx::Db {
 
@@ -43,29 +44,52 @@ Db::Db(const connection_config &db_config)
   : db_config_(db_config), logger_(Sphinx::make_logger("Sphinx::Db", spdlog::level::debug))
 {
   logger_->info("Connecting to database");
-  conn = PQconnectdb(db_config_.get_connection_string().data());
-  if (PQstatus(conn) != CONNECTION_OK) {
-    logger_->error("Cannot connect to database: {}", PQerrorMessage(conn));
+  conn_ = PQconnectdb(db_config_.get_connection_string().data());
+  if (PQstatus(conn_) != CONNECTION_OK) {
+    logger_->error("Cannot connect to database: {}", PQerrorMessage(conn_));
   } else {
     logger_->info("Connected to database.");
   }
 }
 
 Db::~Db() {
-  if (PQstatus(conn) == CONNECTION_OK){
+  if (PQstatus(conn_) == CONNECTION_OK){
     logger_->info("Database disconnecting");
-    PQfinish(conn);
+    PQfinish(conn_);
   }
 }
 
-// nlohmann::json Db::get_users_json()
-// {
-  // auto query_results = queries_->get_users();
-  // auto &rows = std::get<1>(query_results);
+nlohmann::json Db::get_users_json()
+{
+  auto users = get_users();
 
-  // return rows_to_json(rows);
-// }
+  return to_json(users);
+}
 
+  std::vector<User> Db::get_users() {
+
+    std::vector<User> users;
+    auto res = PQexec(conn_, "SELECT * FROM users");
+    auto rows_number = PQntuples(res);
+    users.reserve(static_cast<std::size_t>(rows_number));
+
+    auto id_col = PQfnumber(res, "id");
+    auto username_col = PQfnumber(res, "username");
+    auto email_col = PQfnumber(res, "email");
+
+    for (int row = 0; row < rows_number; ++row) {
+      User user;
+      user.id = std::atoi(PQgetvalue(res, row, id_col));
+      user.username = std::string(PQgetvalue(res, row, username_col));
+      user.email = std::string(PQgetvalue(res, row, email_col));
+      users.push_back(user);
+    }
+
+    PQclear(res);
+
+    return users;
+
+  }
 // std::vector<User> Db::get_users()
 // {
 

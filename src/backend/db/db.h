@@ -39,11 +39,11 @@ public:
 private:
   const connection_config db_config_;
 
-  PGconn *conn;
+  PGconn *conn_;
 
 public:
-  // std::vector<User> get_users();
-  // nlohmann::json get_users_json();
+  std::vector<User> get_users();
+  nlohmann::json get_users_json();
   // void create_user(const User &user);
 
 private:
