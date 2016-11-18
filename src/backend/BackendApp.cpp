@@ -53,12 +53,18 @@ Db::connection_config BackendApp::prepare_db_config()
   }
 }
 
+std::string BackendApp::get_courses()
+{
+  return db_.get_courses_json().dump(dump_indent_);
+}
+
 std::string BackendApp::get_users()
 {
   return db_.get_users_json().dump(dump_indent_);
 }
 
-void BackendApp::create_user(const std::string &data) {
+void BackendApp::create_user(const std::string &data)
+{
 
   auto json_data = nlohmann::json::parse(data);
   logger()->debug("JSON: {} {}", data, json_data.dump(dump_indent_));
@@ -68,11 +74,21 @@ void BackendApp::create_user(const std::string &data) {
   logger()->debug("Creating user {} {}", user.username, user.email);
   SPHINX_ASSERT(false, "not implemented");
   // db_.create_user(user);
-
 }
 int BackendApp::run()
 {
   logger()->debug("Configuration file: {}", config().dump(dump_indent_));
+
+  add_route("/courses", "GET"_method,
+            "POST"_method)([&](const crow::request &req) {
+    if (req.method == "GET"_method) {
+      return get_courses();
+    }
+    else if (req.method == "POST"_method) {
+      logger()->debug("POST body {}", req.body);
+    }
+    return "nothing"s;
+  });
 
   add_route("/users", "GET"_method,
             "POST"_method)([&](const crow::request &req) {

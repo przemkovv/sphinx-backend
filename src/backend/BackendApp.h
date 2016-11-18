@@ -50,6 +50,7 @@ private:
   }
 
   std::string get_users();
+  std::string get_courses();
   [[noreturn]] void create_user(const std::string& data);
 };
 

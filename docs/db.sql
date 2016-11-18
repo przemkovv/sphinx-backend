@@ -25,7 +25,8 @@ CREATE TABLE modules (
     id        SERIAL PRIMARY KEY,
     course_id INTEGER NOT NULL
                       REFERENCES courses (id),
-    name      TEXT
+   name        varchar(100)    NOT NULL,
+    description text
 );
 
 
