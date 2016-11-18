@@ -32,6 +32,22 @@ struct connection_config {
 };
 
 //----------------------------------------------------------------------
+class prepared_statement {
+public:
+  prepared_statement(const std::string &name, int parameters)
+    : name_(name), parameters_(parameters)
+  {
+  }
+
+  const std::string &get_name() const { return name_; }
+  int get_parameters() const { return parameters_; }
+
+private:
+  std::string name_;
+  int parameters_;
+};
+
+//----------------------------------------------------------------------
 class Db {
 
 public:
@@ -39,47 +55,47 @@ public:
   ~Db() = default;
 
 private:
+  /* database connection and statement execution */
   const connection_config db_config_;
+  std::map<std::string, prepared_statement> prepared_statements;
 
   std::shared_ptr<PGconn> conn_;
   std::shared_ptr<PGconn> connect(const connection_config &db_config);
 
+  auto make_result_safe(PGresult *res)
+      -> std::unique_ptr<PGresult, std::function<void(PGresult *)>>;
+
   template <typename... Args>
   auto exec(const std::string &query, Args... param_args)
-  {
-    std::vector<std::string> args = make_value_list(param_args...);
-    std::vector<const char *> pq_args = make_pq_args(args);
+      -> decltype(make_result_safe(nullptr));
 
-    logger_->info("Executing query: {}", query);
+  template <typename... Args>
+  auto exec(const prepared_statement &stmt, Args... param_args)
+      -> decltype(make_result_safe(nullptr));
 
-    auto tmp = PQexecParams(conn_.get(), query.data(),
-                            static_cast<int>(pq_args.size()), nullptr,
-                            pq_args.data(), nullptr, nullptr, 0);
-    auto result = std::unique_ptr<PGresult, std::function<void(PGresult *)>>(
-        tmp, [=](PGresult *res) { PQclear(res); });
+  prepared_statement
+  prepare(const std::string &name, const std::string &query, int parameters);
 
-    return std::move(result);
-  }
-
+private:
   template <typename T>
-  Meta::ColumnsId<T> get_columns_id(PGresult * /* res */);
+  std::vector<T> get_all();
+
+  template <typename T, typename Res>
+  std::vector<T> get_rows(Res &&res);
 
   template <typename T>
   T get_row(PGresult * /* res */,
             const Meta::ColumnsId<T> & /*cols*/,
             int /*row_id*/);
 
-  template <typename T, typename Res>
-  std::vector<T> get_rows(Res &&res);
+  template <typename T>
+  Meta::ColumnsId<T> get_columns_id(PGresult * /* res */);
 
   std::vector<const char *>
-  make_pq_args(const std::vector<std::string> &arguments);
+  make_pq_args(const std::vector<optional<std::string>> &arguments);
 
   template <typename... Args>
-  std::vector<std::string> make_value_list(Args... args);
-
-  template <typename T>
-  std::vector<T> get_all();
+  auto make_value_list(Args... args) -> std::vector<optional<std::string>>;
 
   template <typename T>
   T get_field(PGresult *res, int row_id, int col_id);
@@ -90,11 +106,12 @@ private:
   template <typename T>
   T convert_to(const char * /* data */);
 
+  template <typename T>
+  optional<std::string> to_optional_string(T data);
+
 public:
   std::vector<User> get_users();
-  nlohmann::json get_users_json();
   std::vector<Course> get_courses();
-  nlohmann::json get_courses_json();
   // void create_user(const User &user);
 
 private:

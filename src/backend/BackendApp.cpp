@@ -58,13 +58,13 @@ Db::connection_config BackendApp::prepare_db_config()
 //----------------------------------------------------------------------
 std::string BackendApp::get_courses()
 {
-  return db_.get_courses_json().dump(dump_indent_);
+  return to_json(db_.get_courses()).dump(dump_indent_);
 }
 
 //----------------------------------------------------------------------
 std::string BackendApp::get_users()
 {
-  return db_.get_users_json().dump(dump_indent_);
+  return to_json(db_.get_users()).dump(dump_indent_);
 }
 
 //----------------------------------------------------------------------

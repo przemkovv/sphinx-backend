@@ -34,21 +34,72 @@ Db::Db(const connection_config &db_config)
   }
   else {
     logger_->info("Connected to database.");
+
+    for (auto table : {std::string{User::TableName::name},
+                       std::string{Course::TableName::name}}) {
+      auto name = fmt::format("{}", table);
+      auto query = fmt::format("SELECT * FROM {}", table);
+      prepared_statements.emplace(name, prepare(name, query, 0));
+    }
   }
 }
-
 //----------------------------------------------------------------------
-nlohmann::json Db::get_courses_json()
+auto Db::make_result_safe(PGresult *res)
+    -> std::unique_ptr<PGresult, std::function<void(PGresult *)>>
 {
-  auto courses = get_courses();
-  return to_json(courses);
+  return std::unique_ptr<PGresult, std::function<void(PGresult *)>>(
+      res, [=](PGresult *res_) { PQclear(res_); });
 }
 
 //----------------------------------------------------------------------
-nlohmann::json Db::get_users_json()
+template <typename... Args>
+auto Db::exec(const std::string &query, Args... param_args)
+    -> decltype(make_result_safe(nullptr))
 {
-  auto users = get_users();
-  return to_json(users);
+  auto args = make_value_list(param_args...);
+  auto pq_args = make_pq_args(args);
+
+  logger_->info("Executing query: {}", query);
+
+  auto result =
+      PQexecParams(conn_.get(), query.data(), static_cast<int>(pq_args.size()),
+                   nullptr, pq_args.data(), nullptr, nullptr, 0);
+
+  return make_result_safe(result);
+}
+
+//----------------------------------------------------------------------
+template <typename... Args>
+auto Db::exec(const prepared_statement &stmt, Args... param_args)
+    -> decltype(make_result_safe(nullptr))
+{
+  auto args = make_value_list(param_args...);
+  auto pq_args = make_pq_args(args);
+
+  logger_->info("Executing prepared query: {}", stmt.get_name());
+
+  auto result = PQexecPrepared(conn_.get(), stmt.get_name().c_str(),
+                               stmt.get_parameters(), pq_args.data(), nullptr,
+                               nullptr, 0);
+
+  return make_result_safe(result);
+}
+//----------------------------------------------------------------------
+prepared_statement
+Db::prepare(const std::string &name, const std::string &query, int parameters)
+{
+  auto tmp =
+      PQprepare(conn_.get(), name.c_str(), query.c_str(), parameters, nullptr);
+  auto res = make_result_safe(tmp);
+
+  if (PQresultStatus(res.get()) == PGRES_COMMAND_OK) {
+    return prepared_statement(name, parameters);
+  }
+  else {
+    auto msg = PQerrorMessage(conn_.get());
+    logger_->error("{}", msg);
+    throw std::runtime_error(msg);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -67,9 +118,19 @@ std::vector<Course> Db::get_courses()
 template <typename T>
 std::vector<T> Db::get_all()
 {
-  auto result =
-      exec(fmt::format("SELECT * FROM {0}", std::string{T::TableName::name}));
+  auto prepared_statement =
+      prepared_statements.at(std::string{T::TableName::name});
+  auto result = exec(prepared_statement);
+  // auto result =
+  // exec(fmt::format("SELECT * FROM {0}", std::string{T::TableName::name}));
   return get_rows<T>(std::move(result));
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+Meta::ColumnsId<T> Db::get_columns_id(PGresult * /* res */)
+{
+  static_assert(assert_false<T>::value, "Not implemented");
 }
 
 //----------------------------------------------------------------------
@@ -88,6 +149,15 @@ Meta::ColumnsId<User> Db::get_columns_id(PGresult *res)
   return {PQfnumber(res, User::ColumnsName::id),
           PQfnumber(res, User::ColumnsName::username),
           PQfnumber(res, User::ColumnsName::email)};
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+T Db::get_row(PGresult * /* res */,
+              const Meta::ColumnsId<T> & /*cols*/,
+              int /*row_id*/)
+{
+  static_assert(assert_false<T>::value, "Not implemented");
 }
 
 //----------------------------------------------------------------------
@@ -121,23 +191,55 @@ User Db::get_row<User>(PGresult *res,
 
 //----------------------------------------------------------------------
 std::vector<const char *>
-Db::make_pq_args(const std::vector<std::string> &arguments)
+Db::make_pq_args(const std::vector<optional<std::string>> &arguments)
 {
   std::vector<const char *> pq_args;
 
   for (auto &val : arguments) {
-    pq_args.push_back(val.data());
+    if (!val) {
+      pq_args.push_back(nullptr);
+    }
+    else {
+      pq_args.push_back(val.value().data());
+    }
   }
 
   return pq_args;
 }
 
 //----------------------------------------------------------------------
-template <typename... Args>
-std::vector<std::string> Db::make_value_list(Args... args)
+template <typename T>
+optional<std::string> to_optional_string(T data)
 {
-  std::vector<std::string> list{std::to_string(args)...};
-  return list;
+  return {std::to_string(data)};
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+optional<std::string> to_optional_string(const char *data)
+{
+  return {data};
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+optional<std::string> to_optional_string(const std::string &data)
+{
+  return {data};
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+optional<std::string> to_optional_string(std::nullptr_t /* null */)
+{
+  return {};
+}
+
+//----------------------------------------------------------------------
+template <typename... Args>
+std::vector<optional<std::string>> Db::make_value_list(Args... args)
+{
+  return {to_optional_string(args)...};
 }
 
 //----------------------------------------------------------------------
@@ -165,22 +267,6 @@ std::vector<T> Db::get_rows(Res &&res)
 
   logger_->error(PQerrorMessage(conn_.get()));
   throw std::runtime_error(PQerrorMessage(conn_.get()));
-}
-
-//----------------------------------------------------------------------
-template <typename T>
-Meta::ColumnsId<T> Db::get_columns_id(PGresult * /* res */)
-{
-  static_assert(assert_false<T>::value, "Not implemented");
-}
-
-//----------------------------------------------------------------------
-template <typename T>
-T Db::get_row(PGresult * /* res */,
-              const Meta::ColumnsId<T> & /*cols*/,
-              int /*row_id*/)
-{
-  static_assert(assert_false<T>::value, "Not implemented");
 }
 
 //----------------------------------------------------------------------

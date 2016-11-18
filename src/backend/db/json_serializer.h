@@ -10,7 +10,7 @@
 
 namespace Sphinx::Db {
 
-  //----------------------------------------------------------------------
+//----------------------------------------------------------------------
 template <typename C>
 nlohmann::json to_json(const C &c)
 {
@@ -24,16 +24,20 @@ nlohmann::json to_json(const C &c)
 template <>
 inline nlohmann::json to_json(const Course &course)
 {
-  return {{Meta::ColumnsName<Course>::id, course.id},
-          {"name", course.name},
-          {"description", course.description.value_or(nullptr)}};
+  using Name = Meta::ColumnsName<Course>;
+  return {{Name::id, course.id},
+          {Name::name, course.name},
+          {Name::description, course.description.value_or(nullptr)}};
 }
 
 //----------------------------------------------------------------------
 template <>
 inline nlohmann::json to_json(const User &user)
 {
-  return {{"id", user.id}, {"username", user.username}, {"email", user.email}};
+  using Name = Meta::ColumnsName<User>;
+  return {{Name::id, user.id},
+          {Name::username, user.username},
+          {Name::email, user.email}};
 }
 
 //----------------------------------------------------------------------
@@ -47,9 +51,10 @@ E from_json(const nlohmann::json & /* json */)
 template <>
 inline User from_json(const nlohmann::json &data)
 {
+  using Name = Meta::ColumnsName<User>;
   User user;
-  user.username = data["username"];
-  user.email = data["email"];
+  user.username = data[Name::username];
+  user.email = data[Name::email];
   return user;
 }
 
