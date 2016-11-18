@@ -41,6 +41,17 @@ inline nlohmann::json to_json(const User &user)
 }
 
 //----------------------------------------------------------------------
+template <>
+inline nlohmann::json to_json(const Module &module)
+{
+  using Cols = Meta::Columns<Module>;
+  return {{Cols::id_n, module.id},
+          {Cols::course_id_n, module.course_id},
+          {Cols::name_n, module.name},
+          {Cols::description_n, module.description.value_or(nullptr)}};
+}
+
+//----------------------------------------------------------------------
 template <typename E>
 E from_json(const nlohmann::json & /* json */)
 {

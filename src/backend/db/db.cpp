@@ -35,8 +35,8 @@ Db::Db(const connection_config &db_config)
   else {
     logger_->info("Connected to database.");
 
-    for (auto table : {std::string{User::TableName::name},
-                       std::string{Course::TableName::name}}) {
+    for (auto table : {std::string{User::Table::name},
+                       std::string{Course::Table::name}}) {
       auto name = fmt::format("{}", table);
       auto query = fmt::format("SELECT * FROM {}", table);
       prepared_statements.emplace(name, prepare(name, query, 0));
@@ -119,10 +119,10 @@ template <typename T>
 std::vector<T> Db::get_all()
 {
   auto prepared_statement =
-      prepared_statements.at(std::string{T::TableName::name});
+      prepared_statements.at(std::string{T::Table::name});
   auto result = exec(prepared_statement);
   // auto result =
-  // exec(fmt::format("SELECT * FROM {0}", std::string{T::TableName::name}));
+  // exec(fmt::format("SELECT * FROM {0}", std::string{T::Table::name}));
   return get_rows<T>(std::move(result));
 }
 

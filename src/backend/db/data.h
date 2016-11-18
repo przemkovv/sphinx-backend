@@ -14,7 +14,7 @@ struct ColumnsId {
 };
 
 template <typename T>
-struct TableName {
+struct Table {
 };
 
 } // namespace Sphinx::Db::Meta
@@ -25,26 +25,26 @@ using std::experimental::optional;
 using std::experimental::nullopt;
 
 template <typename T>
-struct Table {
+struct TableDescription {
   using Columns = Meta::Columns<T>;
   using ColumnsId = Meta::ColumnsId<T>;
-  using TableName = Meta::TableName<T>;
+  using Table = Meta::Table<T>;
 };
 
 //----------------------------------------------------------------------
-struct User : public Table<User> {
+struct User : public TableDescription<User> {
   int64_t id;
   std::string username;
   std::string email;
 };
 
-struct Course : public Table<Course> {
+struct Course : public TableDescription<Course> {
   int64_t id;
   std::string name;
   optional<std::string> description;
 };
 
-struct Module : public Table<Module> {
+struct Module : public TableDescription<Module> {
   int64_t id;
   int64_t course_id;
   std::string name;
@@ -57,7 +57,7 @@ namespace Sphinx::Db::Meta {
 
 //----------------------------------------------------------------------
 template <>
-struct TableName<User> {
+struct Table<User> {
   static constexpr auto name = "users";
 };
 
@@ -71,9 +71,9 @@ struct Columns<User> {
   static constexpr auto username_n = "username";
   static constexpr auto email_n = "email";
 
-  static constexpr auto id_o = false;
-  static constexpr auto username_o = false;
-  static constexpr auto email_o = false;
+  static constexpr auto id_opt = false;
+  static constexpr auto username_opt = false;
+  static constexpr auto email_opt = false;
 };
 
 template <>
@@ -85,7 +85,7 @@ struct ColumnsId<User> {
 
 //----------------------------------------------------------------------
 template <>
-struct TableName<Course> {
+struct Table<Course> {
   static constexpr auto name = "courses";
 };
 
@@ -99,9 +99,9 @@ struct Columns<Course> {
   static constexpr auto name_n = "name";
   static constexpr auto description_n = "description";
 
-  static constexpr auto id_o = false;
-  static constexpr auto name_o = false;
-  static constexpr auto description_o = true;
+  static constexpr auto id_opt = false;
+  static constexpr auto name_opt = false;
+  static constexpr auto description_opt = true;
 };
 
 template <>
@@ -113,7 +113,7 @@ struct ColumnsId<Course> {
 
 //----------------------------------------------------------------------
 template <>
-struct TableName<Module> {
+struct Table<Module> {
   static constexpr auto name = "modules";
 };
 
@@ -129,10 +129,10 @@ struct Columns<Module> {
   static constexpr auto name_n = "name";
   static constexpr auto description_n = "description";
 
-  static constexpr auto id_o = false;
-  static constexpr auto course_id_o = false;
-  static constexpr auto name_o = false;
-  static constexpr auto description_o = true;
+  static constexpr auto id_opt = false;
+  static constexpr auto course_id_opt = false;
+  static constexpr auto name_opt = false;
+  static constexpr auto description_opt = true;
 };
 
 template <>
