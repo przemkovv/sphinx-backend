@@ -137,18 +137,18 @@ Meta::ColumnsId<T> Db::get_columns_id(PGresult * /* res */)
 template <>
 Meta::ColumnsId<Course> Db::get_columns_id(PGresult *res)
 {
-  return {PQfnumber(res, Course::ColumnsName::id),
-          PQfnumber(res, Course::ColumnsName::name),
-          PQfnumber(res, Course::ColumnsName::description)};
+  return {PQfnumber(res, Course::Columns::id_n),
+          PQfnumber(res, Course::Columns::name_n),
+          PQfnumber(res, Course::Columns::description_n)};
 }
 
 //----------------------------------------------------------------------
 template <>
 Meta::ColumnsId<User> Db::get_columns_id(PGresult *res)
 {
-  return {PQfnumber(res, User::ColumnsName::id),
-          PQfnumber(res, User::ColumnsName::username),
-          PQfnumber(res, User::ColumnsName::email)};
+  return {PQfnumber(res, User::Columns::id_n),
+          PQfnumber(res, User::Columns::username_n),
+          PQfnumber(res, User::Columns::email_n)};
 }
 
 //----------------------------------------------------------------------

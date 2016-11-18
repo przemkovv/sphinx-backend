@@ -24,20 +24,20 @@ nlohmann::json to_json(const C &c)
 template <>
 inline nlohmann::json to_json(const Course &course)
 {
-  using Name = Meta::ColumnsName<Course>;
-  return {{Name::id, course.id},
-          {Name::name, course.name},
-          {Name::description, course.description.value_or(nullptr)}};
+  using Cols = Meta::Columns<Course>;
+  return {{Cols::id_n, course.id},
+          {Cols::name_n, course.name},
+          {Cols::description_n, course.description.value_or(nullptr)}};
 }
 
 //----------------------------------------------------------------------
 template <>
 inline nlohmann::json to_json(const User &user)
 {
-  using Name = Meta::ColumnsName<User>;
-  return {{Name::id, user.id},
-          {Name::username, user.username},
-          {Name::email, user.email}};
+  using Cols = Meta::Columns<User>;
+  return {{Cols::id_n, user.id},
+          {Cols::username_n, user.username},
+          {Cols::email_n, user.email}};
 }
 
 //----------------------------------------------------------------------
@@ -49,13 +49,42 @@ E from_json(const nlohmann::json & /* json */)
 
 //----------------------------------------------------------------------
 template <>
+inline Course from_json(const nlohmann::json &data)
+{
+  using Cols = Meta::Columns<Course>;
+  Course entity;
+  entity.name = data[Cols::name_n];
+  if (data[Cols::description_n].is_null()) {
+    entity.description = nullopt;
+  }
+  else {
+    entity.description = data[Cols::description_n].get<Cols::description_t>();
+  }
+  return entity;
+}
+template <>
+inline Module from_json(const nlohmann::json &data)
+{
+  using Cols = Meta::Columns<Module>;
+  Module entity;
+  entity.name = data[Cols::name_n];
+  if (data[Cols::description_n].is_null()) {
+    entity.description = nullopt;
+  }
+  else {
+    entity.description = data[Cols::description_n].get<Cols::description_t>();
+  }
+  entity.course_id = data[Cols::course_id_n];
+  return entity;
+}
+template <>
 inline User from_json(const nlohmann::json &data)
 {
-  using Name = Meta::ColumnsName<User>;
-  User user;
-  user.username = data[Name::username];
-  user.email = data[Name::email];
-  return user;
+  using Cols = Meta::Columns<User>;
+  User entity;
+  entity.username = data[Cols::username_n];
+  entity.email = data[Cols::email_n];
+  return entity;
 }
 
 } // namespace Sphinx::Db

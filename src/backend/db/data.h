@@ -6,7 +6,7 @@
 namespace Sphinx::Db::Meta {
 
 template <typename T>
-struct ColumnsName {
+struct Columns {
 };
 
 template <typename T>
@@ -17,9 +17,6 @@ template <typename T>
 struct TableName {
 };
 
-template <typename T>
-struct Nullable {
-};
 } // namespace Sphinx::Db::Meta
 
 namespace Sphinx::Db {
@@ -29,10 +26,9 @@ using std::experimental::nullopt;
 
 template <typename T>
 struct Table {
-  using ColumnsName = Meta::ColumnsName<T>;
+  using Columns = Meta::Columns<T>;
   using ColumnsId = Meta::ColumnsId<T>;
   using TableName = Meta::TableName<T>;
-  using Nullable = Meta::Nullable<T>;
 };
 
 //----------------------------------------------------------------------
@@ -66,17 +62,18 @@ struct TableName<User> {
 };
 
 template <>
-struct ColumnsName<User> {
-  static constexpr auto id = "id";
-  static constexpr auto username = "username";
-  static constexpr auto email = "email";
-};
+struct Columns<User> {
+  using id_t = decltype(User::id);
+  using username_t = decltype(User::username);
+  using email_t = decltype(User::email);
 
-template <>
-struct Nullable<User> {
-  static constexpr auto id = false;
-  static constexpr auto username = false;
-  static constexpr auto email = false;
+  static constexpr auto id_n = "id";
+  static constexpr auto username_n = "username";
+  static constexpr auto email_n = "email";
+
+  static constexpr auto id_o = false;
+  static constexpr auto username_o = false;
+  static constexpr auto email_o = false;
 };
 
 template <>
@@ -93,17 +90,18 @@ struct TableName<Course> {
 };
 
 template <>
-struct ColumnsName<Course> {
-  static constexpr auto id = "id";
-  static constexpr auto name = "name";
-  static constexpr auto description = "description";
-};
+struct Columns<Course> {
+  using id_t = decltype(Course::id);
+  using name_t = decltype(Course::name);
+  using description_t = decltype(Course::description);
 
-template <>
-struct Nullable<Course> {
-  static constexpr auto id = false;
-  static constexpr auto name = false;
-  static constexpr auto description = true;
+  static constexpr auto id_n = "id";
+  static constexpr auto name_n = "name";
+  static constexpr auto description_n = "description";
+
+  static constexpr auto id_o = false;
+  static constexpr auto name_o = false;
+  static constexpr auto description_o = true;
 };
 
 template <>
@@ -120,19 +118,21 @@ struct TableName<Module> {
 };
 
 template <>
-struct ColumnsName<Module> {
-  static constexpr auto id = "id";
-  static constexpr auto course_id = "course_id";
-  static constexpr auto name = "name";
-  static constexpr auto description = "description";
-};
+struct Columns<Module> {
+  using id_t = decltype(Module::id);
+  using course_id_t = decltype(Module::course_id);
+  using name_t = decltype(Module::name);
+  using description_t = decltype(Module::description);
 
-template <>
-struct Nullable<Module> {
-  static constexpr auto id = false;
-  static constexpr auto course_id = false;
-  static constexpr auto name = false;
-  static constexpr auto description = true;
+  static constexpr auto id_n = "id";
+  static constexpr auto course_id_n = "course_id";
+  static constexpr auto name_n = "name";
+  static constexpr auto description_n = "description";
+
+  static constexpr auto id_o = false;
+  static constexpr auto course_id_o = false;
+  static constexpr auto name_o = false;
+  static constexpr auto description_o = true;
 };
 
 template <>
