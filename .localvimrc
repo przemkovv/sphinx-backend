@@ -28,3 +28,5 @@ let g:neomake_cpp_clangtidy_args = ['-p=build/',
                                   \ '--checks=*',
                                   \ '--header-filter="(?!pprint.hpp).*"',
                                   \ '--export-fixes=clang-tidy-fixes']
+
+nnoremap <leader>ss O//<esc>70A-<esc>
