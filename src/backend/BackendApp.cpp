@@ -3,19 +3,20 @@
 
 #include "db/json_serializer.h"
 
-#include <utils.h>
+#include "utils.h"
 
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 
-#include <sphinx_assert.h>
+#include "sphinx_assert.h"
 
 using std::literals::operator""s;
 
 namespace Sphinx::Backend {
 
+//----------------------------------------------------------------------
 BackendApp::BackendApp(const std::string &application_name,
                        const std::vector<std::string> &args)
   : Application(application_name, args),
@@ -28,6 +29,7 @@ BackendApp::BackendApp(const std::string &application_name,
 {
 }
 
+//----------------------------------------------------------------------
 Db::connection_config BackendApp::prepare_db_config()
 {
   const auto db_engine_path = "/database/engine"_json_pointer;
@@ -53,16 +55,19 @@ Db::connection_config BackendApp::prepare_db_config()
   }
 }
 
+//----------------------------------------------------------------------
 std::string BackendApp::get_courses()
 {
   return db_.get_courses_json().dump(dump_indent_);
 }
 
+//----------------------------------------------------------------------
 std::string BackendApp::get_users()
 {
   return db_.get_users_json().dump(dump_indent_);
 }
 
+//----------------------------------------------------------------------
 void BackendApp::create_user(const std::string &data)
 {
 
@@ -75,6 +80,8 @@ void BackendApp::create_user(const std::string &data)
   SPHINX_ASSERT(false, "not implemented");
   // db_.create_user(user);
 }
+
+//----------------------------------------------------------------------
 int BackendApp::run()
 {
   logger()->debug("Configuration file: {}", config().dump(dump_indent_));

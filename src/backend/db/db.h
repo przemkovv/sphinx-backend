@@ -2,7 +2,7 @@
 
 #include "data.h"
 
-#include <Logger.h>
+#include "Logger.h"
 #include <fmt/format.h>
 #include <libpq-fe.h>
 #include <nlohmann/json.hpp>
@@ -12,10 +12,11 @@
 #include <experimental/propagate_const>
 #include <memory>
 
-#include <sphinx_assert.h>
+#include "sphinx_assert.h"
 
 namespace Sphinx::Db {
 
+//----------------------------------------------------------------------
 struct connection_config {
   std::string host;
   std::uint16_t port;
@@ -30,6 +31,7 @@ struct connection_config {
   }
 };
 
+//----------------------------------------------------------------------
 class Db {
 
 public:
@@ -86,7 +88,7 @@ private:
   optional<T> get_field_optional(PGresult *res, int row_id, int col_id);
 
   template <typename T>
-  T to_(const char * /* data */);
+  T convert_to(const char * /* data */);
 
 public:
   std::vector<User> get_users();

@@ -1,7 +1,7 @@
 
 
 #include "Application.h"
-#include <utils.h>
+#include "utils.h"
 
 #include <fstream>
 
@@ -11,6 +11,7 @@
 
 namespace Sphinx {
 
+//----------------------------------------------------------------------
 Application::Application(const std::string &application_name,
                          const std::vector<std::string> &args)
   : application_name_(application_name),
@@ -27,6 +28,7 @@ Application::Application(const std::string &application_name,
   logger()->debug("Configuration {}", config_cli_);
 }
 
+//----------------------------------------------------------------------
 po::options_description Application::prepare_options_description_cli()
 {
   po::options_description desc("Allowed options");
@@ -39,6 +41,7 @@ po::options_description Application::prepare_options_description_cli()
   return desc;
 }
 
+//----------------------------------------------------------------------
 po::variables_map
 Application::parse_command_line_options(const std::vector<std::string> &args)
 {
@@ -50,6 +53,7 @@ Application::parse_command_line_options(const std::vector<std::string> &args)
   return vm;
 }
 
+//----------------------------------------------------------------------
 json Application::parse_config_file()
 {
   json config;
@@ -61,6 +65,7 @@ json Application::parse_config_file()
   return config;
 }
 
+//----------------------------------------------------------------------
 void Application::configure_logger(spdlog::level::level_enum log_level)
 {
   spdlog::set_level(log_level);

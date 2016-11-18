@@ -10,6 +10,7 @@
 
 namespace Sphinx::Db {
 
+  //----------------------------------------------------------------------
 template <typename C>
 nlohmann::json to_json(const C &c)
 {
@@ -19,6 +20,7 @@ nlohmann::json to_json(const C &c)
   return json;
 }
 
+//----------------------------------------------------------------------
 template <>
 inline nlohmann::json to_json(const Course &course)
 {
@@ -26,18 +28,22 @@ inline nlohmann::json to_json(const Course &course)
           {"name", course.name},
           {"description", course.description.value_or(nullptr)}};
 }
+
+//----------------------------------------------------------------------
 template <>
 inline nlohmann::json to_json(const User &user)
 {
   return {{"id", user.id}, {"username", user.username}, {"email", user.email}};
 }
 
+//----------------------------------------------------------------------
 template <typename E>
 E from_json(const nlohmann::json & /* json */)
 {
   static_assert(assert_false<E>::value, "Not implemented for the type.");
 }
 
+//----------------------------------------------------------------------
 template <>
 inline User from_json(const nlohmann::json &data)
 {

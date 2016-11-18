@@ -25,7 +25,7 @@ struct Nullable {
 namespace Sphinx::Db {
 
 using std::experimental::optional;
-using std::experimental::nullopt;;
+using std::experimental::nullopt;
 
 template <typename T>
 struct Table {
@@ -35,20 +35,20 @@ struct Table {
   using Nullable = Meta::Nullable<T>;
 };
 
+//----------------------------------------------------------------------
 struct User : public Table<User> {
   int64_t id;
   std::string username;
   std::string email;
-
 };
 
-struct Course : public Table<Course>{
+struct Course : public Table<Course> {
   int64_t id;
   std::string name;
   optional<std::string> description;
 };
 
-struct Module : public Table<Module>{
+struct Module : public Table<Module> {
   int64_t id;
   int64_t course_id;
   std::string name;
@@ -59,6 +59,7 @@ struct Module : public Table<Module>{
 
 namespace Sphinx::Db::Meta {
 
+//----------------------------------------------------------------------
 template <>
 struct TableName<User> {
   static constexpr auto name = "users";
@@ -85,6 +86,7 @@ struct ColumnsId<User> {
   int email;
 };
 
+//----------------------------------------------------------------------
 template <>
 struct TableName<Course> {
   static constexpr auto name = "courses";
@@ -111,6 +113,7 @@ struct ColumnsId<Course> {
   int description;
 };
 
+//----------------------------------------------------------------------
 template <>
 struct TableName<Module> {
   static constexpr auto name = "modules";
