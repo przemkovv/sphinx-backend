@@ -4,6 +4,7 @@
 #include "Application.h"
 
 #include "db/db.h"
+#include "db/backend_db.h"
 #include <crow.h>
 
 #include <cstdint>
