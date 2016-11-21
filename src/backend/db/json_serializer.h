@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "data.h"
+#include "model.h"
 
 #include <algorithm>
 #include <nlohmann/json.hpp>
 
 #include <sphinx_assert.h>
 
-namespace Sphinx::Db {
+namespace Sphinx::Backend::Model {
 
 //----------------------------------------------------------------------
 template <typename C>

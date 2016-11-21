@@ -1,35 +1,13 @@
 #pragma once
 
+#include "model_utils.h"
+
 #include <experimental/optional>
 #include <string>
 
-namespace Sphinx::Db::Meta {
 
-template <typename T>
-struct Columns {
-};
+namespace Sphinx::Backend::Model {
 
-template <typename T>
-struct ColumnsId {
-};
-
-template <typename T>
-struct Table {
-};
-
-} // namespace Sphinx::Db::Meta
-
-namespace Sphinx::Db {
-
-using std::experimental::optional;
-using std::experimental::nullopt;
-
-template <typename T>
-struct TableDescription {
-  using Columns = Meta::Columns<T>;
-  using ColumnsId = Meta::ColumnsId<T>;
-  using Table = Meta::Table<T>;
-};
 
 //----------------------------------------------------------------------
 struct User : public TableDescription<User> {
@@ -51,9 +29,9 @@ struct Module : public TableDescription<Module> {
   optional<std::string> description;
 };
 
-} // namespace Sphinx::Db
+} // namespace Sphinx::Backend::Model
 
-namespace Sphinx::Db::Meta {
+namespace Sphinx::Backend::Model::Meta {
 
 //----------------------------------------------------------------------
 template <>
@@ -133,4 +111,4 @@ struct ColumnsId<Module> {
   int description;
 };
 
-} // namespace Sphinx::Db::Meta
+} // namespace Sphinx::Backend::Model::Meta

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "data.h"
+#include "model_utils.h"
+#include "model.h"
 
 #include "Logger.h"
 #include "utils.h"
@@ -16,6 +17,8 @@
 #include "sphinx_assert.h"
 
 namespace Sphinx::Db {
+
+  using namespace Sphinx::Backend::Model;
 
 //----------------------------------------------------------------------
 struct connection_config {
