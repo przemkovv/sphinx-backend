@@ -21,7 +21,6 @@
 namespace Sphinx::Db {
 
 using std::experimental::optional;
-// using namespace Sphinx::Backend::Model;
 
 //----------------------------------------------------------------------
 struct connection_config {
@@ -144,6 +143,7 @@ public:
     throw std::runtime_error(PQerrorMessage(conn_.get()));
   }
 
+  //----------------------------------------------------------------------
   std::vector<const char *>
   make_pq_args(const std::vector<optional<std::string>> &arguments);
 
@@ -154,10 +154,7 @@ public:
     return {to_optional_string(args)...};
   }
 
-  template <typename T>
-  optional<std::string> to_optional_string(T data);
-
-  // void create_user(const User &user);
+  //----------------------------------------------------------------------
 
 private:
   Logger logger_;
