@@ -2,13 +2,14 @@
 #pragma once
 
 #include "model.h"
+#include "model_utils.h"
 
 #include <algorithm>
 #include <nlohmann/json.hpp>
 
 #include <sphinx_assert.h>
 
-namespace Sphinx::Backend::Model {
+namespace Sphinx::Db::Json {
 
 //----------------------------------------------------------------------
 template <typename C>
@@ -22,9 +23,9 @@ nlohmann::json to_json(const C &c)
 
 //----------------------------------------------------------------------
 template <>
-inline nlohmann::json to_json(const Course &course)
+inline nlohmann::json to_json(const Backend::Model::Course &course)
 {
-  using Cols = Meta::Columns<Course>;
+  using Cols = Meta::Columns<Backend::Model::Course>;
   return {{Cols::id_n, course.id},
           {Cols::name_n, course.name},
           {Cols::description_n, course.description.value_or(nullptr)}};
@@ -32,9 +33,9 @@ inline nlohmann::json to_json(const Course &course)
 
 //----------------------------------------------------------------------
 template <>
-inline nlohmann::json to_json(const User &user)
+inline nlohmann::json to_json(const Backend::Model::User &user)
 {
-  using Cols = Meta::Columns<User>;
+  using Cols = Meta::Columns<Backend::Model::User>;
   return {{Cols::id_n, user.id},
           {Cols::username_n, user.username},
           {Cols::email_n, user.email}};
@@ -42,9 +43,9 @@ inline nlohmann::json to_json(const User &user)
 
 //----------------------------------------------------------------------
 template <>
-inline nlohmann::json to_json(const Module &module)
+inline nlohmann::json to_json(const Backend::Model::Module &module)
 {
-  using Cols = Meta::Columns<Module>;
+  using Cols = Meta::Columns<Backend::Model::Module>;
   return {{Cols::id_n, module.id},
           {Cols::course_id_n, module.course_id},
           {Cols::name_n, module.name},
@@ -60,13 +61,13 @@ E from_json(const nlohmann::json & /* json */)
 
 //----------------------------------------------------------------------
 template <>
-inline Course from_json(const nlohmann::json &data)
+inline Backend::Model::Course from_json(const nlohmann::json &data)
 {
-  using Cols = Meta::Columns<Course>;
-  Course entity;
+  using Cols = Meta::Columns<Backend::Model::Course>;
+  Backend::Model::Course entity;
   entity.name = data[Cols::name_n];
   if (data[Cols::description_n].is_null()) {
-    entity.description = nullopt;
+    entity.description = Db::nullopt;
   }
   else {
     entity.description = data[Cols::description_n].get<Cols::description_t>();
@@ -74,10 +75,10 @@ inline Course from_json(const nlohmann::json &data)
   return entity;
 }
 template <>
-inline Module from_json(const nlohmann::json &data)
+inline Backend::Model::Module from_json(const nlohmann::json &data)
 {
-  using Cols = Meta::Columns<Module>;
-  Module entity;
+  using Cols = Meta::Columns<Backend::Model::Module>;
+  Backend::Model::Module entity;
   entity.name = data[Cols::name_n];
   if (data[Cols::description_n].is_null()) {
     entity.description = nullopt;
@@ -89,10 +90,10 @@ inline Module from_json(const nlohmann::json &data)
   return entity;
 }
 template <>
-inline User from_json(const nlohmann::json &data)
+inline Backend::Model::User from_json(const nlohmann::json &data)
 {
-  using Cols = Meta::Columns<User>;
-  User entity;
+  using Cols = Meta::Columns<Backend::Model::User>;
+  Backend::Model::User entity;
   entity.username = data[Cols::username_n];
   entity.email = data[Cols::email_n];
   return entity;

@@ -16,6 +16,9 @@ using std::literals::operator""s;
 
 namespace Sphinx::Backend {
 
+using Sphinx::Db::Json::to_json;
+using Sphinx::Db::Json::from_json;
+
 //----------------------------------------------------------------------
 BackendApp::BackendApp(const std::string &application_name,
                        const std::vector<std::string> &args)
@@ -30,7 +33,7 @@ BackendApp::BackendApp(const std::string &application_name,
 }
 
 //----------------------------------------------------------------------
-Db::connection_config BackendApp::prepare_db_config()
+Sphinx::Db::connection_config BackendApp::prepare_db_config()
 {
   const auto db_engine_path = "/database/engine"_json_pointer;
   if (auto engine = config_get<std::string>(db_engine_path);
@@ -44,7 +47,7 @@ Db::connection_config BackendApp::prepare_db_config()
     const auto db_user_path = "/database/user"_json_pointer;
     const auto db_dbname_path = "/database/dbname"_json_pointer;
 
-    Db::connection_config config;
+    Sphinx::Db::connection_config config;
     config.host = config_get<std::string>(db_host_path);
     config.port = config_get<std::uint16_t>(db_port_path);
     config.user = config_get<std::string>(db_user_path);
@@ -74,7 +77,7 @@ void BackendApp::create_user(const std::string &data)
   auto json_data = nlohmann::json::parse(data);
   logger()->debug("JSON: {} {}", data, json_data.dump(dump_indent_));
 
-  auto user = Sphinx::Db::from_json<Sphinx::Db::User>(json_data);
+  auto user = from_json<Model::User>(json_data);
 
   logger()->debug("Creating user {} {}", user.username, user.email);
   SPHINX_ASSERT(false, "not implemented");

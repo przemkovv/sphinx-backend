@@ -10,37 +10,38 @@ namespace Sphinx::Backend::Model {
 
 
 //----------------------------------------------------------------------
-struct User : public TableDescription<User> {
+struct User : public Db::TableDescription<User> {
   int64_t id;
   std::string username;
   std::string email;
 };
 
-struct Course : public TableDescription<Course> {
+struct Course : public Db::TableDescription<Course> {
   int64_t id;
   std::string name;
-  optional<std::string> description;
+  Db::optional<std::string> description;
 };
 
-struct Module : public TableDescription<Module> {
+struct Module : public Db::TableDescription<Module> {
   int64_t id;
   int64_t course_id;
   std::string name;
-  optional<std::string> description;
+  Db::optional<std::string> description;
 };
 
 } // namespace Sphinx::Backend::Model
 
-namespace Sphinx::Backend::Model::Meta {
+namespace Sphinx::Db::Meta {
 
 //----------------------------------------------------------------------
 template <>
-struct Table<User> {
+struct Table<Backend::Model::User> {
   static constexpr auto name = "users";
 };
 
 template <>
-struct Columns<User> {
+struct Columns<Backend::Model::User> {
+  using User = Backend::Model::User;
   using id_t = decltype(User::id);
   using username_t = decltype(User::username);
   using email_t = decltype(User::email);
@@ -52,7 +53,7 @@ struct Columns<User> {
 };
 
 template <>
-struct ColumnsId<User> {
+struct ColumnsId<Backend::Model::User> {
   int id;
   int username;
   int email;
@@ -60,12 +61,13 @@ struct ColumnsId<User> {
 
 //----------------------------------------------------------------------
 template <>
-struct Table<Course> {
+struct Table<Backend::Model::Course> {
   static constexpr auto name = "courses";
 };
 
 template <>
-struct Columns<Course> {
+struct Columns<Backend::Model::Course> {
+  using Course = Backend::Model::Course;
   using id_t = decltype(Course::id);
   using name_t = decltype(Course::name);
   using description_t = decltype(Course::description);
@@ -77,7 +79,7 @@ struct Columns<Course> {
 };
 
 template <>
-struct ColumnsId<Course> {
+struct ColumnsId<Backend::Model::Course> {
   int id;
   int name;
   int description;
@@ -85,12 +87,13 @@ struct ColumnsId<Course> {
 
 //----------------------------------------------------------------------
 template <>
-struct Table<Module> {
+struct Table<Backend::Model::Module> {
   static constexpr auto name = "modules";
 };
 
 template <>
-struct Columns<Module> {
+struct Columns<Backend::Model::Module> {
+  using Module = Backend::Model::Module;
   using id_t = decltype(Module::id);
   using course_id_t = decltype(Module::course_id);
   using name_t = decltype(Module::name);
@@ -104,7 +107,7 @@ struct Columns<Module> {
 };
 
 template <>
-struct ColumnsId<Module> {
+struct ColumnsId<Backend::Model::Module> {
   int id;
   int course_id;
   int name;

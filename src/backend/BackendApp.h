@@ -24,10 +24,10 @@ public:
   int run() override;
 
 protected:
-  Db::connection_config prepare_db_config();
+  Sphinx::Db::connection_config prepare_db_config();
 
-  Db::connection_config db_config_;
-  Db::Db db_;
+  Sphinx::Db::connection_config db_config_;
+  Sphinx::Backend::Db::BackendDb db_;
 
   crow::SimpleApp app_;
 

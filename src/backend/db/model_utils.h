@@ -2,7 +2,7 @@
 #pragma once
 #include <experimental/optional>
 
-namespace Sphinx::Backend::Model::Meta {
+namespace Sphinx::Db::Meta {
 
 //----------------------------------------------------------------------
 template <typename T>
@@ -17,10 +17,10 @@ template <typename T>
 struct Table {
 };
 
-} // namespace Sphinx::Backend::Model::Meta
+} // namespace Sphinx::Db::Meta
 
 //----------------------------------------------------------------------
-namespace Sphinx::Backend::Model {
+namespace Sphinx::Db {
 
 using std::experimental::optional;
 using std::experimental::nullopt;
@@ -32,4 +32,4 @@ struct TableDescription {
   using Table = Meta::Table<T>;
 };
 
-} // namespace Sphinx::Backend::Model::Meta
+} // namespace Sphinx::Db
