@@ -3,6 +3,7 @@
 #include "data.h"
 
 #include "Logger.h"
+#include "utils.h"
 #include <fmt/format.h>
 #include <libpq-fe.h>
 #include <nlohmann/json.hpp>
@@ -51,7 +52,7 @@ private:
 class Db {
 
 public:
-  Db(const connection_config &db_config);
+  Db(connection_config db_config);
   ~Db() = default;
 
 private:
@@ -104,6 +105,26 @@ private:
   optional<T> get_field_optional(PGresult *res, int row_id, int col_id);
 
   template <typename T>
+  auto get_field_c(PGresult *res, int row_id, int col_id)
+  {
+    if
+      constexpr(Utils::is_optional<T>::value)
+      {
+        return get_field_optional<typename Utils::remove_optional<T>::type>(
+            res, row_id, col_id);
+      }
+    else {
+      return get_field<T>(res, row_id, col_id);
+    }
+  }
+
+  template <typename T>
+  void load_field_from_res(T &field, PGresult *res, int row_id, int col_id)
+  {
+    field = get_field_c<T>(res, row_id, col_id);
+  }
+
+  template <typename T>
   T convert_to(const char * /* data */);
 
   template <typename T>
@@ -112,6 +133,7 @@ private:
 public:
   std::vector<User> get_users();
   std::vector<Course> get_courses();
+  std::vector<Module> get_modules();
   // void create_user(const User &user);
 
 private:

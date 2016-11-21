@@ -19,11 +19,12 @@ add_definitions(
   -Weverything
   -Wno-c++98-compat
   -Wno-c++98-compat-pedantic
-  # -Wno-exit-time-destructors
-  # -Wno-global-constructors
+  -Wno-exit-time-destructors
+  -Wno-global-constructors
   -Wno-padded
   -Wno-weak-vtables
   # -Wno-shadow
+  -Wno-reserved-user-defined-literal
   -Weffc++
   -Werror
   -DSPDLOG_FMT_EXTERNAL

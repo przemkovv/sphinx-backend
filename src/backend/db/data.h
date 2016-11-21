@@ -71,9 +71,6 @@ struct Columns<User> {
   static constexpr auto username_n = "username";
   static constexpr auto email_n = "email";
 
-  static constexpr auto id_opt = false;
-  static constexpr auto username_opt = false;
-  static constexpr auto email_opt = false;
 };
 
 template <>
@@ -99,9 +96,6 @@ struct Columns<Course> {
   static constexpr auto name_n = "name";
   static constexpr auto description_n = "description";
 
-  static constexpr auto id_opt = false;
-  static constexpr auto name_opt = false;
-  static constexpr auto description_opt = true;
 };
 
 template <>
@@ -129,10 +123,6 @@ struct Columns<Module> {
   static constexpr auto name_n = "name";
   static constexpr auto description_n = "description";
 
-  static constexpr auto id_opt = false;
-  static constexpr auto course_id_opt = false;
-  static constexpr auto name_opt = false;
-  static constexpr auto description_opt = true;
 };
 
 template <>

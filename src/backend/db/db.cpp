@@ -23,8 +23,8 @@ std::shared_ptr<PGconn> Db::connect(const connection_config &db_config)
 }
 
 //----------------------------------------------------------------------
-Db::Db(const connection_config &db_config)
-  : db_config_(db_config),
+Db::Db(connection_config db_config)
+  : db_config_(std::move(db_config)),
     conn_(connect(db_config_)),
     logger_(Sphinx::make_logger("Sphinx::Db", spdlog::level::debug))
 {
@@ -35,8 +35,9 @@ Db::Db(const connection_config &db_config)
   else {
     logger_->info("Connected to database.");
 
-    for (auto table : {std::string{User::Table::name},
-                       std::string{Course::Table::name}}) {
+    for (const auto &table :
+         {std::string{User::Table::name}, std::string{Module::Table::name},
+          std::string{Course::Table::name}}) {
       auto name = fmt::format("{}", table);
       auto query = fmt::format("SELECT * FROM {}", table);
       prepared_statements.emplace(name, prepare(name, query, 0));
@@ -95,11 +96,9 @@ Db::prepare(const std::string &name, const std::string &query, int parameters)
   if (PQresultStatus(res.get()) == PGRES_COMMAND_OK) {
     return prepared_statement(name, parameters);
   }
-  else {
-    auto msg = PQerrorMessage(conn_.get());
-    logger_->error("{}", msg);
-    throw std::runtime_error(msg);
-  }
+  auto msg = PQerrorMessage(conn_.get());
+  logger_->error("{}", msg);
+  throw std::runtime_error(msg);
 }
 
 //----------------------------------------------------------------------
@@ -115,11 +114,16 @@ std::vector<Course> Db::get_courses()
 }
 
 //----------------------------------------------------------------------
+std::vector<Module> Db::get_modules()
+{
+  return get_all<Module>();
+}
+
+//----------------------------------------------------------------------
 template <typename T>
 std::vector<T> Db::get_all()
 {
-  auto prepared_statement =
-      prepared_statements.at(std::string{T::Table::name});
+  auto prepared_statement = prepared_statements.at(std::string{T::Table::name});
   auto result = exec(prepared_statement);
   // auto result =
   // exec(fmt::format("SELECT * FROM {0}", std::string{T::Table::name}));
@@ -131,6 +135,16 @@ template <typename T>
 Meta::ColumnsId<T> Db::get_columns_id(PGresult * /* res */)
 {
   static_assert(assert_false<T>::value, "Not implemented");
+}
+
+//----------------------------------------------------------------------
+template <>
+Meta::ColumnsId<Module> Db::get_columns_id(PGresult *res)
+{
+  return {PQfnumber(res, Module::Columns::id_n),
+          PQfnumber(res, Module::Columns::course_id_n),
+          PQfnumber(res, Module::Columns::name_n),
+          PQfnumber(res, Module::Columns::description_n)};
 }
 
 //----------------------------------------------------------------------
@@ -154,7 +168,7 @@ Meta::ColumnsId<User> Db::get_columns_id(PGresult *res)
 //----------------------------------------------------------------------
 template <typename T>
 T Db::get_row(PGresult * /* res */,
-              const Meta::ColumnsId<T> & /*cols*/,
+              const Meta::ColumnsId<T> & /*cols_id*/,
               int /*row_id*/)
 {
   static_assert(assert_false<T>::value, "Not implemented");
@@ -163,29 +177,39 @@ T Db::get_row(PGresult * /* res */,
 //----------------------------------------------------------------------
 template <>
 Course Db::get_row<Course>(PGresult *res,
-                           const Meta::ColumnsId<Course> &cols,
+                           const Meta::ColumnsId<Course> &cols_id,
                            int row_id)
 {
   Course course;
-  course.id = get_field<int64_t>(res, row_id, cols.id);
-  course.name = get_field<std::string>(res, row_id, cols.name);
-  course.description =
-      get_field_optional<std::string>(res, row_id, cols.description);
-
+  load_field_from_res(course.id, res, row_id, cols_id.id);
+  load_field_from_res(course.name, res, row_id, cols_id.name);
+  load_field_from_res(course.description, res, row_id, cols_id.description);
   return course;
 }
 
 //----------------------------------------------------------------------
 template <>
+Module Db::get_row<Module>(PGresult *res,
+                           const Meta::ColumnsId<Module> &cols_id,
+                           int row_id)
+{
+  Module module;
+  load_field_from_res(module.id, res, row_id, cols_id.id);
+  load_field_from_res(module.name, res, row_id, cols_id.name);
+  load_field_from_res(module.description, res, row_id, cols_id.description);
+  load_field_from_res(module.course_id, res, row_id, cols_id.course_id);
+  return module;
+}
+//----------------------------------------------------------------------
+template <>
 User Db::get_row<User>(PGresult *res,
-                       const Meta::ColumnsId<User> &cols,
+                       const Meta::ColumnsId<User> &cols_id,
                        int row_id)
 {
   User user;
-  user.id = get_field<int64_t>(res, row_id, cols.id);
-  user.username = get_field<std::string>(res, row_id, cols.username);
-  user.email = get_field<std::string>(res, row_id, cols.email);
-
+  load_field_from_res(user.id, res, row_id, cols_id.id);
+  load_field_from_res(user.username, res, row_id, cols_id.username);
+  load_field_from_res(user.email, res, row_id, cols_id.email);
   return user;
 }
 
@@ -283,9 +307,7 @@ optional<T> Db::get_field_optional(PGresult *res, int row_id, int col_id)
   if (PQgetisnull(res, row_id, col_id)) {
     return {};
   }
-  else {
-    return {get_field<T>(res, row_id, col_id)};
-  }
+  return {get_field<T>(res, row_id, col_id)};
 }
 
 //----------------------------------------------------------------------
