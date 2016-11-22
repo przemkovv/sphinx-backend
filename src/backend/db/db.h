@@ -149,13 +149,19 @@ public:
                              field_list, field_ids);
     return query;
   }
+
   //----------------------------------------------------------------------
   template <typename T>
   void insert(const T &data)
   {
     auto query = prepare_insert_query<T>();
     auto insert_params = to_insert_params(data);
+    return insert(query, insert_params);
+  }
 
+  //----------------------------------------------------------------------
+  void insert(const std::string &query, const QueryParams &insert_params)
+  {
     auto res = exec(query, insert_params);
 
     int status = PQresultStatus(res.get());
