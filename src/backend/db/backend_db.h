@@ -41,6 +41,8 @@ public:
   std::vector<Model::Course> get_courses();
   std::vector<Model::Module> get_modules();
   void create_user(const Model::User &user);
+  void create_course(const Model::Course &course);
+  void create_module(const Model::Module &module);
 };
 } // namespace Sphinx::Backend::Db
 

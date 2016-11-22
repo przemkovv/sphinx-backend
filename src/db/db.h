@@ -1,23 +1,23 @@
 #pragma once
 
-#include <fmt/format.h>           // for format, UdlArg, operator""_a
-#include <libpq-fe.h>             // for PQerrorMessage, PGresult, PQresultS...
-#include <spdlog/spdlog.h>        // for logger
-#include <stdint.h>               // for uint16_t
-#include <algorithm>              // for move
-#include <cstddef>                // for size_t
-#include <exception>              // for exception
-#include <experimental/optional>  // for optional
-#include <functional>             // for function
-#include <iterator>               // for next
-#include <memory>                 // for shared_ptr, __shared_ptr_access
-#include <numeric>                // for accumulate
-#include <stdexcept>              // for runtime_error
-#include <string>                 // for string
-#include <vector>                 // for vector
-#include "Logger.h"               // for Logger
-#include "db_utils.h"             // for make_value_list, QueryParams, get_c...
-#include "model_utils.h"          // for Columns
+#include "Logger.h"              // for Logger
+#include "db_utils.h"            // for make_value_list, QueryParams, get_c...
+#include "model_utils.h"         // for Columns
+#include <algorithm>             // for move
+#include <cstddef>               // for size_t
+#include <exception>             // for exception
+#include <experimental/optional> // for optional
+#include <fmt/format.h>          // for format, UdlArg, operator""_a
+#include <functional>            // for function
+#include <iterator>              // for next
+#include <libpq-fe.h>            // for PQerrorMessage, PGresult, PQresultS...
+#include <memory>                // for shared_ptr, __shared_ptr_access
+#include <numeric>               // for accumulate
+#include <spdlog/spdlog.h>       // for logger
+#include <stdexcept>             // for runtime_error
+#include <stdint.h>              // for uint16_t
+#include <string>                // for string
+#include <vector>                // for vector
 
 namespace Sphinx::Db {
 
@@ -144,29 +144,46 @@ public:
                         });
 
     std::string table_name = T::Table::name;
-    auto query = fmt::format("INSERT INTO {0} ({1}) VALUES ({2})", table_name,
-                             field_list, field_ids);
+    std::string id_column = Meta::Columns<T>::id_column;
+    auto query = fmt::format("INSERT INTO {0} ({1}) VALUES ({2}) RETURNING {3}",
+                             table_name, field_list, field_ids, id_column);
     return query;
   }
 
   //----------------------------------------------------------------------
   template <typename T>
-  void insert(const T &data)
+  auto insert(const T &data)
   {
     auto query = prepare_insert_query<T>();
     auto insert_params = to_insert_params(data);
-    return insert(query, insert_params);
+    return insert<T>(query, insert_params);
   }
 
   //----------------------------------------------------------------------
-  void insert(const std::string &query, const QueryParams &insert_params)
+  template <typename T>
+  typename T::Columns::id_column_t insert(const std::string &query,
+                                          const QueryParams &insert_params)
   {
     auto res = exec(query, insert_params);
 
     int status = PQresultStatus(res.get());
     if (status == PGRES_COMMAND_OK) {
-      return;
+      return {};
     }
+    if (status == PGRES_TUPLES_OK) {
+
+      using id_column_t = typename T::Columns::id_column_t;
+      auto id_column = T::Columns::id_column;
+
+      auto id_column_id = PQfnumber(res.get(), id_column);
+      int row_count = PQntuples(res.get());
+
+      SPHINX_ASSERT(row_count == 1, "INSERT query returned more than one row");
+
+      auto last_id = get_field<id_column_t>(res.get(), 0, id_column_id);
+      return last_id;
+    }
+
     logger_->error(PQerrorMessage(conn_.get()));
     throw std::runtime_error(PQerrorMessage(conn_.get()));
   }
@@ -204,7 +221,7 @@ public:
 
   //----------------------------------------------------------------------
 
-private:
+protected:
   Logger logger_;
 };
 

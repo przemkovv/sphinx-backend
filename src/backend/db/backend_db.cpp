@@ -116,7 +116,8 @@ std::vector<Model::Module> BackendDb::get_modules()
 }
 void BackendDb::create_user(const Model::User &user)
 {
-  insert(user);
+  auto last_id = insert(user);
+  logger_->debug("Created user with last id: {}", last_id);
 }
 
 } // namespace Sphinx::Backend::Db

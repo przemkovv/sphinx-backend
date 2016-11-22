@@ -49,6 +49,8 @@ struct Columns<Backend::Model::User> {
   static constexpr auto email_n = "email";
 
   static constexpr auto insert_columns = {username_n, email_n};
+  static constexpr auto id_column = id_n;
+  using id_column_t = id_t;
 };
 
 template <>
@@ -76,6 +78,8 @@ struct Columns<Backend::Model::Course> {
   static constexpr auto description_n = "description";
 
   static constexpr auto insert_columns = {name_n, description_n};
+  static constexpr auto id_column = id_n;
+  using id_column_t = id_t;
 };
 
 template <>
@@ -105,6 +109,8 @@ struct Columns<Backend::Model::Module> {
   static constexpr auto description_n = "description";
 
   static constexpr auto insert_columns = {course_id_n, name_n, description_n};
+  static constexpr auto id_column = id_n;
+  using id_column_t = id_t;
 };
 
 template <>
