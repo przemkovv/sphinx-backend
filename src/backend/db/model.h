@@ -1,9 +1,9 @@
 #pragma once
 
-#include "model_utils.h"
-
-#include <experimental/optional>
-#include <string>
+#include "model_utils.h"         // for Columns (ptr only), ColumnsId (ptr ...
+#include <experimental/optional> // for optional
+#include <stdint.h>              // for int64_t
+#include <string>                // for string
 
 namespace Sphinx::Backend::Model {
 

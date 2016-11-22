@@ -81,7 +81,6 @@ void BackendApp::create_user(const std::string &data)
 
   logger()->debug("Creating user {} {}", user.username, user.email);
   db_.create_user(user);
-
 }
 
 //----------------------------------------------------------------------

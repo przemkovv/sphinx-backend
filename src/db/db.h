@@ -1,22 +1,23 @@
 #pragma once
 
-#include "db_utils.h"
-#include "model_utils.h"
-
-#include "Logger.h"
-#include "utils.h"
-#include <fmt/format.h>
-#include <libpq-fe.h>
-
-#include <vector>
-
-#include <experimental/optional>
-#include <experimental/propagate_const>
-#include <memory>
-#include <numeric>
-
-#include "joiner_iterator.h"
-#include "sphinx_assert.h"
+#include <fmt/format.h>           // for format, UdlArg, operator""_a
+#include <libpq-fe.h>             // for PQerrorMessage, PGresult, PQresultS...
+#include <spdlog/spdlog.h>        // for logger
+#include <stdint.h>               // for uint16_t
+#include <algorithm>              // for move
+#include <cstddef>                // for size_t
+#include <exception>              // for exception
+#include <experimental/optional>  // for optional
+#include <functional>             // for function
+#include <iterator>               // for next
+#include <memory>                 // for shared_ptr, __shared_ptr_access
+#include <numeric>                // for accumulate
+#include <stdexcept>              // for runtime_error
+#include <string>                 // for string
+#include <vector>                 // for vector
+#include "Logger.h"               // for Logger
+#include "db_utils.h"             // for make_value_list, QueryParams, get_c...
+#include "model_utils.h"          // for Columns
 
 namespace Sphinx::Db {
 

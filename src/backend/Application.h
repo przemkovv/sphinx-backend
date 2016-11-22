@@ -1,12 +1,13 @@
 #pragma once
 
-#include "Logger.h"
-
-#include <boost/program_options.hpp>
-#include <memory>
-#include <string>
-
-#include <nlohmann/json.hpp>
+#include "Logger.h"                                      // for Logger
+#include <boost/program_options/errors.hpp>              // for program_opt...
+#include <boost/program_options/options_description.hpp> // for options_des...
+#include <boost/program_options/variables_map.hpp>       // for variables_map
+#include <nlohmann/json.hpp>                             // for json
+#include <spdlog/spdlog.h>                               // for level_enum
+#include <string>                                        // for string
+#include <vector>                                        // for vector
 
 using json = nlohmann::json;
 using json_pointer = nlohmann::json::json_pointer;

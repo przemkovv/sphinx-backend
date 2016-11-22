@@ -1,10 +1,7 @@
 
 #include "db.h"
-
-#include <algorithm>
-#include <cstdlib>
-#include <iterator>
-#include <utility>
+#include <algorithm>    // for move
+#include <type_traits>  // for remove_reference<>::type
 
 namespace Sphinx::Db {
 
