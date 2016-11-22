@@ -12,7 +12,8 @@
 
 #include "sphinx_assert.h"
 
-using std::literals::operator""s;
+// using std::literals::operator""s;
+using namespace std::literals::string_literals;
 
 namespace Sphinx::Backend {
 
@@ -80,8 +81,8 @@ void BackendApp::create_user(const std::string &data)
   auto user = from_json<Model::User>(json_data);
 
   logger()->debug("Creating user {} {}", user.username, user.email);
-  SPHINX_ASSERT(false, "not implemented");
-  // db_.create_user(user);
+  db_.create_user(user);
+
 }
 
 //----------------------------------------------------------------------

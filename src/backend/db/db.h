@@ -12,15 +12,18 @@
 
 #include <vector>
 
+#include <experimental/iterator>
 #include <experimental/optional>
 #include <experimental/propagate_const>
 #include <memory>
 
+#include "joiner_iterator.h"
 #include "sphinx_assert.h"
 
 namespace Sphinx::Db {
 
 using std::experimental::optional;
+using fmt::literals::operator""_a;
 
 //----------------------------------------------------------------------
 struct connection_config {
@@ -32,8 +35,9 @@ struct connection_config {
 
   std::string get_connection_string() const
   {
-    return fmt::format("postgresql://{0}:{1}@{2}:{3}/{4}", user, password, host,
-                       port, db_name);
+    return fmt::format("postgresql://{user}:{password}@{host}:{port}/{db_name}",
+                       "user"_a = user, "password"_a = password,
+                       "host"_a = host, "port"_a = port, "db_name"_a = db_name);
   }
 };
 
@@ -71,6 +75,20 @@ private:
       -> std::unique_ptr<PGresult, std::function<void(PGresult *)>>;
 
 public:
+  //----------------------------------------------------------------------
+  auto exec(const std::string &query,
+            const std::vector<optional<std::string>> &args)
+  {
+    auto pq_args = make_pq_args(args);
+
+    logger_->info("Executing query: {}", query);
+
+    auto result = PQexecParams(conn_.get(), query.data(),
+                               static_cast<int>(pq_args.size()), nullptr,
+                               pq_args.data(), nullptr, nullptr, 0);
+
+    return make_result_safe(result);
+  }
   //----------------------------------------------------------------------
   template <typename... Args>
   auto exec(const std::string &query, Args... param_args)
@@ -117,6 +135,46 @@ public:
   }
 
   //----------------------------------------------------------------------
+  template <typename T>
+  std::string prepare_insert_query()
+  {
+    auto &insert_columns = Meta::Columns<T>::insert_columns;
+
+    std::string field_list =
+        std::accumulate(std::next(insert_columns.begin()), insert_columns.end(),
+                        std::string(*insert_columns.begin()),
+                        [](auto a, auto b) { return a + ", " + b; });
+
+    int n = 1;
+    std::string field_ids =
+        std::accumulate(std::next(insert_columns.begin()), insert_columns.end(),
+                        std::string{"$1"}, [n](auto a, auto b) mutable {
+                          return a + ", " + fmt::format("${}", ++n);
+                        });
+
+    std::string table_name = T::Table::name;
+    auto query = fmt::format("INSERT INTO {0} ({1}) VALUES ({2})", table_name,
+                             field_list, field_ids);
+    return query;
+  }
+  //----------------------------------------------------------------------
+  template <typename T>
+  void insert(const T &data)
+  {
+    auto query = prepare_insert_query<T>();
+    auto insert_params = to_insert_params(data);
+
+    auto res = exec(query, insert_params);
+
+    int status = PQresultStatus(res.get());
+    if (status == PGRES_COMMAND_OK) {
+      return;
+    }
+    logger_->error(PQerrorMessage(conn_.get()));
+    throw std::runtime_error(PQerrorMessage(conn_.get()));
+  }
+
+  //----------------------------------------------------------------------
   template <typename T, typename Res>
   std::vector<T> get_rows(Res &&res)
   {
@@ -146,13 +204,6 @@ public:
   //----------------------------------------------------------------------
   std::vector<const char *>
   make_pq_args(const std::vector<optional<std::string>> &arguments);
-
-  //----------------------------------------------------------------------
-  template <typename... Args>
-  std::vector<optional<std::string>> make_value_list(Args... args)
-  {
-    return {to_optional_string(args)...};
-  }
 
   //----------------------------------------------------------------------
 

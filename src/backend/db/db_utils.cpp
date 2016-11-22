@@ -17,22 +17,7 @@ std::string convert_to(const char *data)
 }
 
 //----------------------------------------------------------------------
-//----------------------------------------------------------------------
-template <typename T>
-optional<std::string> to_optional_string(const char *data)
-{
-  return {data};
-}
-
-//----------------------------------------------------------------------
-template <typename T>
-optional<std::string> to_optional_string(const std::string &data)
-{
-  return {data};
-}
-
-//----------------------------------------------------------------------
-template <typename T>
+template <>
 optional<std::string> to_optional_string(std::nullptr_t /* null */)
 {
   return {};

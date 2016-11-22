@@ -18,7 +18,8 @@ Application::Application(const std::string &application_name,
     args_(args),
     options_description_cli_(prepare_options_description_cli()),
     config_cli_(parse_command_line_options(args_)),
-    config_(parse_config_file())
+    config_(parse_config_file()),
+    logger_(Sphinx::make_logger("Application"))
 {
 
   auto log_level = config_cli_["log_level"].as<int>();

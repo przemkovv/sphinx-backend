@@ -3,14 +3,16 @@
 
 #include "Application.h"
 
-#include "db/db.h"
 #include "db/backend_db.h"
+#include "db/db.h"
 #include <crow.h>
 
 #include <cstdint>
+#include <string>
 
 using json_pointer = nlohmann::json::json_pointer;
-using std::literals::operator""s;
+// using std::literals::operator""s;
+using namespace std::literals::string_literals;
 
 namespace Sphinx::Backend {
 
@@ -52,7 +54,7 @@ private:
 
   std::string get_users();
   std::string get_courses();
-  [[noreturn]] void create_user(const std::string& data);
+  void create_user(const std::string &data);
 };
 
 } // namespace Sphinx::Backend

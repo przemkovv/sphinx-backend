@@ -65,7 +65,7 @@ inline Backend::Model::Course from_json(const nlohmann::json &data)
 {
   using Cols = Meta::Columns<Backend::Model::Course>;
   Backend::Model::Course entity;
-  entity.name = data[Cols::name_n];
+  entity.name = data[Cols::name_n].get<Cols::name_t>();
   if (data[Cols::description_n].is_null()) {
     entity.description = Db::nullopt;
   }
@@ -79,7 +79,7 @@ inline Backend::Model::Module from_json(const nlohmann::json &data)
 {
   using Cols = Meta::Columns<Backend::Model::Module>;
   Backend::Model::Module entity;
-  entity.name = data[Cols::name_n];
+  entity.name = data[Cols::name_n].get<Cols::name_t>();
   if (data[Cols::description_n].is_null()) {
     entity.description = nullopt;
   }
@@ -94,8 +94,8 @@ inline Backend::Model::User from_json(const nlohmann::json &data)
 {
   using Cols = Meta::Columns<Backend::Model::User>;
   Backend::Model::User entity;
-  entity.username = data[Cols::username_n];
-  entity.email = data[Cols::email_n];
+  entity.username = data[Cols::username_n].get<Cols::username_t>();
+  entity.email = data[Cols::email_n].get<Cols::email_t>();
   return entity;
 }
 

@@ -5,9 +5,7 @@
 #include <experimental/optional>
 #include <string>
 
-
 namespace Sphinx::Backend::Model {
-
 
 //----------------------------------------------------------------------
 struct User : public Db::TableDescription<User> {
@@ -50,6 +48,7 @@ struct Columns<Backend::Model::User> {
   static constexpr auto username_n = "username";
   static constexpr auto email_n = "email";
 
+  static constexpr auto insert_columns = {username_n, email_n};
 };
 
 template <>
@@ -76,6 +75,7 @@ struct Columns<Backend::Model::Course> {
   static constexpr auto name_n = "name";
   static constexpr auto description_n = "description";
 
+  static constexpr auto insert_columns = {name_n, description_n};
 };
 
 template <>
@@ -104,6 +104,7 @@ struct Columns<Backend::Model::Module> {
   static constexpr auto name_n = "name";
   static constexpr auto description_n = "description";
 
+  static constexpr auto insert_columns = {course_id_n, name_n, description_n};
 };
 
 template <>

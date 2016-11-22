@@ -5,6 +5,26 @@
 namespace Sphinx::Db {
 
 template <>
+QueryParams to_insert_params(const Backend::Model::User &data)
+{
+  return make_value_list(data.username, data.email);
+}
+
+//----------------------------------------------------------------------
+template <>
+QueryParams to_insert_params(const Backend::Model::Course &data)
+{
+  return make_value_list(data.name, data.description);
+}
+
+//----------------------------------------------------------------------
+template <>
+QueryParams to_insert_params(const Backend::Model::Module &data)
+{
+  return make_value_list(data.course_id, data.name, data.description);
+}
+
+template <>
 Db::Meta::ColumnsId<Backend::Model::Module> get_columns_id(PGresult *res)
 {
   return {PQfnumber(res, Backend::Model::Module::Columns::id_n),
@@ -94,5 +114,9 @@ std::vector<Model::Module> BackendDb::get_modules()
 {
   return get_all<Model::Module>();
 }
-} // namespace Sphinx::Backend::Db
+void BackendDb::create_user(const Model::User &user)
+{
+  insert(user);
+}
 
+} // namespace Sphinx::Backend::Db

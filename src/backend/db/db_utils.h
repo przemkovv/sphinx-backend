@@ -4,11 +4,14 @@
 #include "sphinx_assert.h"
 #include "utils.h"
 
+#include <fmt/format.h>
+
 #include <libpq-fe.h>
 
 namespace Sphinx::Db {
 
 using std::experimental::optional;
+using QueryParams = std::vector<optional<std::string>>;
 
 //----------------------------------------------------------------------
 template <typename T>
@@ -68,12 +71,24 @@ std::string convert_to(const char *data);
 template <typename T>
 optional<std::string> to_optional_string(T data)
 {
-  return {std::to_string(data)};
+  fmt::MemoryWriter w;
+  w.write("{}", data);
+  return {w.str()};
 }
-template <>
-optional<std::string> to_optional_string(const char *data);
-template <>
-optional<std::string> to_optional_string(const std::string &data);
+
+//----------------------------------------------------------------------
+template <typename T>
+optional<std::string> to_optional_string(optional<T> data)
+{
+  if (data) {
+    return to_optional_string(data.value());
+  }
+  else {
+    return {};
+  }
+}
+
+//----------------------------------------------------------------------
 template <>
 optional<std::string> to_optional_string(std::nullptr_t /* null */);
 
@@ -91,6 +106,20 @@ T get_row(PGresult * /* res */,
           int /*row_id*/)
 {
   static_assert(assert_false<T>::value, "Not implemented");
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+QueryParams to_insert_params(const T &data)
+{
+  static_assert(assert_false<T>::value, "Not implemented");
+}
+
+//----------------------------------------------------------------------
+template <typename... Args>
+std::vector<optional<std::string>> make_value_list(Args... args)
+{
+  return {to_optional_string(args)...};
 }
 
 } // namespace Sphinx::Db
