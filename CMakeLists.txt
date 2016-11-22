@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
 project(Sphinx)
 
@@ -39,6 +39,21 @@ find_package(Threads REQUIRED)
 find_package(Boost 1.62 COMPONENTS system filesystem program_options)
 find_package(PostgreSQL REQUIRED)
 
+find_package(PythonInterp)
+find_program(iwyu_tool_path NAMES iwyu_tool.py)
+if (iwyu_tool_path AND PYTHONINTERP_FOUND)
+  add_custom_target(iwyu
+    ALL      # Remove ALL if you don't iwyu to be run by default.
+    COMMAND "${PYTHON_EXECUTABLE}" "${iwyu_tool_path}" -p "${CMAKE_BINARY_DIR}" -- --mapping_file="${CMAKE_CURRENT_SOURCE_DIR}/sphinx.imp"
+    COMMENT "Running include-what-you-use tool"
+    VERBATIM
+  )
+endif()
+# find_program(iwyu_path NAMES include-what-you-use iwyu)
+# if(NOT iwyu_path)
+  # message(FATAL_ERROR "Could not find the program include-what-you-use")
+# endif()
+
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
@@ -59,6 +74,11 @@ ExternalProject_Add(json
     )
 
 add_subdirectory(src/shared_lib)
+add_subdirectory(src/db)
 add_subdirectory(src/backend)
+
+# set_property(TARGET SphinxDb PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
+# set_property(TARGET SphinxBackend PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
+# set_property(TARGET SphinxSharedLib PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
 
 add_test(NAME rest_api COMMAND abao ${CMAKE_SOURCE_DIR}/docs/rest_api/sphinx-backend-rest.raml --server http://localhost:9999)

@@ -1,21 +1,19 @@
 #pragma once
 
 #include "db_utils.h"
-#include "model.h"
 #include "model_utils.h"
 
 #include "Logger.h"
 #include "utils.h"
 #include <fmt/format.h>
 #include <libpq-fe.h>
-#include <nlohmann/json.hpp>
 
 #include <vector>
 
-#include <experimental/iterator>
 #include <experimental/optional>
 #include <experimental/propagate_const>
 #include <memory>
+#include <numeric>
 
 #include "joiner_iterator.h"
 #include "sphinx_assert.h"

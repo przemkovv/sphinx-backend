@@ -1,0 +1,9 @@
+[
+{ include: ["@<spdlog/.*>", private, "<spdlog/spdlog.h>", public] },
+{ include: ["<bits/shared_ptr.h>", private, "<memory>", public ] },
+{ include: ["<bits/exception.h>", private, "<exception>", public ] },
+{ include: ["<bits/std_function.h>", private, "<functional>", public ] },
+{ ref: "/usr/share/include-what-you-use/boost-all.imp" },
+{ ref: "/usr/share/include-what-you-use/iwyu.gcc.imp" }
+]
+

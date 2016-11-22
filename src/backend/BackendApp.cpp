@@ -12,7 +12,6 @@
 
 #include "sphinx_assert.h"
 
-// using std::literals::operator""s;
 using namespace std::literals::string_literals;
 
 namespace Sphinx::Backend {
