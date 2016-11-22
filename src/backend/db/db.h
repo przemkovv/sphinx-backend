@@ -94,15 +94,7 @@ public:
   auto exec(const std::string &query, Args... param_args)
   {
     auto args = make_value_list(param_args...);
-    auto pq_args = make_pq_args(args);
-
-    logger_->info("Executing query: {}", query);
-
-    auto result = PQexecParams(conn_.get(), query.data(),
-                               static_cast<int>(pq_args.size()), nullptr,
-                               pq_args.data(), nullptr, nullptr, 0);
-
-    return make_result_safe(result);
+    return exec(query, args);
   }
 
   //----------------------------------------------------------------------
