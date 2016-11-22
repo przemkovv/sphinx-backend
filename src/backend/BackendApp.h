@@ -53,7 +53,10 @@ private:
 
   std::string get_users();
   std::string get_courses();
+  std::string get_modules();
   void create_user(const std::string &data);
+  void create_course(const std::string &data);
+  void create_module(const std::string &data);
 };
 
 } // namespace Sphinx::Backend

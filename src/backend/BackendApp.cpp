@@ -65,9 +65,43 @@ std::string BackendApp::get_courses()
 }
 
 //----------------------------------------------------------------------
+std::string BackendApp::get_modules()
+{
+  return to_json(db_.get_modules()).dump(dump_indent_);
+}
+
+//----------------------------------------------------------------------
 std::string BackendApp::get_users()
 {
   return to_json(db_.get_users()).dump(dump_indent_);
+}
+
+//----------------------------------------------------------------------
+void BackendApp::create_module(const std::string &data)
+{
+
+  auto json_data = nlohmann::json::parse(data);
+  logger()->debug("JSON: {} {}", data, json_data.dump(dump_indent_));
+
+  auto module = from_json<Model::Module>(json_data);
+
+  logger()->debug("Creating course {} {} {}", module.course_id,
+                  module.name, module.description.value_or("EMPTY"));
+  db_.create_module(module);
+}
+
+//----------------------------------------------------------------------
+void BackendApp::create_course(const std::string &data)
+{
+
+  auto json_data = nlohmann::json::parse(data);
+  logger()->debug("JSON: {} {}", data, json_data.dump(dump_indent_));
+
+  auto course = from_json<Model::Course>(json_data);
+
+  logger()->debug("Creating course {} {}", course.name,
+                  course.description.value_or("EMPTY"));
+  db_.create_course(course);
 }
 
 //----------------------------------------------------------------------
@@ -95,10 +129,22 @@ int BackendApp::run()
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
+      create_course(req.body);
     }
     return "nothing"s;
   });
 
+  add_route("/modules", "GET"_method,
+            "POST"_method)([&](const crow::request &req) {
+    if (req.method == "GET"_method) {
+      return get_modules();
+    }
+    else if (req.method == "POST"_method) {
+      logger()->debug("POST body {}", req.body);
+      create_module(req.body);
+    }
+    return "nothing"s;
+  });
   add_route("/users", "GET"_method,
             "POST"_method)([&](const crow::request &req) {
     if (req.method == "GET"_method) {

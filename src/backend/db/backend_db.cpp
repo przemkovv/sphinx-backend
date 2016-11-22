@@ -114,6 +114,22 @@ std::vector<Model::Module> BackendDb::get_modules()
 {
   return get_all<Model::Module>();
 }
+
+//----------------------------------------------------------------------
+void BackendDb::create_course(const Model::Course &course)
+{
+  auto last_id = insert(course);
+  logger_->debug("Created course with last id: {}", last_id);
+}
+
+//----------------------------------------------------------------------
+void BackendDb::create_module(const Model::Module &module)
+{
+  auto last_id = insert(module);
+  logger_->debug("Created module with last id: {}", last_id);
+}
+
+//----------------------------------------------------------------------
 void BackendDb::create_user(const Model::User &user)
 {
   auto last_id = insert(user);
