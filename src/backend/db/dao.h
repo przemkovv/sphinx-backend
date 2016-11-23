@@ -6,9 +6,13 @@
 #include "model.h"         // for Module, Course, User
 #include "model_utils.h"
 #include <algorithm> // for move
-#include <vector>    // for vector
+#include <experimental/optional>
+#include <vector> // for vector
 
 namespace Sphinx::Backend::Db {
+
+using std::experimental::optional;
+using std::experimental::nullopt;
 
 class DAO {
 public:
@@ -22,6 +26,21 @@ private:
   Sphinx::Db::DbConnection db_connection_;
 
 public:
+  template <typename T>
+  optional<T> find_by_column(typename T::Columns::id_column_t id)
+  {
+    not_implemented_yet<T>();
+  }
+  template <typename T>
+  optional<T> find_by_id(typename T::Columns::id_column_t id)
+  {
+    not_implemented_yet<T>();
+  }
+  template <typename T>
+  T get_by_id(typename T::Columns::id_column_t id)
+  {
+    not_implemented_yet<T>();
+  }
   std::vector<Model::User> get_users();
   std::vector<Model::Course> get_courses();
   std::vector<Model::Module> get_modules();

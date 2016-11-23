@@ -26,9 +26,10 @@ template <>
 inline nlohmann::json to_json(const Backend::Model::Course &course)
 {
   using Cols = Meta::Columns<Backend::Model::Course>;
-  return {{Cols::id_n, course.id},
-          {Cols::name_n, course.name},
-          {Cols::description_n, course.description.value_or(nullptr)}};
+  return {
+      {course.id.name, course.id.value},
+      {course.name.name, course.name.value},
+      {course.description.name, course.description.value.value_or(nullptr)}};
 }
 
 //----------------------------------------------------------------------
@@ -36,9 +37,9 @@ template <>
 inline nlohmann::json to_json(const Backend::Model::User &user)
 {
   using Cols = Meta::Columns<Backend::Model::User>;
-  return {{Cols::id_n, user.id},
-          {Cols::username_n, user.username},
-          {Cols::email_n, user.email}};
+  return {{user.id.name, user.id.value},
+          {user.username.name, user.username.value},
+          {user.email.name, user.email.value}};
 }
 
 //----------------------------------------------------------------------
@@ -46,10 +47,11 @@ template <>
 inline nlohmann::json to_json(const Backend::Model::Module &module)
 {
   using Cols = Meta::Columns<Backend::Model::Module>;
-  return {{Cols::id_n, module.id},
-          {Cols::course_id_n, module.course_id},
-          {Cols::name_n, module.name},
-          {Cols::description_n, module.description.value_or(nullptr)}};
+  return {
+      {module.id.name, module.id.value},
+      {module.course_id.name, module.course_id.value},
+      {module.name.name, module.name.value},
+      {module.description.name, module.description.value.value_or(nullptr)}};
 }
 
 //----------------------------------------------------------------------
@@ -60,17 +62,25 @@ E from_json(const nlohmann::json & /* json */)
 }
 
 //----------------------------------------------------------------------
+
+template <typename E, typename T, auto N>
+auto from_json(const nlohmann::json &data,
+               const Db::Meta::Column<E, T, N> &column)
+{
+  return data[column.name].template get<T>();
+}
+
 template <>
 inline Backend::Model::Course from_json(const nlohmann::json &data)
 {
   using Cols = Meta::Columns<Backend::Model::Course>;
   Backend::Model::Course entity;
-  entity.name = data[Cols::name_n].get<Cols::name_t>();
-  if (data[Cols::description_n].is_null()) {
-    entity.description = Db::nullopt;
+  entity.name.value = from_json(data, entity.name);
+  if (data[entity.description.name].is_null()) {
+    entity.description.value = Db::nullopt;
   }
   else {
-    entity.description = data[Cols::description_n].get<Cols::description_t>();
+    entity.description.value = from_json(data, entity.description);
   }
   return entity;
 }
@@ -79,14 +89,14 @@ inline Backend::Model::Module from_json(const nlohmann::json &data)
 {
   using Cols = Meta::Columns<Backend::Model::Module>;
   Backend::Model::Module entity;
-  entity.name = data[Cols::name_n].get<Cols::name_t>();
-  if (data[Cols::description_n].is_null()) {
-    entity.description = nullopt;
+  entity.name.value = from_json(data, entity.name);
+  if (data[entity.description.name].is_null()) {
+    entity.description.value = Db::nullopt;
   }
   else {
-    entity.description = data[Cols::description_n].get<Cols::description_t>();
+    entity.description.value = from_json(data, entity.description);
   }
-  entity.course_id = data[Cols::course_id_n];
+  entity.course_id.value = from_json(data, entity.course_id);
   return entity;
 }
 template <>
@@ -94,8 +104,8 @@ inline Backend::Model::User from_json(const nlohmann::json &data)
 {
   using Cols = Meta::Columns<Backend::Model::User>;
   Backend::Model::User entity;
-  entity.username = data[Cols::username_n].get<Cols::username_t>();
-  entity.email = data[Cols::email_n].get<Cols::email_t>();
+  entity.username.value = from_json(data, entity.username);
+  entity.email.value = from_json(data, entity.email);
   return entity;
 }
 

@@ -5,26 +5,48 @@
 #include <stdint.h>              // for int64_t
 #include <string>                // for string
 
+using Sphinx::Db::Meta::Column;
+
 namespace Sphinx::Backend::Model {
+
+struct Course_ {
+  static constexpr char id[] = "id";
+  static constexpr char name[] = "name";
+  static constexpr char description[] = "description";
+};
+
+//----------------------------------------------------------------------
+struct Module_ {
+  static constexpr char id[] = "id";
+  static constexpr char course_id[] = "course_id";
+  static constexpr char name[] = "name";
+  static constexpr char description[] = "description";
+};
+
+struct User_ {
+  static constexpr char id[] = "id";
+  static constexpr char username[] = "username";
+  static constexpr char email[] = "email";
+};
 
 //----------------------------------------------------------------------
 struct User : public Db::TableDescription<User> {
-  int64_t id;
-  std::string username;
-  std::string email;
+  Column<User, int64_t, User_::id> id;
+  Column<User, std::string, User_::username> username;
+  Column<User, std::string, User_::email> email;
 };
 
 struct Course : public Db::TableDescription<Course> {
-  int64_t id;
-  std::string name;
-  Db::optional<std::string> description;
+  Column<Course, int64_t, Course_::id> id;
+  Column<Course, std::string, Course_::name> name;
+  Column<Course, Db::optional<std::string>, Course_::description> description;
 };
 
 struct Module : public Db::TableDescription<Module> {
-  int64_t id;
-  int64_t course_id;
-  std::string name;
-  Db::optional<std::string> description;
+  Column<Module, int64_t, Module_::id> id;
+  Column<Module, int64_t, Module_::course_id> course_id;
+  Column<Module, std::string, Module_::name> name;
+  Column<Module, Db::optional<std::string>, Module_::description> description;
 };
 
 } // namespace Sphinx::Backend::Model
@@ -40,24 +62,10 @@ struct Table<Backend::Model::User> {
 template <>
 struct Columns<Backend::Model::User> {
   using User = Backend::Model::User;
-  using id_t = decltype(User::id);
-  using username_t = decltype(User::username);
-  using email_t = decltype(User::email);
 
-  static constexpr auto id_n = "id";
-  static constexpr auto username_n = "username";
-  static constexpr auto email_n = "email";
-
-  static constexpr auto insert_columns = {username_n, email_n};
-  static constexpr auto id_column = id_n;
-  using id_column_t = id_t;
-};
-
-template <>
-struct ColumnsId<Backend::Model::User> {
-  int id;
-  int username;
-  int email;
+  static constexpr auto insert_columns = {decltype(User::username)::name,
+                                          decltype(User::email)::name};
+  using id_column = decltype(User::id);
 };
 
 //----------------------------------------------------------------------
@@ -69,24 +77,10 @@ struct Table<Backend::Model::Course> {
 template <>
 struct Columns<Backend::Model::Course> {
   using Course = Backend::Model::Course;
-  using id_t = decltype(Course::id);
-  using name_t = decltype(Course::name);
-  using description_t = decltype(Course::description);
 
-  static constexpr auto id_n = "id";
-  static constexpr auto name_n = "name";
-  static constexpr auto description_n = "description";
-
-  static constexpr auto insert_columns = {name_n, description_n};
-  static constexpr auto id_column = id_n;
-  using id_column_t = id_t;
-};
-
-template <>
-struct ColumnsId<Backend::Model::Course> {
-  int id;
-  int name;
-  int description;
+  static constexpr auto insert_columns = {decltype(Course::name)::name,
+                                          decltype(Course::description)::name};
+  using id_column = decltype(Course::id);
 };
 
 //----------------------------------------------------------------------
@@ -98,21 +92,26 @@ struct Table<Backend::Model::Module> {
 template <>
 struct Columns<Backend::Model::Module> {
   using Module = Backend::Model::Module;
-  using id_t = decltype(Module::id);
-  using course_id_t = decltype(Module::course_id);
-  using name_t = decltype(Module::name);
-  using description_t = decltype(Module::description);
 
-  static constexpr auto id_n = "id";
-  static constexpr auto course_id_n = "course_id";
-  static constexpr auto name_n = "name";
-  static constexpr auto description_n = "description";
-
-  static constexpr auto insert_columns = {course_id_n, name_n, description_n};
-  static constexpr auto id_column = id_n;
-  using id_column_t = id_t;
+  static constexpr auto insert_columns = {decltype(Module::course_id)::name,
+                                          decltype(Module::name)::name,
+                                          decltype(Module::description)::name};
+  using id_column = decltype(Module::id);
 };
 
+//----------------------------------------------------------------------
+template <>
+struct ColumnsId<Backend::Model::User> {
+  int id;
+  int username;
+  int email;
+};
+template <>
+struct ColumnsId<Backend::Model::Course> {
+  int id;
+  int name;
+  int description;
+};
 template <>
 struct ColumnsId<Backend::Model::Module> {
   int id;

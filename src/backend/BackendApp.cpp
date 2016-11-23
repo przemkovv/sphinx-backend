@@ -6,7 +6,6 @@
 #include "utils.h"
 
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -76,43 +75,32 @@ std::string BackendApp::get_users()
 }
 
 //----------------------------------------------------------------------
-void BackendApp::create_module(const std::string &data)
+template <>
+void BackendApp::create_entity<Model::Module>(const nlohmann::json &data)
 {
-
-  auto json_data = nlohmann::json::parse(data);
-  logger()->debug("JSON: {} {}", data, json_data.dump(dump_indent_));
-
-  auto module = from_json<Model::Module>(json_data);
-
-  logger()->debug("Creating course {} {} {}", module.course_id,
-                  module.name, module.description.value_or("EMPTY"));
+  auto module = from_json<Model::Module>(data);
+  logger()->debug("Creating course {} {} {}", module.course_id.value,
+                  module.name.value,
+                  module.description.value.value_or("EMPTY"));
   dao_.create_module(module);
 }
 
 //----------------------------------------------------------------------
-void BackendApp::create_course(const std::string &data)
+template <>
+void BackendApp::create_entity<Model::Course>(const nlohmann::json &data)
 {
-
-  auto json_data = nlohmann::json::parse(data);
-  logger()->debug("JSON: {} {}", data, json_data.dump(dump_indent_));
-
-  auto course = from_json<Model::Course>(json_data);
-
-  logger()->debug("Creating course {} {}", course.name,
-                  course.description.value_or("EMPTY"));
+  auto course = from_json<Model::Course>(data);
+  logger()->debug("Creating course {} {}", course.name.value,
+                  course.description.value.value_or("EMPTY"));
   dao_.create_course(course);
 }
 
 //----------------------------------------------------------------------
-void BackendApp::create_user(const std::string &data)
+template <>
+void BackendApp::create_entity<Model::User>(const nlohmann::json &data)
 {
-
-  auto json_data = nlohmann::json::parse(data);
-  logger()->debug("JSON: {} {}", data, json_data.dump(dump_indent_));
-
-  auto user = from_json<Model::User>(json_data);
-
-  logger()->debug("Creating user {} {}", user.username, user.email);
+  auto user = from_json<Model::User>(data);
+  logger()->debug("Creating user {} {}", user.username.value, user.email.value);
   dao_.create_user(user);
 }
 
@@ -128,7 +116,7 @@ int BackendApp::run()
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
-      create_course(req.body);
+      create_entities<Model::Course>(req.body);
     }
     return "nothing"s;
   });
@@ -140,10 +128,11 @@ int BackendApp::run()
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
-      create_module(req.body);
+      create_entities<Model::Module>(req.body);
     }
     return "nothing"s;
   });
+
   add_route("/users", "GET"_method,
             "POST"_method)([&](const crow::request &req) {
     if (req.method == "GET"_method) {
@@ -151,7 +140,7 @@ int BackendApp::run()
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
-      create_user(req.body);
+      create_entities<Model::User>(req.body);
     }
     return "nothing"s;
   });

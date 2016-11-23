@@ -5,48 +5,52 @@ namespace Sphinx::Db {
 template <>
 QueryParams to_insert_params(const Backend::Model::User &data)
 {
-  return make_value_list(data.username, data.email);
+  return make_value_list(data.username.value, data.email.value);
 }
 
 //----------------------------------------------------------------------
 template <>
 QueryParams to_insert_params(const Backend::Model::Course &data)
 {
-  return make_value_list(data.name, data.description);
+  return make_value_list(data.name.value, data.description.value);
 }
 
 //----------------------------------------------------------------------
 template <>
 QueryParams to_insert_params(const Backend::Model::Module &data)
 {
-  return make_value_list(data.course_id, data.name, data.description);
+  return make_value_list(data.course_id.value, data.name.value,
+                         data.description.value);
 }
 
 template <>
 Db::Meta::ColumnsId<Backend::Model::Module> get_columns_id(PGresult *res)
 {
-  return {PQfnumber(res, Backend::Model::Module::Columns::id_n),
-          PQfnumber(res, Backend::Model::Module::Columns::course_id_n),
-          PQfnumber(res, Backend::Model::Module::Columns::name_n),
-          PQfnumber(res, Backend::Model::Module::Columns::description_n)};
+  using E = Backend::Model::Module;
+  return {PQfnumber(res, decltype(E::id)::name),
+          PQfnumber(res, decltype(E::course_id)::name),
+          PQfnumber(res, decltype(E::name)::name),
+          PQfnumber(res, decltype(E::description)::name)};
 }
 
 //----------------------------------------------------------------------
 template <>
 Db::Meta::ColumnsId<Backend::Model::Course> get_columns_id(PGresult *res)
 {
-  return {PQfnumber(res, Backend::Model::Course::Columns::id_n),
-          PQfnumber(res, Backend::Model::Course::Columns::name_n),
-          PQfnumber(res, Backend::Model::Course::Columns::description_n)};
+  using E = Backend::Model::Course;
+  return {PQfnumber(res, decltype(E::id)::name),
+          PQfnumber(res, decltype(E::name)::name),
+          PQfnumber(res, decltype(E::description)::name)};
 }
 
 //----------------------------------------------------------------------
 template <>
 Db::Meta::ColumnsId<Backend::Model::User> get_columns_id(PGresult *res)
 {
-  return {PQfnumber(res, Backend::Model::User::Columns::id_n),
-          PQfnumber(res, Backend::Model::User::Columns::username_n),
-          PQfnumber(res, Backend::Model::User::Columns::email_n)};
+  using E = Backend::Model::User;
+  return {PQfnumber(res, decltype(E::id)::name),
+          PQfnumber(res, decltype(E::username)::name),
+          PQfnumber(res, decltype(E::email)::name)};
 }
 
 //----------------------------------------------------------------------

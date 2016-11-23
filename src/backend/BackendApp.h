@@ -6,6 +6,7 @@
 #include "db.h"
 #include "db/dao.h"
 #include <crow.h>
+#include <nlohmann/json.hpp>
 
 #include <cstdint>
 #include <string>
@@ -56,6 +57,29 @@ private:
   void create_user(const std::string &data);
   void create_course(const std::string &data);
   void create_module(const std::string &data);
-};
 
+  template <typename T>
+  void create_entity(const nlohmann::json &entity_json)
+  {
+    static_assert(assert_false<T>::value, "Not implemented");
+  }
+  template <typename T>
+  void create_entities(const nlohmann::json &data)
+  {
+    if (data.is_array()) {
+      for (const auto &entity_json : data) {
+        create_entity<T>(entity_json);
+      }
+    }
+    else {
+      create_entity<T>(data);
+    }
+  }
+
+  template <typename T>
+  void create_entities(const std::string &data)
+  {
+    return create_entities<T>(nlohmann::json::parse(data));
+  }
+};
 } // namespace Sphinx::Backend

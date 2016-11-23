@@ -145,7 +145,7 @@ public:
                         });
 
     std::string table_name = T::Table::name;
-    std::string id_column = Meta::Columns<T>::id_column;
+    std::string id_column = Meta::Columns<T>::id_column::name;
     auto query = fmt::format("INSERT INTO {0} ({1}) VALUES ({2}) RETURNING {3}",
                              table_name, field_list, field_ids, id_column);
     return query;
@@ -162,8 +162,8 @@ public:
 
   //----------------------------------------------------------------------
   template <typename T>
-  typename T::Columns::id_column_t insert(const std::string &query,
-                                          const QueryParams &insert_params)
+  typename T::Columns::id_column::type insert(const std::string &query,
+                                              const QueryParams &insert_params)
   {
     auto res = exec(query, insert_params);
 
@@ -173,8 +173,8 @@ public:
     }
     if (status == PGRES_TUPLES_OK) {
 
-      using id_column_t = typename T::Columns::id_column_t;
-      auto id_column = T::Columns::id_column;
+      using id_column_t = typename T::Columns::id_column::type;
+      auto id_column = T::Columns::id_column::name;
 
       auto id_column_id = PQfnumber(res.get(), id_column);
       int row_count = PQntuples(res.get());
