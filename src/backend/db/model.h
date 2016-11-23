@@ -1,6 +1,6 @@
 #pragma once
 
-#include "model_utils.h"         // for Columns (ptr only), ColumnsId (ptr ...
+#include "model_meta.h"          // for Columns (ptr only), ColumnsId (ptr ...
 #include <experimental/optional> // for optional
 #include <stdint.h>              // for int64_t
 #include <string>                // for string

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "model_utils.h"
+#include "model_meta.h"
 #include "sphinx_assert.h"
 #include "utils.h"
 

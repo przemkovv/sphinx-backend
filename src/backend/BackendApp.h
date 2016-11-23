@@ -4,7 +4,7 @@
 #include "Application.h"
 
 #include "db.h"
-#include "db/backend_db.h"
+#include "db/dao.h"
 #include <crow.h>
 
 #include <cstdint>
@@ -28,8 +28,7 @@ public:
 protected:
   Sphinx::Db::connection_config prepare_db_config();
 
-  Sphinx::Db::connection_config db_config_;
-  Sphinx::Backend::Db::BackendDb db_;
+  Sphinx::Backend::Db::DAO dao_;
 
   crow::SimpleApp app_;
 

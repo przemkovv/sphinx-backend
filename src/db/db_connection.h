@@ -2,7 +2,8 @@
 
 #include "Logger.h"              // for Logger
 #include "db_utils.h"            // for make_value_list, QueryParams, get_c...
-#include "model_utils.h"         // for Columns
+#include "model_meta.h"          // for Columns
+#include "sphinx_assert.h"       // for SPHINX_ASSERT
 #include <algorithm>             // for move
 #include <cstddef>               // for size_t
 #include <exception>             // for exception

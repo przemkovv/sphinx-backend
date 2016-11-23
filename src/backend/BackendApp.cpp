@@ -23,8 +23,7 @@ using Sphinx::Db::Json::from_json;
 BackendApp::BackendApp(const std::string &application_name,
                        const std::vector<std::string> &args)
   : Application(application_name, args),
-    db_config_(prepare_db_config()),
-    db_(db_config_),
+    dao_(prepare_db_config()),
     REST_API_PORT(config_get<std::uint16_t>(REST_API_PORT_PATH)),
     REST_API_VERSION("/"s + config_get<std::string>(REST_API_VERSION_PATH)),
     dump_indent_(config_get<int>(DUMP_LEVEL_PATH))
@@ -61,19 +60,19 @@ Sphinx::Db::connection_config BackendApp::prepare_db_config()
 //----------------------------------------------------------------------
 std::string BackendApp::get_courses()
 {
-  return to_json(db_.get_courses()).dump(dump_indent_);
+  return to_json(dao_.get_courses()).dump(dump_indent_);
 }
 
 //----------------------------------------------------------------------
 std::string BackendApp::get_modules()
 {
-  return to_json(db_.get_modules()).dump(dump_indent_);
+  return to_json(dao_.get_modules()).dump(dump_indent_);
 }
 
 //----------------------------------------------------------------------
 std::string BackendApp::get_users()
 {
-  return to_json(db_.get_users()).dump(dump_indent_);
+  return to_json(dao_.get_users()).dump(dump_indent_);
 }
 
 //----------------------------------------------------------------------
@@ -87,7 +86,7 @@ void BackendApp::create_module(const std::string &data)
 
   logger()->debug("Creating course {} {} {}", module.course_id,
                   module.name, module.description.value_or("EMPTY"));
-  db_.create_module(module);
+  dao_.create_module(module);
 }
 
 //----------------------------------------------------------------------
@@ -101,7 +100,7 @@ void BackendApp::create_course(const std::string &data)
 
   logger()->debug("Creating course {} {}", course.name,
                   course.description.value_or("EMPTY"));
-  db_.create_course(course);
+  dao_.create_course(course);
 }
 
 //----------------------------------------------------------------------
@@ -114,7 +113,7 @@ void BackendApp::create_user(const std::string &data)
   auto user = from_json<Model::User>(json_data);
 
   logger()->debug("Creating user {} {}", user.username, user.email);
-  db_.create_user(user);
+  dao_.create_user(user);
 }
 
 //----------------------------------------------------------------------

@@ -1,6 +1,4 @@
-
-#include "backend_db.h"
-#include "db_utils.h"
+#include "model_utils.h"
 
 namespace Sphinx::Db {
 
@@ -94,46 +92,3 @@ Backend::Model::User get_row<Backend::Model::User>(
 }
 
 } // namespace Sphinx::Db
-
-//----------------------------------------------------------------------
-namespace Sphinx::Backend::Db {
-
-std::vector<Model::User> BackendDb::get_users()
-{
-  return get_all<Model::User>();
-}
-
-//----------------------------------------------------------------------
-std::vector<Model::Course> BackendDb::get_courses()
-{
-  return get_all<Model::Course>();
-}
-
-//----------------------------------------------------------------------
-std::vector<Model::Module> BackendDb::get_modules()
-{
-  return get_all<Model::Module>();
-}
-
-//----------------------------------------------------------------------
-void BackendDb::create_course(const Model::Course &course)
-{
-  auto last_id = insert(course);
-  logger_->debug("Created course with last id: {}", last_id);
-}
-
-//----------------------------------------------------------------------
-void BackendDb::create_module(const Model::Module &module)
-{
-  auto last_id = insert(module);
-  logger_->debug("Created module with last id: {}", last_id);
-}
-
-//----------------------------------------------------------------------
-void BackendDb::create_user(const Model::User &user)
-{
-  auto last_id = insert(user);
-  logger_->debug("Created user with last id: {}", last_id);
-}
-
-} // namespace Sphinx::Backend::Db
