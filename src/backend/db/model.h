@@ -1,52 +1,56 @@
 #pragma once
 
-#include "model_meta.h"          // for Columns (ptr only), ColumnsId (ptr ...
-#include <experimental/optional> // for optional
-#include <stdint.h>              // for int64_t
-#include <string>                // for string
+#include "model_meta.h"  // for ColumnsId (ptr only), Insert (ptr only), Column
 
-using Sphinx::Db::Meta::Column;
+using Sphinx::Db::Column;
 
 namespace Sphinx::Backend::Model {
 
-struct Course_ {
-  static constexpr char id[] = "id";
-  static constexpr char name[] = "name";
-  static constexpr char description[] = "description";
-};
-
 //----------------------------------------------------------------------
-struct Module_ {
-  static constexpr char id[] = "id";
-  static constexpr char course_id[] = "course_id";
-  static constexpr char name[] = "name";
-  static constexpr char description[] = "description";
-};
+struct User {
+private:
+  struct User_ {
+    static constexpr char id[] = "id";
+    static constexpr char username[] = "username";
+    static constexpr char email[] = "email";
+  };
 
-struct User_ {
-  static constexpr char id[] = "id";
-  static constexpr char username[] = "username";
-  static constexpr char email[] = "email";
-};
-
-//----------------------------------------------------------------------
-struct User : public Db::TableDescription<User> {
-  Column<User, int64_t, User_::id> id;
+public:
+  Column<User, std::int64_t, User_::id> id;
   Column<User, std::string, User_::username> username;
   Column<User, std::string, User_::email> email;
 };
 
-struct Course : public Db::TableDescription<Course> {
-  Column<Course, int64_t, Course_::id> id;
+//----------------------------------------------------------------------
+struct Course {
+private:
+  struct Course_ {
+    static constexpr char id[] = "id";
+    static constexpr char name[] = "name";
+    static constexpr char description[] = "description";
+  };
+
+public:
+  Column<Course, std::int64_t, Course_::id> id;
   Column<Course, std::string, Course_::name> name;
-  Column<Course, Db::optional<std::string>, Course_::description> description;
+  Column<Course, std::string, Course_::description, true> description;
 };
 
-struct Module : public Db::TableDescription<Module> {
-  Column<Module, int64_t, Module_::id> id;
-  Column<Module, int64_t, Module_::course_id> course_id;
+//----------------------------------------------------------------------
+struct Module {
+private:
+  struct Module_ {
+    static constexpr char id[] = "id";
+    static constexpr char course_id[] = "course_id";
+    static constexpr char name[] = "name";
+    static constexpr char description[] = "description";
+  };
+
+public:
+  Column<Module, std::int64_t, Module_::id> id;
+  Column<Module, std::int64_t, Module_::course_id> course_id;
   Column<Module, std::string, Module_::name> name;
-  Column<Module, Db::optional<std::string>, Module_::description> description;
+  Column<Module, std::string, Module_::description, true> description;
 };
 
 } // namespace Sphinx::Backend::Model
@@ -54,13 +58,12 @@ struct Module : public Db::TableDescription<Module> {
 namespace Sphinx::Db::Meta {
 
 //----------------------------------------------------------------------
-template <>
-struct Table<Backend::Model::User> {
-  static constexpr auto name = "users";
-};
 
 template <>
-struct Columns<Backend::Model::User> {
+constexpr auto TableName<Backend::Model::User> = "users";
+
+template <>
+struct Insert<Backend::Model::User> {
   using User = Backend::Model::User;
 
   static constexpr auto insert_columns = {decltype(User::username)::name,
@@ -70,12 +73,10 @@ struct Columns<Backend::Model::User> {
 
 //----------------------------------------------------------------------
 template <>
-struct Table<Backend::Model::Course> {
-  static constexpr auto name = "courses";
-};
+constexpr auto TableName<Backend::Model::Course> = "courses";
 
 template <>
-struct Columns<Backend::Model::Course> {
+struct Insert<Backend::Model::Course> {
   using Course = Backend::Model::Course;
 
   static constexpr auto insert_columns = {decltype(Course::name)::name,
@@ -85,12 +86,10 @@ struct Columns<Backend::Model::Course> {
 
 //----------------------------------------------------------------------
 template <>
-struct Table<Backend::Model::Module> {
-  static constexpr auto name = "modules";
-};
+constexpr auto TableName<Backend::Model::Module> = "modules";
 
 template <>
-struct Columns<Backend::Model::Module> {
+struct Insert<Backend::Model::Module> {
   using Module = Backend::Model::Module;
 
   static constexpr auto insert_columns = {decltype(Module::course_id)::name,
@@ -100,6 +99,7 @@ struct Columns<Backend::Model::Module> {
 };
 
 //----------------------------------------------------------------------
+
 template <>
 struct ColumnsId<Backend::Model::User> {
   int id;

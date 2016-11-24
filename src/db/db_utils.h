@@ -39,13 +39,12 @@ template <typename T>
 auto get_field_c(PGresult *res, int row_id, int col_id)
 {
   if
-    constexpr(Utils::is_optional<T>::value)
+    constexpr(T::is_optional)
     {
-      return get_field_optional<typename Utils::remove_optional<T>::type>(
-          res, row_id, col_id);
+      return get_field_optional<typename T::type>(res, row_id, col_id);
     }
   else {
-    return get_field<T>(res, row_id, col_id);
+    return get_field<typename T::type>(res, row_id, col_id);
   }
 }
 
@@ -53,7 +52,7 @@ auto get_field_c(PGresult *res, int row_id, int col_id)
 template <typename T>
 void load_field_from_res(T &field, PGresult *res, int row_id, int col_id)
 {
-  field.value = get_field_c<typename T::type>(res, row_id, col_id);
+  field.value = get_field_c<T>(res, row_id, col_id);
 }
 
 //----------------------------------------------------------------------

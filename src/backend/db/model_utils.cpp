@@ -24,7 +24,7 @@ QueryParams to_insert_params(const Backend::Model::Module &data)
 }
 
 template <>
-Db::Meta::ColumnsId<Backend::Model::Module> get_columns_id(PGresult *res)
+Meta::ColumnsId<Backend::Model::Module> get_columns_id(PGresult *res)
 {
   using E = Backend::Model::Module;
   return {PQfnumber(res, decltype(E::id)::name),
@@ -35,7 +35,7 @@ Db::Meta::ColumnsId<Backend::Model::Module> get_columns_id(PGresult *res)
 
 //----------------------------------------------------------------------
 template <>
-Db::Meta::ColumnsId<Backend::Model::Course> get_columns_id(PGresult *res)
+Meta::ColumnsId<Backend::Model::Course> get_columns_id(PGresult *res)
 {
   using E = Backend::Model::Course;
   return {PQfnumber(res, decltype(E::id)::name),
@@ -45,7 +45,7 @@ Db::Meta::ColumnsId<Backend::Model::Course> get_columns_id(PGresult *res)
 
 //----------------------------------------------------------------------
 template <>
-Db::Meta::ColumnsId<Backend::Model::User> get_columns_id(PGresult *res)
+Meta::ColumnsId<Backend::Model::User> get_columns_id(PGresult *res)
 {
   using E = Backend::Model::User;
   return {PQfnumber(res, decltype(E::id)::name),
@@ -57,7 +57,7 @@ Db::Meta::ColumnsId<Backend::Model::User> get_columns_id(PGresult *res)
 template <>
 Backend::Model::Course get_row<Backend::Model::Course>(
     PGresult *res,
-    const Db::Meta::ColumnsId<Backend::Model::Course> &cols_id,
+    const Meta::ColumnsId<Backend::Model::Course> &cols_id,
     int row_id)
 {
   Backend::Model::Course course;
@@ -71,7 +71,7 @@ Backend::Model::Course get_row<Backend::Model::Course>(
 template <>
 Backend::Model::Module get_row<Backend::Model::Module>(
     PGresult *res,
-    const Db::Meta::ColumnsId<Backend::Model::Module> &cols_id,
+    const Meta::ColumnsId<Backend::Model::Module> &cols_id,
     int row_id)
 {
   Backend::Model::Module module;
@@ -85,7 +85,7 @@ Backend::Model::Module get_row<Backend::Model::Module>(
 template <>
 Backend::Model::User get_row<Backend::Model::User>(
     PGresult *res,
-    const Db::Meta::ColumnsId<Backend::Model::User> &cols_id,
+    const Meta::ColumnsId<Backend::Model::User> &cols_id,
     int row_id)
 {
   Backend::Model::User user;

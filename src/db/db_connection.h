@@ -122,7 +122,7 @@ public:
   std::vector<T> get_all()
   {
     auto result =
-        exec(fmt::format("SELECT * FROM {0}", std::string{T::Table::name}));
+        exec(fmt::format("SELECT * FROM {0}", std::string{Meta::TableName<T>}));
     return get_rows<T>(std::move(result));
   }
 
@@ -130,7 +130,7 @@ public:
   template <typename T>
   std::string prepare_insert_query()
   {
-    auto &insert_columns = Meta::Columns<T>::insert_columns;
+    auto &insert_columns = Meta::InsertColumns<T>;
 
     std::string field_list =
         std::accumulate(std::next(insert_columns.begin()), insert_columns.end(),
@@ -144,8 +144,8 @@ public:
                           return a + ", " + fmt::format("${}", ++n);
                         });
 
-    std::string table_name = T::Table::name;
-    std::string id_column = Meta::Columns<T>::id_column::name;
+    std::string table_name = Meta::TableName<T>;
+    std::string id_column = Meta::IdColumn<T>::name;
     auto query = fmt::format("INSERT INTO {0} ({1}) VALUES ({2}) RETURNING {3}",
                              table_name, field_list, field_ids, id_column);
     return query;
@@ -162,8 +162,8 @@ public:
 
   //----------------------------------------------------------------------
   template <typename T>
-  typename T::Columns::id_column::type insert(const std::string &query,
-                                              const QueryParams &insert_params)
+  typename Meta::IdColumn<T>::type insert(const std::string &query,
+                                          const QueryParams &insert_params)
   {
     auto res = exec(query, insert_params);
 
@@ -173,8 +173,8 @@ public:
     }
     if (status == PGRES_TUPLES_OK) {
 
-      using id_column_t = typename T::Columns::id_column::type;
-      auto id_column = T::Columns::id_column::name;
+      using id_column_t = typename Meta::IdColumn<T>::type;
+      auto id_column = Meta::IdColumn<T>::name;
 
       auto id_column_id = PQfnumber(res.get(), id_column);
       int row_count = PQntuples(res.get());

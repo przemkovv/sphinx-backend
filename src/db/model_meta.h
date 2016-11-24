@@ -1,35 +1,12 @@
 
 #pragma once
 #include <experimental/optional>
+#include <type_traits>
 
 namespace Sphinx::Db::Meta {
 
-template <typename Entity, typename Type, auto Name>
-struct Column {
-  using entity = Entity;
-  using type = Type;
-  static constexpr auto name = Name;
-
-  Type value;
-};
-
-template <typename Column>
-struct type {
-  using value = typename Column::type;
-};
-
-template <typename Column>
-struct name {
-  static constexpr auto value = Column::name;
-  name(const Column& c){}
-};
-// template <typename Column>
-// constexpr auto name(const Column &[> c <]) {
-  // return Column::name;
-// }
-
 template <typename T>
-struct Columns {
+struct Insert {
 };
 
 template <typename T>
@@ -40,6 +17,16 @@ template <typename T>
 struct Table {
 };
 
+template <typename T>
+constexpr auto TableName = Table<T>::name;
+
+template <typename T>
+constexpr auto InsertColumns = Insert<T>::insert_columns;
+
+template <typename T>
+using IdColumn = typename Insert<T>::id_column;
+
+
 } // namespace Sphinx::Db::Meta
 
 //----------------------------------------------------------------------
@@ -48,11 +35,14 @@ namespace Sphinx::Db {
 using std::experimental::optional;
 using std::experimental::nullopt;
 
-template <typename T>
-struct TableDescription {
-  using Columns = Meta::Columns<T>;
-  using ColumnsId = Meta::ColumnsId<T>;
-  using Table = Meta::Table<T>;
+template <typename Entity, typename Type, auto Name, bool Optional = false>
+struct Column {
+  using entity = Entity;
+  using type = Type;
+  static constexpr auto is_optional = Optional;
+  static constexpr auto name = Name;
+
+  std::conditional_t<is_optional, Db::optional<type>, type> value;
 };
 
 } // namespace Sphinx::Db
