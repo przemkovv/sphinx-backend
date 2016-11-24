@@ -3,27 +3,6 @@
 namespace Sphinx::Db {
 
 template <>
-QueryParams to_insert_params(const Backend::Model::User &data)
-{
-  return make_value_list(data.username.value, data.email.value);
-}
-
-//----------------------------------------------------------------------
-template <>
-QueryParams to_insert_params(const Backend::Model::Course &data)
-{
-  return make_value_list(data.name.value, data.description.value);
-}
-
-//----------------------------------------------------------------------
-template <>
-QueryParams to_insert_params(const Backend::Model::Module &data)
-{
-  return make_value_list(data.course_id.value, data.name.value,
-                         data.description.value);
-}
-
-template <>
 Meta::ColumnsId<Backend::Model::Module> get_columns_id(PGresult *res)
 {
   using E = Backend::Model::Module;

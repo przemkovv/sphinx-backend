@@ -4,14 +4,16 @@
 #include "sphinx_assert.h"
 #include "utils.h"
 
+#include <experimental/tuple>
 #include <fmt/format.h>
+#include <tuple>
 
 #include <libpq-fe.h>
 
 namespace Sphinx::Db {
 
 using std::experimental::optional;
-using QueryParams = std::vector<optional<std::string>>;
+using ValueList = std::vector<optional<std::string>>;
 
 //----------------------------------------------------------------------
 template <typename T>
@@ -108,17 +110,16 @@ T get_row(PGresult * /* res */,
 }
 
 //----------------------------------------------------------------------
-template <typename T>
-QueryParams to_insert_params(const T &data)
-{
-  static_assert(assert_false<T>::value, "Not implemented");
-}
-
-//----------------------------------------------------------------------
 template <typename... Args>
-std::vector<optional<std::string>> make_value_list(Args... args)
+ValueList make_value_list(Args... args)
 {
   return {to_optional_string(args)...};
+}
+//----------------------------------------------------------------------
+template <typename... Args>
+ValueList make_value_list_from_tuple(const std::tuple<Args...> &&args)
+{
+  return std::apply(make_value_list<Args...>, args);
 }
 
 } // namespace Sphinx::Db

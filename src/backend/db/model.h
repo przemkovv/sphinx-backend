@@ -1,6 +1,7 @@
 #pragma once
 
-#include "model_meta.h"  // for ColumnsId (ptr only), Insert (ptr only), Column
+#include "model_meta.h" // for ColumnsId (ptr only), Insert (ptr only), Column
+#include <tuple>
 
 using Sphinx::Db::Column;
 
@@ -68,6 +69,10 @@ struct Insert<Backend::Model::User> {
 
   static constexpr auto insert_columns = {decltype(User::username)::name,
                                           decltype(User::email)::name};
+  static auto insert_values(const User &data)
+  {
+    return std::make_tuple(data.username.value, data.email.value);
+  }
   using id_column = decltype(User::id);
 };
 
@@ -81,6 +86,10 @@ struct Insert<Backend::Model::Course> {
 
   static constexpr auto insert_columns = {decltype(Course::name)::name,
                                           decltype(Course::description)::name};
+  static auto insert_values(const Course &data)
+  {
+    return std::make_tuple(data.name.value, data.description.value);
+  }
   using id_column = decltype(Course::id);
 };
 
@@ -95,6 +104,11 @@ struct Insert<Backend::Model::Module> {
   static constexpr auto insert_columns = {decltype(Module::course_id)::name,
                                           decltype(Module::name)::name,
                                           decltype(Module::description)::name};
+  static auto insert_values(const Module &data)
+  {
+    return std::make_tuple(data.course_id.value, data.name.value,
+                           data.description.value);
+  }
   using id_column = decltype(Module::id);
 };
 

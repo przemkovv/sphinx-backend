@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Logger.h"              // for Logger
-#include "db_utils.h"            // for make_value_list, QueryParams, get_c...
+#include "db_utils.h"            // for make_value_list, ValueList, get_c...
 #include "model_meta.h"          // for Columns
 #include "sphinx_assert.h"       // for SPHINX_ASSERT
 #include <algorithm>             // for move
@@ -156,14 +156,15 @@ public:
   auto insert(const T &data)
   {
     auto query = prepare_insert_query<T>();
-    auto insert_params = to_insert_params(data);
+    auto insert_params =
+        make_value_list_from_tuple(Meta::Insert<T>::insert_values(data));
     return insert<T>(query, insert_params);
   }
 
   //----------------------------------------------------------------------
   template <typename T>
   typename Meta::IdColumn<T>::type insert(const std::string &query,
-                                          const QueryParams &insert_params)
+                                          const ValueList &insert_params)
   {
     auto res = exec(query, insert_params);
 

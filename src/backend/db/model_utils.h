@@ -6,17 +6,6 @@
 namespace Sphinx::Db {
 
 template <>
-QueryParams to_insert_params(const Backend::Model::User &data);
-
-//----------------------------------------------------------------------
-template <>
-QueryParams to_insert_params(const Backend::Model::Course &data);
-
-//----------------------------------------------------------------------
-template <>
-QueryParams to_insert_params(const Backend::Model::Module &data);
-
-template <>
 Meta::ColumnsId<Backend::Model::Module> get_columns_id(PGresult *res);
 
 //----------------------------------------------------------------------
