@@ -64,6 +64,8 @@ T convert_to(const char * /* data */)
   static_assert(assert_false<T>::value, "Not implemented");
 }
 template <>
+bool convert_to(const char *data);
+template <>
 int64_t convert_to(const char *data);
 template <>
 std::string convert_to(const char *data);

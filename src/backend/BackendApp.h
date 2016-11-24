@@ -5,6 +5,7 @@
 
 #include "db.h"
 #include "db/dao.h"
+#include "model_meta.h"
 #include <crow.h>
 #include <nlohmann/json.hpp>
 
@@ -50,11 +51,32 @@ private:
                     ((" "s + crow::method_name(methods)) + ...));
     return app_.route_dynamic(REST_API_VERSION + path).methods(methods...);
   }
+  void add_users_routes();
+  void add_courses_routes();
+  void add_modules_routes();
+  void add_test_routes();
 
   std::string get_users();
   std::string get_courses();
   std::string get_modules();
 
+  template <typename T>
+  bool is_entity_exists(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id)
+  {
+    return dao_.exists<T>(entity_id);
+  }
+  template <typename T>
+  T get_entity(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id)
+  {
+    auto entity = dao_.get_by_id<T>(entity_id);
+    return entity;
+  }
+  template <typename T>
+  T update_entity(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id,
+                  const nlohmann::json &entity_json)
+  {
+    NOT_IMPLEMENTED_YET();
+  }
   template <typename T>
   void create_entity(const nlohmann::json &entity_json)
   {

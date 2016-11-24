@@ -4,6 +4,13 @@
 namespace Sphinx::Db {
 //----------------------------------------------------------------------
 template <>
+bool convert_to(const char *data)
+{
+  return data[0] == 't' || data[0] == '1';
+}
+
+//----------------------------------------------------------------------
+template <>
 int64_t convert_to(const char *data)
 {
   return std::stoll(data);

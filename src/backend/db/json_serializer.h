@@ -12,8 +12,15 @@
 namespace Sphinx::Db::Json {
 
 //----------------------------------------------------------------------
-template <typename C>
-nlohmann::json to_json(const C &c)
+template <typename T>
+nlohmann::json to_json(const T &value)
+{
+  return {value};
+}
+
+//----------------------------------------------------------------------
+template <template <typename, typename> typename C, typename E, typename A>
+nlohmann::json to_json(C<E,A> &&c)
 {
   nlohmann::json json;
   std::transform(c.begin(), c.end(), std::back_inserter(json),

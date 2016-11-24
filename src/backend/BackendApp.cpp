@@ -9,6 +9,9 @@
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+
 #include "sphinx_assert.h"
 
 using namespace std::literals::string_literals;
@@ -17,6 +20,7 @@ namespace Sphinx::Backend {
 
 using Sphinx::Db::Json::to_json;
 using Sphinx::Db::Json::from_json;
+using Sphinx::Db::Meta::IdColumn;
 
 //----------------------------------------------------------------------
 BackendApp::BackendApp(const std::string &application_name,
@@ -105,34 +109,8 @@ void BackendApp::create_entity<Model::User>(const nlohmann::json &data)
 }
 
 //----------------------------------------------------------------------
-int BackendApp::run()
+void BackendApp::add_users_routes()
 {
-  logger()->debug("Configuration file: {}", config().dump(dump_indent_));
-
-  add_route("/courses", "GET"_method,
-            "POST"_method)([&](const crow::request &req) {
-    if (req.method == "GET"_method) {
-      return get_courses();
-    }
-    else if (req.method == "POST"_method) {
-      logger()->debug("POST body {}", req.body);
-      create_entities<Model::Course>(req.body);
-    }
-    return "nothing"s;
-  });
-
-  add_route("/modules", "GET"_method,
-            "POST"_method)([&](const crow::request &req) {
-    if (req.method == "GET"_method) {
-      return get_modules();
-    }
-    else if (req.method == "POST"_method) {
-      logger()->debug("POST body {}", req.body);
-      create_entities<Model::Module>(req.body);
-    }
-    return "nothing"s;
-  });
-
   add_route("/users", "GET"_method,
             "POST"_method)([&](const crow::request &req) {
     if (req.method == "GET"_method) {
@@ -144,6 +122,96 @@ int BackendApp::run()
     }
     return "nothing"s;
   });
+
+  add_route("/users/<uint>/exists", "GET"_method,
+            "PUT"_method)([&](const crow::request &req, std::uint64_t user_id) {
+    if (req.method == "GET"_method) {
+      auto entity = is_entity_exists<Model::User>(user_id);
+      return to_json(entity).dump(dump_indent_);
+    }
+    return "nothing"s;
+  });
+
+  add_route("/users/<uint>", "GET"_method,
+            "PUT"_method)([&](const crow::request &req, std::uint64_t user_id) {
+    if (req.method == "GET"_method) {
+      auto entity = get_entity<Model::User>(user_id);
+      return to_json(entity).dump(dump_indent_);
+    }
+    else if (req.method == "PUT"_method) {
+      logger()->debug("PUT body {}", req.body);
+      auto entity = update_entity<Model::User>(user_id, req.body);
+      return to_json(entity).dump(dump_indent_);
+    }
+    return "nothing"s;
+  });
+}
+
+//----------------------------------------------------------------------
+void BackendApp::add_courses_routes()
+{
+  add_route("/courses", "GET"_method,
+            "POST"_method)([&](const crow::request &req) {
+    if (req.method == "GET"_method) {
+      return get_courses();
+    }
+    else if (req.method == "POST"_method) {
+      logger()->debug("POST body {}", req.body);
+      create_entities<Model::Course>(req.body);
+    }
+    return "nothing"s;
+  });
+}
+
+//----------------------------------------------------------------------
+void BackendApp::add_modules_routes()
+{
+  add_route("/modules", "GET"_method,
+            "POST"_method)([&](const crow::request &req) {
+    if (req.method == "GET"_method) {
+      return get_modules();
+    }
+    else if (req.method == "POST"_method) {
+      logger()->debug("POST body {}", req.body);
+      create_entities<Model::Module>(req.body);
+    }
+    return "nothing"s;
+  });
+}
+
+//----------------------------------------------------------------------
+void BackendApp::add_test_routes()
+{
+  add_route("/test", "GET"_method,
+            "POST"_method)([&](const crow::request &req) {
+    if (req.method == "GET"_method) {
+      logger()->debug("GET body {}", req.body);
+      logger()->debug("Query string: {}", req.url_params);
+      logger()->debug("Query Id: {}", req.url_params.get("id"));
+      fmt::MemoryWriter w;
+      for (const auto &header : req.headers) {
+        w.write("{{{}: {}}}, ", header.first, header.second);
+      }
+      logger()->debug("Headers: {}", w.str());
+      return "GET"s;
+    }
+    else if (req.method == "POST"_method) {
+      logger()->debug("POST body {}", req.body);
+      return "POST"s;
+    }
+    return "nothing"s;
+  });
+}
+
+//----------------------------------------------------------------------
+int BackendApp::run()
+{
+  logger()->debug("Configuration file: {}", config().dump(dump_indent_));
+
+  add_users_routes();
+  add_courses_routes();
+  add_modules_routes();
+  add_test_routes();
 
   app_.port(REST_API_PORT).run();
 

@@ -29,17 +29,22 @@ public:
   template <typename T>
   optional<T> find_by_column(typename T::Columns::id_column_t id)
   {
-    not_implemented_yet<T>();
+    static_not_implemented_yet<T>();
   }
   template <typename T>
   optional<T> find_by_id(typename T::Columns::id_column_t id)
   {
-    not_implemented_yet<T>();
+    return db_connection_.find_by_id<T>(id);
   }
   template <typename T>
-  T get_by_id(typename T::Columns::id_column_t id)
+  bool exists(typename Sphinx::Db::Meta::IdColumn<T>::type id)
   {
-    not_implemented_yet<T>();
+    return db_connection_.exists<T>(id);
+  }
+  template <typename T>
+  T get_by_id(typename Sphinx::Db::Meta::IdColumn<T>::type id)
+  {
+    return db_connection_.get_by_id<T>(id);
   }
   std::vector<Model::User> get_users();
   std::vector<Model::Course> get_courses();

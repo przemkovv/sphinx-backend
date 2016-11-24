@@ -125,7 +125,50 @@ public:
         exec(fmt::format("SELECT * FROM {0}", std::string{Meta::TableName<T>}));
     return get_rows<T>(std::move(result));
   }
+  //----------------------------------------------------------------------
+  template <typename T>
+  Db::optional<T> find_by_id(typename Meta::IdColumn<T>::type id)
+  {
+    auto result =
+        exec(fmt::format("SELECT * FROM {table_name} WHERE {column} = {value}",
+                         "table_name"_a = Meta::TableName<T>,
+                         "column"_a = Meta::IdColumn<T>::name, "value"_a = id));
+    return get_row<T>(std::move(result));
+  }
+  //----------------------------------------------------------------------
+  template <typename T>
+  T get_by_id(typename Meta::IdColumn<T>::type id)
+  {
+    return find_by_id<T>(id).value();
+  }
+  //----------------------------------------------------------------------
+  template <typename T>
+  bool exists(typename Meta::IdColumn<T>::type id)
+  {
+    auto result = exec(fmt::format(
+        "SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {column} = {value})",
+        "table_name"_a = Meta::TableName<T>,
+        "column"_a = Meta::IdColumn<T>::name, "value"_a = id));
 
+    return get_scalar<bool>(std::move(result));
+  }
+  //----------------------------------------------------------------------
+  template <typename T, typename Res>
+  T get_scalar(Res &&res)
+  {
+    int status = PQresultStatus(res.get());
+
+    if (status == PGRES_TUPLES_OK) {
+      int row_count = PQntuples(res.get());
+      SPHINX_ASSERT(row_count == 1, "Number of rows have to be 1 (is {})",
+                    row_count);
+
+      return get_field<bool>(res.get(), 0, 0);
+    }
+
+    logger_->error(PQerrorMessage(conn_.get()));
+    throw std::runtime_error(PQerrorMessage(conn_.get()));
+  }
   //----------------------------------------------------------------------
   template <typename T>
   std::string prepare_insert_query()
@@ -191,6 +234,30 @@ public:
 
   //----------------------------------------------------------------------
   template <typename T, typename Res>
+  Db::optional<T> get_row(Res &&res)
+  {
+    int status = PQresultStatus(res.get());
+
+    if (status == PGRES_TUPLES_OK) {
+
+      const auto cols = get_columns_id<T>(res.get());
+      int row_count = PQntuples(res.get());
+      if (row_count == 0) {
+        return {};
+      }
+      SPHINX_ASSERT(row_count == 1,
+                    "Returned none or more than one record ({} records)",
+                    row_count);
+
+      return {Db::get_row<T>(res.get(), cols, 0)};
+    }
+
+    logger_->error(PQerrorMessage(conn_.get()));
+    throw std::runtime_error(PQerrorMessage(conn_.get()));
+  }
+
+  //----------------------------------------------------------------------
+  template <typename T, typename Res>
   std::vector<T> get_rows(Res &&res)
   {
     int status = PQresultStatus(res.get());
@@ -207,7 +274,7 @@ public:
       rows.reserve(static_cast<std::size_t>(row_count));
 
       for (int r = 0; r < row_count; r++) {
-        rows.push_back(get_row<T>(res.get(), cols, r));
+        rows.push_back(Db::get_row<T>(res.get(), cols, r));
       }
       return rows;
     }
