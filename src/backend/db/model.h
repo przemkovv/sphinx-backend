@@ -67,9 +67,9 @@ template <>
 struct Insert<Backend::Model::User> {
   using User = Backend::Model::User;
 
-  static constexpr auto insert_columns = {decltype(User::username)::name,
-                                          decltype(User::email)::name};
-  static auto insert_values(const User &data)
+  static constexpr auto columns = {decltype(User::username)::name,
+                                   decltype(User::email)::name};
+  static auto values(const User &data)
   {
     return std::make_tuple(data.username.value, data.email.value);
   }
@@ -84,9 +84,9 @@ template <>
 struct Insert<Backend::Model::Course> {
   using Course = Backend::Model::Course;
 
-  static constexpr auto insert_columns = {decltype(Course::name)::name,
-                                          decltype(Course::description)::name};
-  static auto insert_values(const Course &data)
+  static constexpr auto columns = {decltype(Course::name)::name,
+                                   decltype(Course::description)::name};
+  static auto values(const Course &data)
   {
     return std::make_tuple(data.name.value, data.description.value);
   }
@@ -101,10 +101,10 @@ template <>
 struct Insert<Backend::Model::Module> {
   using Module = Backend::Model::Module;
 
-  static constexpr auto insert_columns = {decltype(Module::course_id)::name,
-                                          decltype(Module::name)::name,
-                                          decltype(Module::description)::name};
-  static auto insert_values(const Module &data)
+  static constexpr auto columns = {decltype(Module::course_id)::name,
+                                   decltype(Module::name)::name,
+                                   decltype(Module::description)::name};
+  static auto values(const Module &data)
   {
     return std::make_tuple(data.course_id.value, data.name.value,
                            data.description.value);

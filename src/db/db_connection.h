@@ -130,7 +130,7 @@ public:
   template <typename T>
   std::string prepare_insert_query()
   {
-    auto &insert_columns = Meta::InsertColumns<T>;
+    auto &insert_columns = Meta::Insert<T>::columns;
 
     std::string field_list =
         std::accumulate(std::next(insert_columns.begin()), insert_columns.end(),
@@ -156,8 +156,7 @@ public:
   auto insert(const T &data)
   {
     auto query = prepare_insert_query<T>();
-    auto insert_params =
-        make_value_list_from_tuple(Meta::Insert<T>::insert_values(data));
+    auto insert_params = make_value_list(Meta::Insert<T>::values(data));
     return insert<T>(query, insert_params);
   }
 

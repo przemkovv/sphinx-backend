@@ -21,7 +21,7 @@ template <typename T>
 constexpr auto TableName = Table<T>::name;
 
 template <typename T>
-constexpr auto InsertColumns = Insert<T>::insert_columns;
+constexpr auto InsertColumns = Insert<T>::columns;
 
 template <typename T>
 using IdColumn = typename Insert<T>::id_column;

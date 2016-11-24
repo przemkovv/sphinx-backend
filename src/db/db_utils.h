@@ -116,10 +116,11 @@ ValueList make_value_list(Args... args)
   return {to_optional_string(args)...};
 }
 //----------------------------------------------------------------------
-template <typename... Args>
-ValueList make_value_list_from_tuple(const std::tuple<Args...> &&args)
+template <template <typename...> typename Container, typename... Args>
+ValueList make_value_list(Container<Args...> &&args)
 {
-  return std::apply(make_value_list<Args...>, args);
+  return std::apply(make_value_list<Args...>,
+                    std::forward<Container<Args...>>(args));
 }
 
 } // namespace Sphinx::Db
