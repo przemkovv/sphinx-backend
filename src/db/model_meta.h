@@ -27,6 +27,13 @@ constexpr auto InsertColumns = Insert<T>::columns;
 template <typename T>
 using IdColumn = typename Insert<T>::id_column;
 
+template <typename T>
+using EntityType = T;
+
+template <typename Column, typename Entity>
+constexpr auto is_column_belongs_to_entity =
+    std::is_same_v<Entity, typename Column::entity>;
+
 } // namespace Sphinx::Db::Meta
 
 //----------------------------------------------------------------------
@@ -39,9 +46,9 @@ struct optional_tag {
 struct autoincrement_tag {
 };
 
-
-template<typename C>
-constexpr bool is_optional(C&& c) {
+template <typename C>
+constexpr bool is_optional(C &&c)
+{
   return c.is_optional;
 }
 
@@ -66,6 +73,24 @@ struct Column {
   static constexpr auto name = Name;
 
   std::conditional_t<is_optional, Db::optional<type>, type> value;
+};
+
+template <typename ParentTable,
+          typename PK,
+          typename Entity,
+          auto Name,
+          typename... Traits>
+struct ForeignKey : public Column<Entity, typename PK::type, Name, Traits...> {
+
+  using referenced_table = ParentTable;
+  using referenced_table_primary_key = PK;
+
+  static_assert(
+      Db::Meta::is_column_belongs_to_entity<referenced_table_primary_key,
+                                            referenced_table>,
+      "Primary Key origin has to be ParentTable");
+
+  Db::optional<referenced_table> referenced_value;
 };
 
 } // namespace Sphinx::Db
