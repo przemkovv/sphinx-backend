@@ -30,3 +30,9 @@ let g:neomake_cpp_clangtidy_args = ['-p=build/',
                                   \ '--export-fixes=clang-tidy-fixes']
 
 nnoremap <leader>ss O//<esc>70A-<esc>
+
+" let g:clang_compilation_database = '.'
+" let g:clang_debug = 3
+let g:dbext_default_profile_Sphinx = 'type=PGSQL:user=sphinx:passwd=sphinx.123:host=localhost:dbname=sphinx_backend'
+
+DBSetOption profile=Sphinx

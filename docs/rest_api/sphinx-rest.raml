@@ -82,6 +82,8 @@ types:
         format: rfc2616
       files?: Files
       test_results: TestResults
+      language:
+        enum: [ cpp ]
 
   Solutions:
     type: Solution[]
@@ -93,8 +95,6 @@ types:
       id?: number
       solution?: Solution
       filename: string
-      language:
-        enum: [ cpp ]
       content: string
 
   Files:
