@@ -20,7 +20,7 @@ nlohmann::json to_json(const T &value)
 
 //----------------------------------------------------------------------
 template <template <typename, typename> typename C, typename E, typename A>
-nlohmann::json to_json(C<E,A> &&c)
+nlohmann::json to_json(C<E, A> &&c)
 {
   nlohmann::json json;
   std::transform(c.begin(), c.end(), std::back_inserter(json),
@@ -66,32 +66,27 @@ E from_json(const nlohmann::json & /* json */)
 }
 
 //----------------------------------------------------------------------
-
-template <typename E, typename T, auto N>
-auto from_json(const nlohmann::json &data, const Db::Column<E, T, N> &column)
+template <typename E, typename T, auto N, typename... Ts>
+auto from_json(const nlohmann::json &data,
+               const Db::Column<E, T, N, Ts> &column)
 {
   return data[column.name].template get<T>();
 }
 
 //----------------------------------------------------------------------
-template <typename E, typename T, auto N>
-void load_from_json(Db::Column<E, T, N, false> &column,
+template <typename E, typename T, auto N, typename... Traits>
+void load_from_json(Db::Column<E, T, N, Traits...> &column,
                     const nlohmann::json &data)
 {
+  if
+    constexpr(Db::is_optional(column))
+    {
+      if (data[column.name].is_null()) {
+        column.value = Db::nullopt;
+        return;
+      }
+    }
   column.value = data[N].template get<T>();
-}
-
-//----------------------------------------------------------------------
-template <typename E, typename T, auto N>
-void load_from_json(Db::Column<E, T, N, true> &column,
-                    const nlohmann::json &data)
-{
-  if (data[column.name].is_null()) {
-    column.value = Db::nullopt;
-  }
-  else {
-    column.value = data[N].template get<T>();
-  }
 }
 
 //----------------------------------------------------------------------
@@ -103,6 +98,7 @@ inline Backend::Model::Course from_json(const nlohmann::json &data)
   load_from_json(entity.description, data);
   return entity;
 }
+//----------------------------------------------------------------------
 template <>
 inline Backend::Model::Module from_json(const nlohmann::json &data)
 {
@@ -112,6 +108,7 @@ inline Backend::Model::Module from_json(const nlohmann::json &data)
   load_from_json(entity.course_id, data);
   return entity;
 }
+//----------------------------------------------------------------------
 template <>
 inline Backend::Model::User from_json(const nlohmann::json &data)
 {

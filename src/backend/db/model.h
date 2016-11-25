@@ -7,6 +7,10 @@ using Sphinx::Db::Column;
 
 namespace Sphinx::Backend::Model {
 
+using Sphinx::Db::just_tag;
+using Sphinx::Db::optional_tag;
+using Sphinx::Db::autoincrement_tag;
+
 //----------------------------------------------------------------------
 struct User {
 private:
@@ -34,7 +38,7 @@ private:
 public:
   Column<Course, std::int64_t, Course_::id> id;
   Column<Course, std::string, Course_::name> name;
-  Column<Course, std::string, Course_::description, true> description;
+  Column<Course, std::string, Course_::description, optional_tag> description;
 };
 
 //----------------------------------------------------------------------
@@ -51,7 +55,7 @@ public:
   Column<Module, std::int64_t, Module_::id> id;
   Column<Module, std::int64_t, Module_::course_id> course_id;
   Column<Module, std::string, Module_::name> name;
-  Column<Module, std::string, Module_::description, true> description;
+  Column<Module, std::string, Module_::description, optional_tag> description;
 };
 
 } // namespace Sphinx::Backend::Model
