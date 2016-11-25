@@ -68,7 +68,7 @@ E from_json(const nlohmann::json & /* json */)
 //----------------------------------------------------------------------
 template <typename E, typename T, auto N, typename... Ts>
 auto from_json(const nlohmann::json &data,
-               const Db::Column<E, T, N, Ts> &column)
+               const Db::Column<E, T, N, Ts...> &column)
 {
   return data[column.name].template get<T>();
 }
