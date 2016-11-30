@@ -37,7 +37,6 @@ protected:
   auto &options_description_cli() { return options_description_cli_; }
 
 private:
-  Logger logger_;
 
   const std::string application_name_;
   const std::vector<std::string> args_;
@@ -46,6 +45,7 @@ private:
 
   json config_;
 
+  Logger logger_;
 public:
   Application(const std::string &application_name,
               const std::vector<std::string> &args);

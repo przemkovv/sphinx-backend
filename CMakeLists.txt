@@ -15,7 +15,7 @@ add_definitions(
     -g
     -O1
     -gsplit-dwarf
-    #-Wall
+    -Wall
     # -Weverything
     # -Wno-c++98-compat
     # -Wno-c++98-compat-pedantic
