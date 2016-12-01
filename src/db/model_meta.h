@@ -39,18 +39,6 @@ constexpr auto is_column_belongs_to_entity =
 //----------------------------------------------------------------------
 namespace Sphinx::Db {
 
-struct just_tag {
-};
-struct optional_tag {
-};
-struct autoincrement_tag {
-};
-
-template <typename C>
-constexpr bool is_optional(C &&c)
-{
-  return c.is_optional;
-}
 
 template <typename T, typename... Traits>
 constexpr bool contains_v = false;
@@ -58,6 +46,47 @@ template <typename T, typename... Traits>
 constexpr bool contains_v<T, std::tuple<Traits...>> =
     std::disjunction_v<std::is_same<T, Traits>...>;
 
+//----------------------------------------------------------------------
+struct optional_tag {
+};
+struct autoincrement_tag {
+};
+struct foreignkey_tag {
+};
+
+//----------------------------------------------------------------------
+template <typename... Traits>
+constexpr bool has_optional_v = contains_v<optional_tag, Traits...>;
+
+//----------------------------------------------------------------------
+template <typename C>
+constexpr bool is_optional_v = contains_v<optional_tag, typename C::traits>;
+template <typename C>
+constexpr bool is_autoincrement_v =
+    contains_v<autoincrement_tag, typename C::traits>;
+template <typename C>
+constexpr bool is_foreignkey_v = contains_v<foreignkey_tag, typename C::traits>;
+
+//----------------------------------------------------------------------
+template <typename C>
+constexpr bool is_autoincrement(C &&)
+{
+  return is_autoincrement_v<typename std::remove_reference_t<C>>;
+}
+
+template <typename C>
+constexpr bool is_foreignkey(C &&)
+{
+  return is_foreignkey_v<typename std::remove_reference_t<C>>;
+}
+
+template <typename C>
+constexpr bool is_optional(C &&)
+{
+  return is_optional_v<typename std::remove_reference_t<C>>;
+}
+
+//----------------------------------------------------------------------
 using std::experimental::optional;
 using std::experimental::nullopt;
 
@@ -67,20 +96,23 @@ struct Column {
   using type = Type;
 
   using traits = std::tuple<Traits...>;
-  static constexpr auto is_optional = contains_v<optional_tag, traits>;
-  static constexpr auto is_autoincrement =
-      contains_v<autoincrement_tag, traits>;
+
   static constexpr auto name = Name;
 
-  std::conditional_t<is_optional, Db::optional<type>, type> value;
+  std::conditional_t<has_optional_v<traits>, Db::optional<type>, type> value;
 };
 
+//----------------------------------------------------------------------
 template <typename ParentTable,
           typename PK,
           typename Entity,
           auto Name,
           typename... Traits>
-struct ForeignKey : public Column<Entity, typename PK::type, Name, Traits...> {
+struct ForeignKey : public Column<Entity,
+                                  typename PK::type,
+                                  Name,
+                                  foreignkey_tag,
+                                  Traits...> {
 
   using referenced_table = ParentTable;
   using referenced_table_primary_key = PK;
@@ -92,5 +124,4 @@ struct ForeignKey : public Column<Entity, typename PK::type, Name, Traits...> {
 
   Db::optional<referenced_table> referenced_value;
 };
-
 } // namespace Sphinx::Db

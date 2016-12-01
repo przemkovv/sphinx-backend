@@ -41,7 +41,7 @@ template <typename T>
 auto get_field_c(PGresult *res, int row_id, int col_id)
 {
   if
-    constexpr(T::is_optional)
+    constexpr(is_optional_v<T>)
     {
       return get_field_optional<typename T::type>(res, row_id, col_id);
     }
