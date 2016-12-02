@@ -126,8 +126,17 @@ public:
     return get_rows<T>(std::move(result));
   }
   //----------------------------------------------------------------------
+  template <typename T, typename C>
+  std::vector<T> get_all_where(const C &column, const typename C::type &value)
+  {
+    auto result =
+        exec(fmt::format("SELECT * FROM {0} WHERE {1} = {2}",
+                         std::string{Meta::TableName<T>}, C::name, value));
+    return get_rows<T>(std::move(result));
+  }
+  //----------------------------------------------------------------------
   template <typename T>
-  Db::optional<T> find_by_id(typename Meta::IdColumn<T>::type id)
+  Db::optional<T> find_by_id(Meta::IdColumn_t<T> id)
   {
     auto result =
         exec(fmt::format("SELECT * FROM {table_name} WHERE {column} = {value}",

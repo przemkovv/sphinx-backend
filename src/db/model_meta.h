@@ -28,6 +28,9 @@ template <typename T>
 using IdColumn = typename Insert<T>::id_column;
 
 template <typename T>
+using IdColumn_t = typename Insert<T>::id_column::type;
+
+template <typename T>
 using EntityType = T;
 
 template <typename Column, typename Entity>

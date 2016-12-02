@@ -14,6 +14,8 @@ namespace Sphinx::Backend::Db {
 using std::experimental::optional;
 using std::experimental::nullopt;
 
+namespace Meta = Sphinx::Db::Meta;
+
 class DAO {
 public:
   DAO(Sphinx::Db::connection_config config)
@@ -49,6 +51,7 @@ public:
   std::vector<Model::User> get_users();
   std::vector<Model::Course> get_courses();
   std::vector<Model::Module> get_modules();
+  std::vector<Model::Module> get_modules(Meta::IdColumn_t<Model::Course> course_id);
   void create_user(const Model::User &user);
   void create_course(const Model::Course &course);
   void create_module(const Model::Module &module);
