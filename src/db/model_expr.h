@@ -22,21 +22,23 @@ struct neq_operator {
 
 template <typename Column, typename Operator>
 struct condition {
-  using column = Column;
-  using op = Operator;
+  using column_t = Column;
+  using operator_t = Operator;
   using value_type = typename Column::type;
 
   const Column &col;
   const value_type value;
 
-  condition(Column &&c, Operator &&op, value_type val) : col(c), value(val) {}
+  condition(const Column &c, const Operator &op, value_type val) : col(c), value(val) {}
 
-  std::string str(std::string placeholder = "")
+  std::string str(std::string placeholder = "") const
   {
+    const std::string column_name = column_t::name;
+    const std::string operator_name = operator_t::name;
     if (placeholder.empty())
-      return fmt::format("{0} {1} {2}", c.name, op.name, value);
+      return fmt::format("{0} {1} '{2}'", column_name, operator_name, value);
     else
-      return fmt::format("{0} {1} {2}", c.name, op.name, placeholder);
+      return fmt::format("{0} {1} {2}", column_name, operator_name, placeholder);
   }
 };
 }

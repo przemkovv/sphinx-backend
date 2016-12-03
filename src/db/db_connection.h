@@ -126,12 +126,12 @@ public:
     return get_rows<T>(std::move(result));
   }
   //----------------------------------------------------------------------
-  template <typename T, typename C>
-  std::vector<T> get_all_where(const Db::condition &condition)
+  template <typename T, typename Condition>
+  std::vector<T> get_all_where(const Condition &condition)
   {
     auto result =
-        exec(fmt::format("SELECT * FROM {0} WHERE {1} = {2}",
-                         std::string{Meta::TableName<T>}, C::name, value));
+        exec(fmt::format("SELECT * FROM {0} WHERE {1}",
+                         std::string{Meta::TableName<T>}, condition.str()));
     return get_rows<T>(std::move(result));
   }
   //----------------------------------------------------------------------

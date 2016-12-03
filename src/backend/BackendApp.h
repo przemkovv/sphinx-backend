@@ -103,5 +103,7 @@ private:
   {
     return create_entities<T>(nlohmann::json::parse(data));
   }
+
+  std::string find_users(std::string name);
 };
 } // namespace Sphinx::Backend

@@ -4,6 +4,7 @@
 #include "Logger.h"        // for make_logger, Logger
 #include "db_connection.h" // for DbConnection, connection_config
 #include "model.h"         // for Module, Course, User
+#include "model_expr.h"
 #include "model_utils.h"
 #include <algorithm> // for move
 #include <experimental/optional>
@@ -28,10 +29,13 @@ private:
   Sphinx::Db::DbConnection db_connection_;
 
 public:
-  template <typename T>
-  optional<T> find_by_column(typename T::Columns::id_column_t id)
+  template <typename Column>
+  std::vector<typename Column::entity>
+  find_by_column(const Column &column, const typename Column::type &value)
   {
-    static_not_implemented_yet<T>();
+    auto condition =
+        Sphinx::Db::condition{column, Sphinx::Db::eq_operator{}, value};
+    return db_connection_.get_all_where<typename Column::entity>(condition);
   }
   template <typename T>
   optional<T> find_by_id(typename T::Columns::id_column_t id)
@@ -51,7 +55,8 @@ public:
   std::vector<Model::User> get_users();
   std::vector<Model::Course> get_courses();
   std::vector<Model::Module> get_modules();
-  std::vector<Model::Module> get_modules(Meta::IdColumn_t<Model::Course> course_id);
+  std::vector<Model::Module>
+  get_modules(Meta::IdColumn_t<Model::Course> course_id);
   void create_user(const Model::User &user);
   void create_course(const Model::Course &course);
   void create_module(const Model::Module &module);

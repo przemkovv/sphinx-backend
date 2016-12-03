@@ -113,10 +113,24 @@ void BackendApp::create_entity<Model::User>(const nlohmann::json &data)
   logger()->debug("Creating user {} {}", user.username.value, user.email.value);
   dao_.create_user(user);
 }
+//----------------------------------------------------------------------
 
+std::string BackendApp::find_users(std::string name)
+{
+  Model::User user;
+  return to_json(dao_.find_by_column(user.username, name)).dump(dump_indent_);
+}
 //----------------------------------------------------------------------
 void BackendApp::add_users_routes()
 {
+  add_route("/users_search/<string>", "GET"_method,
+            "POST"_method)([&](const crow::request &req, std::string name) {
+    if (req.method == "GET"_method) {
+      return find_users(name);
+    }
+    return "nothing"s;
+  });
+
   add_route("/users", "GET"_method,
             "POST"_method)([&](const crow::request &req) {
     if (req.method == "GET"_method) {
