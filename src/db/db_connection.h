@@ -127,7 +127,7 @@ public:
   }
   //----------------------------------------------------------------------
   template <typename T, typename C>
-  std::vector<T> get_all_where(const C &column, const typename C::type &value)
+  std::vector<T> get_all_where(const Db::condition &condition)
   {
     auto result =
         exec(fmt::format("SELECT * FROM {0} WHERE {1} = {2}",
