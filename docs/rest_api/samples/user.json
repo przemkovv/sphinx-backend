@@ -1,4 +1,8 @@
 {
   "email": "john@snow.com",
-  "username": "john.snow"
+  "username": "john.snow",
+  "firstname": "John",
+  "lastname": "Snow",
+  "user_role": "student",
+  "student_id": "12345"
 }

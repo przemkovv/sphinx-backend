@@ -18,12 +18,20 @@ private:
     static constexpr char id[] = "id";
     static constexpr char username[] = "username";
     static constexpr char email[] = "email";
+    static constexpr char firstname[] = "firstname";
+    static constexpr char lastname[] = "lastanme";
+    static constexpr char student_id[] = "student_id";
+    static constexpr char user_role[] = "user_role";
   };
 
 public:
   Column<User, std::int64_t, User_::id> id;
+  Column<User, std::string, User_::firstname> firstname;
+  Column<User, std::string, User_::lastname> lastname;
   Column<User, std::string, User_::username> username;
+  Column<User, std::string, User_::student_id, optional_tag> student_id;
   Column<User, std::string, User_::email> email;
+  Column<User, std::string, User_::user_role> user_role;
 };
 
 //----------------------------------------------------------------------

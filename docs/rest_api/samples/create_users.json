@@ -1,14 +1,24 @@
 [
   {
     "email": "kahlan@amnel.com",
-    "username": "kahlan.amnel"
+    "username": "kahlan.amnel",
+    "firstname": "Kahlan",
+    "lastname": "Amnel",
+    "user_role": "teacher"
   },
   {
     "email": "richard@rahl.com",
-    "username": "richard.rahl"
+    "username": "richard.rahl",
+    "firstname": "Richard",
+    "lastname": "Rahl",
+    "user_role": "admin"
   },
   {
     "email": "cara@dhara.com",
-    "username": "cara"
+    "username": "cara",
+    "firstname": "Cara",
+    "lastname": "Mord'sith",
+    "user_role": "student",
+    "student_id": "001"
   }
 ]

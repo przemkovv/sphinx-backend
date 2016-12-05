@@ -43,8 +43,12 @@ template <>
 inline nlohmann::json to_json(const Backend::Model::User &user)
 {
   return {{user.id.name, user.id.value},
+          {user.firstname.name, user.firstname.value},
+          {user.lastname.name, user.lastname.value},
           {user.username.name, user.username.value},
-          {user.email.name, user.email.value}};
+          {user.student_id.name, user.student_id.value.value_or(nullptr)},
+          {user.email.name, user.email.value},
+          {user.user_role.name, user.user_role.value}};
 }
 
 //----------------------------------------------------------------------
@@ -114,6 +118,10 @@ inline Backend::Model::User from_json(const nlohmann::json &data)
 {
   Backend::Model::User entity;
   load_from_json(entity.username, data);
+  load_from_json(entity.firstname, data);
+  load_from_json(entity.lastname, data);
+  load_from_json(entity.student_id, data);
+  load_from_json(entity.user_role, data);
   load_from_json(entity.email, data);
   return entity;
 }
