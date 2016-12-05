@@ -15,6 +15,8 @@
 using json_pointer = nlohmann::json::json_pointer;
 using namespace std::literals::string_literals;
 
+namespace Meta = Sphinx::Db::Meta;
+
 namespace Sphinx::Backend {
 
 class BackendApp : public Application {
@@ -59,6 +61,7 @@ private:
   std::string get_users();
   std::string get_courses();
   std::string get_modules();
+  std::string get_modules(typename Meta::IdColumn_t<Model::Course> course_id);
 
   template <typename T>
   bool is_entity_exists(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id)
@@ -100,5 +103,7 @@ private:
   {
     return create_entities<T>(nlohmann::json::parse(data));
   }
+
+  std::string find_users(std::string name);
 };
 } // namespace Sphinx::Backend

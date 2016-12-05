@@ -8,7 +8,6 @@ using Sphinx::Db::ForeignKey;
 
 namespace Sphinx::Backend::Model {
 
-using Sphinx::Db::just_tag;
 using Sphinx::Db::optional_tag;
 using Sphinx::Db::autoincrement_tag;
 

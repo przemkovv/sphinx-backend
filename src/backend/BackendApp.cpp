@@ -73,6 +73,12 @@ std::string BackendApp::get_modules()
 }
 
 //----------------------------------------------------------------------
+std::string BackendApp::get_modules(Meta::IdColumn_t<Model::Course> course_id)
+{
+  return to_json(dao_.get_modules(course_id)).dump(dump_indent_);
+}
+
+//----------------------------------------------------------------------
 std::string BackendApp::get_users()
 {
   return to_json(dao_.get_users()).dump(dump_indent_);
@@ -107,10 +113,24 @@ void BackendApp::create_entity<Model::User>(const nlohmann::json &data)
   logger()->debug("Creating user {} {}", user.username.value, user.email.value);
   dao_.create_user(user);
 }
+//----------------------------------------------------------------------
 
+std::string BackendApp::find_users(std::string name)
+{
+  Model::User user;
+  return to_json(dao_.find_by_column(user.username, name)).dump(dump_indent_);
+}
 //----------------------------------------------------------------------
 void BackendApp::add_users_routes()
 {
+  add_route("/users_search/<string>", "GET"_method,
+            "POST"_method)([&](const crow::request &req, std::string name) {
+    if (req.method == "GET"_method) {
+      return find_users(name);
+    }
+    return "nothing"s;
+  });
+
   add_route("/users", "GET"_method,
             "POST"_method)([&](const crow::request &req) {
     if (req.method == "GET"_method) {
@@ -166,17 +186,17 @@ void BackendApp::add_courses_routes()
 //----------------------------------------------------------------------
 void BackendApp::add_modules_routes()
 {
-  add_route("/modules", "GET"_method,
-            "POST"_method)([&](const crow::request &req) {
-    if (req.method == "GET"_method) {
-      return get_modules();
-    }
-    else if (req.method == "POST"_method) {
-      logger()->debug("POST body {}", req.body);
-      create_entities<Model::Module>(req.body);
-    }
-    return "nothing"s;
-  });
+  add_route("/courses/<uint>", "GET"_method, "POST"_method)(
+      [&](const crow::request &req, std::uint64_t course_id) {
+        if (req.method == "GET"_method) {
+          return get_modules(course_id);
+        }
+        else if (req.method == "POST"_method) {
+          logger()->debug("POST body {}", req.body);
+          create_entities<Model::Module>(req.body);
+        }
+        return "nothing"s;
+      });
 }
 
 //----------------------------------------------------------------------

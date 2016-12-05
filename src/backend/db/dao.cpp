@@ -25,6 +25,13 @@ std::vector<Model::Module> DAO::get_modules()
 }
 
 //----------------------------------------------------------------------
+std::vector<Model::Module>
+DAO::get_modules(Meta::IdColumn_t<Model::Course> course_id)
+{
+  return db_connection_.get_all<Model::Module>();
+}
+
+//----------------------------------------------------------------------
 void DAO::create_course(const Model::Course &course)
 {
   auto last_id = db_connection_.insert(course);
