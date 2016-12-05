@@ -32,7 +32,7 @@ struct condition {
   const Column &col;
   const value_type value;
 
-  condition(const Column &c, const Operator &op, value_type val) : col(c), value(val) {}
+  condition(const Column &c, const Operator &/* op */, value_type val) : col(c), value(val) {}
 
   std::string str(std::string placeholder = "") const
   {

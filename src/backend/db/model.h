@@ -25,7 +25,7 @@ private:
   };
 
 public:
-  Column<User, std::int64_t, User_::id> id;
+  Column<User, std::uint64_t, User_::id> id;
   Column<User, std::string, User_::firstname> firstname;
   Column<User, std::string, User_::lastname> lastname;
   Column<User, std::string, User_::username> username;
@@ -44,7 +44,7 @@ private:
   };
 
 public:
-  Column<Course, std::int64_t, Course_::id> id;
+  Column<Course, std::uint64_t, Course_::id> id;
   Column<Course, std::string, Course_::name> name;
   Column<Course, std::string, Course_::description, optional_tag> description;
 };
@@ -60,7 +60,7 @@ private:
   };
 
 public:
-  Column<Module, std::int64_t, Module_::id> id;
+  Column<Module, std::uint64_t, Module_::id> id;
   ForeignKey<Course, decltype(Course::id), Module, Module_::course_id>
       course_id;
   // Column<Module, std::int64_t, Module_::course_id> course_id;

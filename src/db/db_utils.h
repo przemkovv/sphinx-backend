@@ -66,6 +66,8 @@ bool convert_to(const char *data);
 template <>
 int64_t convert_to(const char *data);
 template <>
+uint64_t convert_to(const char *data);
+template <>
 std::string convert_to(const char *data);
 
 //----------------------------------------------------------------------

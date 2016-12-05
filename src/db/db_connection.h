@@ -190,7 +190,7 @@ public:
     int n = 1;
     std::string field_ids =
         std::accumulate(std::next(insert_columns.begin()), insert_columns.end(),
-                        std::string{"$1"}, [n](auto a, auto b) mutable {
+                        std::string{"$1"}, [n](auto a, auto /* b */) mutable {
                           return a + ", " + fmt::format("${}", ++n);
                         });
 

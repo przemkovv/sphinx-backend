@@ -75,8 +75,8 @@ private:
     return entity;
   }
   template <typename T>
-  T update_entity(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id,
-                  const nlohmann::json &entity_json)
+  T update_entity(typename Sphinx::Db::Meta::IdColumn<T>::type /* entity_id */,
+                  const nlohmann::json &/* entity_json */)
   {
     NOT_IMPLEMENTED_YET();
   }
