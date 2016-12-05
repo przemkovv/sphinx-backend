@@ -29,6 +29,7 @@ private:
   Sphinx::Db::DbConnection db_connection_;
 
 public:
+  //----------------------------------------------------------------------
   template <typename Column>
   std::vector<typename Column::entity>
   find_by_column(const Column &column, const typename Column::type &value)
@@ -37,21 +38,25 @@ public:
         Sphinx::Db::condition{column, Sphinx::Db::eq_operator{}, value};
     return db_connection_.get_all_where<typename Column::entity>(condition);
   }
+  //----------------------------------------------------------------------
   template <typename T>
   optional<T> find_by_id(typename T::Columns::id_column_t id)
   {
     return db_connection_.find_by_id<T>(id);
   }
+  //----------------------------------------------------------------------
   template <typename T>
   bool exists(typename Sphinx::Db::Meta::IdColumn<T>::type id)
   {
     return db_connection_.exists<T>(id);
   }
+  //----------------------------------------------------------------------
   template <typename T>
   T get_by_id(typename Sphinx::Db::Meta::IdColumn<T>::type id)
   {
     return db_connection_.get_by_id<T>(id);
   }
+  //----------------------------------------------------------------------
   std::vector<Model::User> get_users();
   std::vector<Model::Course> get_courses();
   std::vector<Model::Module> get_modules();

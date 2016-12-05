@@ -129,9 +129,9 @@ public:
   template <typename T, typename Condition>
   std::vector<T> get_all_where(const Condition &condition)
   {
-    auto result =
-        exec(fmt::format("SELECT * FROM {0} WHERE {1}",
-                         std::string{Meta::TableName<T>}, condition.str()));
+    auto result = exec(fmt::format("SELECT * FROM {0} WHERE {1}",
+                                   Meta::TableName<T>, condition.str("$1")),
+                       condition.value);
     return get_rows<T>(std::move(result));
   }
   //----------------------------------------------------------------------

@@ -19,6 +19,9 @@ struct eq_operator {
 struct neq_operator {
   static constexpr char name[] = "<>";
 };
+struct like_operator {
+  static constexpr char name[] = "LIKE";
+};
 
 template <typename Column, typename Operator>
 struct condition {
