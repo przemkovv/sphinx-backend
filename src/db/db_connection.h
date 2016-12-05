@@ -1,28 +1,27 @@
 #pragma once
 
-#include "Logger.h"              // for Logger
-#include "db_utils.h"            // for make_value_list, ValueList, get_c...
-#include "model_meta.h"          // for Columns
-#include "sphinx_assert.h"       // for SPHINX_ASSERT
-#include <algorithm>             // for move
-#include <cstddef>               // for size_t
-#include <exception>             // for exception
-#include <experimental/optional> // for optional
-#include <fmt/format.h>          // for format, UdlArg, operator""_a
-#include <functional>            // for function
-#include <iterator>              // for next
-#include <libpq-fe.h>            // for PQerrorMessage, PGresult, PQresultS...
-#include <memory>                // for shared_ptr, __shared_ptr_access
-#include <numeric>               // for accumulate
-#include <spdlog/spdlog.h>       // for logger
-#include <stdexcept>             // for runtime_error
-#include <stdint.h>              // for uint16_t
-#include <string>                // for string
-#include <vector>                // for vector
+#include "Logger.h"        // for Logger
+#include "db_utils.h"      // for make_value_list, ValueList, get_c...
+#include "model_meta.h"    // for Columns
+#include "sphinx_assert.h" // for SPHINX_ASSERT
+#include <algorithm>       // for move
+#include <cstddef>         // for size_t
+#include <exception>       // for exception
+#include <fmt/format.h>    // for format, UdlArg, operator""_a
+#include <functional>      // for function
+#include <iterator>        // for next
+#include <libpq-fe.h>      // for PQerrorMessage, PGresult, PQresultS...
+#include <memory>          // for shared_ptr, __shared_ptr_access
+#include <numeric>         // for accumulate
+#include <optional>        // for optional
+#include <spdlog/spdlog.h> // for logger
+#include <stdexcept>       // for runtime_error
+#include <stdint.h>        // for uint16_t
+#include <string>          // for string
+#include <vector>          // for vector
 
 namespace Sphinx::Db {
 
-using std::experimental::optional;
 using fmt::literals::operator""_a;
 
 //----------------------------------------------------------------------
@@ -76,8 +75,7 @@ private:
 
 public:
   //----------------------------------------------------------------------
-  auto exec(const std::string &query,
-            const std::vector<optional<std::string>> &args)
+  auto exec(const std::string &query, const ValueList &args)
   {
     auto pq_args = make_pq_args(args);
 
@@ -136,7 +134,7 @@ public:
   }
   //----------------------------------------------------------------------
   template <typename T>
-  Db::optional<T> find_by_id(Meta::IdColumn_t<T> id)
+  std::optional<T> find_by_id(Meta::IdColumn_t<T> id)
   {
     auto result =
         exec(fmt::format("SELECT * FROM {table_name} WHERE {column} = {value}",
@@ -243,7 +241,7 @@ public:
 
   //----------------------------------------------------------------------
   template <typename T, typename Res>
-  Db::optional<T> get_row(Res &&res)
+  std::optional<T> get_row(Res &&res)
   {
     int status = PQresultStatus(res.get());
 
@@ -293,8 +291,7 @@ public:
   }
 
   //----------------------------------------------------------------------
-  std::vector<const char *>
-  make_pq_args(const std::vector<optional<std::string>> &arguments);
+  std::vector<const char *> make_pq_args(const ValueList &arguments);
 
   //----------------------------------------------------------------------
 

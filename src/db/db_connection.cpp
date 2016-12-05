@@ -1,7 +1,7 @@
 
 #include "db_connection.h"
-#include <algorithm>    // for move
-#include <type_traits>  // for remove_reference<>::type
+#include <algorithm>   // for move
+#include <type_traits> // for remove_reference<>::type
 
 namespace Sphinx::Db {
 
@@ -58,10 +58,8 @@ prepared_statement DbConnection::prepare(const std::string &name,
   throw std::runtime_error(msg);
 }
 
-
 //----------------------------------------------------------------------
-std::vector<const char *>
-DbConnection::make_pq_args(const std::vector<optional<std::string>> &arguments)
+std::vector<const char *> DbConnection::make_pq_args(const ValueList &arguments)
 {
   std::vector<const char *> pq_args;
 
@@ -77,7 +75,5 @@ DbConnection::make_pq_args(const std::vector<optional<std::string>> &arguments)
   return pq_args;
 }
 
-
 //----------------------------------------------------------------------
 } // namespace Sphinx::Db
-

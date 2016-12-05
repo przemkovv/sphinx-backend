@@ -25,7 +25,7 @@ std::string convert_to(const char *data)
 
 //----------------------------------------------------------------------
 template <>
-optional<std::string> to_optional_string(std::nullptr_t /* null */)
+std::optional<std::string> to_optional_string(std::nullptr_t /* null */)
 {
   return {};
 }

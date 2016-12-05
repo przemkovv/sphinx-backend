@@ -4,7 +4,6 @@
 #include "sphinx_assert.h"
 #include "utils.h"
 
-#include <experimental/tuple>
 #include <fmt/format.h>
 #include <tuple>
 
@@ -12,8 +11,7 @@
 
 namespace Sphinx::Db {
 
-using std::experimental::optional;
-using ValueList = std::vector<optional<std::string>>;
+using ValueList = std::vector<std::optional<std::string>>;
 
 //----------------------------------------------------------------------
 template <typename T>
@@ -28,7 +26,7 @@ T get_field(PGresult *res, int row_id, int col_id)
 
 //----------------------------------------------------------------------
 template <typename T>
-optional<T> get_field_optional(PGresult *res, int row_id, int col_id)
+std::optional<T> get_field_optional(PGresult *res, int row_id, int col_id)
 {
   if (PQgetisnull(res, row_id, col_id)) {
     return {};
@@ -72,7 +70,7 @@ std::string convert_to(const char *data);
 
 //----------------------------------------------------------------------
 template <typename T>
-optional<std::string> to_optional_string(T data)
+std::optional<std::string> to_optional_string(T data)
 {
   fmt::MemoryWriter w;
   w.write("{}", data);
@@ -81,7 +79,7 @@ optional<std::string> to_optional_string(T data)
 
 //----------------------------------------------------------------------
 template <typename T>
-optional<std::string> to_optional_string(optional<T> data)
+std::optional<std::string> to_optional_string(std::optional<T> data)
 {
   if (data) {
     return to_optional_string(data.value());
@@ -93,7 +91,7 @@ optional<std::string> to_optional_string(optional<T> data)
 
 //----------------------------------------------------------------------
 template <>
-optional<std::string> to_optional_string(std::nullptr_t /* null */);
+std::optional<std::string> to_optional_string(std::nullptr_t /* null */);
 
 //----------------------------------------------------------------------
 template <typename T>

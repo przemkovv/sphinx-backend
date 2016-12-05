@@ -1,13 +1,13 @@
 
 #pragma once
 
-#include "model.h"               // for Module, Course, User, Column
-#include "model_meta.h"          // for Column<>::type, Column, nullopt
-#include "sphinx_assert.h"       // for assert_false
-#include <algorithm>             // for transform
-#include <experimental/optional> // for optional, nullopt
-#include <iterator>              // for back_inserter
-#include <nlohmann/json.hpp>     // for basic_json, json
+#include "model.h"           // for Module, Course, User, Column
+#include "model_meta.h"      // for Column<>::type, Column, nullopt
+#include "sphinx_assert.h"   // for assert_false
+#include <algorithm>         // for transform
+#include <iterator>          // for back_inserter
+#include <nlohmann/json.hpp> // for basic_json, json
+#include <optional>          // for optional, nullopt
 
 namespace Sphinx::Db::Json {
 
@@ -82,7 +82,7 @@ void load_from_json(Db::Column<E, T, N, Traits...> &column,
     constexpr(Db::is_optional(column))
     {
       if (data[column.name].is_null()) {
-        column.value = Db::nullopt;
+        column.value = std::nullopt;
         return;
       }
     }

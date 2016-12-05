@@ -7,13 +7,10 @@
 #include "model_expr.h"
 #include "model_utils.h"
 #include <algorithm> // for move
-#include <experimental/optional>
+#include <optional>
 #include <vector> // for vector
 
 namespace Sphinx::Backend::Db {
-
-using std::experimental::optional;
-using std::experimental::nullopt;
 
 namespace Meta = Sphinx::Db::Meta;
 
@@ -40,7 +37,7 @@ public:
   }
   //----------------------------------------------------------------------
   template <typename T>
-  optional<T> find_by_id(typename T::Columns::id_column_t id)
+  std::optional<T> find_by_id(typename T::Columns::id_column_t id)
   {
     return db_connection_.find_by_id<T>(id);
   }

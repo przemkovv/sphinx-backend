@@ -53,10 +53,7 @@ private:
 
 public:
   Column<Module, std::int64_t, Module_::id> id;
-  ForeignKey<Course,
-             decltype(Course::id),
-             Module,
-             Module_::course_id>
+  ForeignKey<Course, decltype(Course::id), Module, Module_::course_id>
       course_id;
   // Column<Module, std::int64_t, Module_::course_id> course_id;
   Column<Module, std::string, Module_::name> name;
