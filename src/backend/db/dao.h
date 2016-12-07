@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Logger.h"        // for make_logger, Logger
+#include "logger.h"        // for make_logger, Logger
 #include "db_connection.h" // for DbConnection, connection_config
 #include "model.h"         // for Module, Course, User
 #include "model_expr.h"

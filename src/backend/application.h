@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Logger.h"                                      // for Logger
+#include "logger.h"                                      // for Logger
 #include <boost/program_options/errors.hpp>              // for program_opt...
 #include <boost/program_options/options_description.hpp> // for options_des...
 #include <boost/program_options/variables_map.hpp>       // for variables_map

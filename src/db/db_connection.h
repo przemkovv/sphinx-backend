@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Logger.h"        // for Logger
+#include "logger.h"        // for Logger
 #include "db_utils.h"      // for make_value_list, ValueList, get_c...
 #include "model_meta.h"    // for Columns
 #include "sphinx_assert.h" // for SPHINX_ASSERT

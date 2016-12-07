@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Application.h"
+#include "application.h"
 
 #include "db.h"
 #include "db/dao.h"

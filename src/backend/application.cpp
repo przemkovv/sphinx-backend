@@ -1,4 +1,4 @@
-#include "Application.h"
+#include "application.h"
 #include <boost/lexical_cast/bad_lexical_cast.hpp>  // for bad_lexical_cast
 #include <boost/program_options/parsers.hpp>        // for command_line_parser
 #include <boost/program_options/value_semantic.hpp> // for typed_value, value
