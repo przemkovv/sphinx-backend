@@ -1,5 +1,6 @@
 
 #pragma once
+#include <array>
 #include <optional>
 #include <tuple>
 #include <type_traits>
@@ -11,8 +12,7 @@ struct Insert {
 };
 
 template <typename T>
-struct ColumnsId {
-};
+struct ColumnsId :public std::array<int, T::N>{};
 
 template <typename T>
 struct Table {
@@ -90,7 +90,7 @@ constexpr bool is_optional(C &&)
 
 //----------------------------------------------------------------------
 
-template <typename Entity, typename Type, auto Name, typename... Traits>
+template <int N, typename Entity, typename Type, auto Name, typename... Traits>
 struct Column {
   using entity = Entity;
   using type = Type;
@@ -98,17 +98,21 @@ struct Column {
   using traits = std::tuple<Traits...>;
 
   static constexpr auto name = Name;
+  static constexpr auto n = N;
+  constexpr operator int() { return n; }
 
   std::conditional_t<has_optional_v<traits>, std::optional<type>, type> value;
 };
 
 //----------------------------------------------------------------------
-template <typename ParentTable,
+template <int N,
+          typename ParentTable,
           typename PK,
           typename Entity,
           auto Name,
           typename... Traits>
-struct ForeignKey : public Column<Entity,
+struct ForeignKey : public Column<N,
+                                  Entity,
                                   typename PK::type,
                                   Name,
                                   foreignkey_tag,

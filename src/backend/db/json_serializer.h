@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "logger.h"
 #include "model.h"           // for Module, Course, User, Column
 #include "model_meta.h"      // for Column<>::type, Column, nullopt
 #include "sphinx_assert.h"   // for assert_false
@@ -20,7 +21,7 @@ nlohmann::json to_json(const T &value)
 
 //----------------------------------------------------------------------
 template <template <typename, typename> typename C, typename E, typename A>
-nlohmann::json to_json(C<E, A> &&c)
+nlohmann::json to_json(const C<E, A> &c)
 {
   nlohmann::json json;
   std::transform(c.begin(), c.end(), std::back_inserter(json),
@@ -42,13 +43,20 @@ inline nlohmann::json to_json(const Backend::Model::Course &course)
 template <>
 inline nlohmann::json to_json(const Backend::Model::User &user)
 {
-  return {{user.id.name, user.id.value},
-          {user.firstname.name, user.firstname.value},
-          {user.lastname.name, user.lastname.value},
-          {user.username.name, user.username.value},
-          {user.student_id.name, user.student_id.value.value_or(nullptr)},
-          {user.email.name, user.email.value},
-          {user.user_role.name, user.user_role.value}};
+  global_logger->debug("to_json<User>: {}", user.firstname.value);
+  nlohmann::json json_user{{user.id.name, user.id.value},
+                           {user.firstname.name, user.firstname.value},
+                           {user.lastname.name, user.lastname.value},
+                           {user.username.name, user.username.value},
+                           {user.email.name, user.email.value},
+                           {user.role.name, user.role.value}};
+  if (user.student_id.value) {
+    json_user[user.student_id.name] = *user.student_id.value;
+  }
+  else {
+    json_user[user.student_id.name] = nullptr;
+  }
+  return json_user;
 }
 
 //----------------------------------------------------------------------
@@ -70,22 +78,22 @@ E from_json(const nlohmann::json & /* json */)
 }
 
 //----------------------------------------------------------------------
-template <typename E, typename T, auto N, typename... Ts>
+template <int N, typename E, typename T, auto Name, typename... Ts>
 auto from_json(const nlohmann::json &data,
-               const Db::Column<E, T, N, Ts...> &column)
+               const Db::Column<N, E, T, Name, Ts...> &column)
 {
   return data[column.name].template get<T>();
 }
 
 //----------------------------------------------------------------------
-template <typename E, typename T, auto N, typename... Traits>
-void load_from_json(Db::Column<E, T, N, Traits...> &column,
+template <int N, typename E, typename T, auto Name, typename... Traits>
+void load_from_json(Db::Column<N, E, T, Name, Traits...> &column,
                     const nlohmann::json &data)
 {
   if
     constexpr(Db::is_optional(column))
     {
-      if (data[column.name].is_null()) {
+      if (data.count(column.name) == 0 || data[column.name].is_null()) {
         column.value = std::nullopt;
         return;
       }
@@ -121,7 +129,7 @@ inline Backend::Model::User from_json(const nlohmann::json &data)
   load_from_json(entity.firstname, data);
   load_from_json(entity.lastname, data);
   load_from_json(entity.student_id, data);
-  load_from_json(entity.user_role, data);
+  load_from_json(entity.role, data);
   load_from_json(entity.email, data);
   return entity;
 }

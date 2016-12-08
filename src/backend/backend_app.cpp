@@ -81,7 +81,9 @@ std::string BackendApp::get_modules(Meta::IdColumn_t<Model::Course> course_id)
 //----------------------------------------------------------------------
 std::string BackendApp::get_users()
 {
-  return to_json(dao_.get_users()).dump(dump_indent_);
+  auto users = dao_.get_users();
+  auto json_users = to_json(users);
+  return json_users.dump(dump_indent_);
 }
 
 //----------------------------------------------------------------------

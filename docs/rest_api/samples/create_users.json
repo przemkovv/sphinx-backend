@@ -4,21 +4,21 @@
     "username": "kahlan.amnel",
     "firstname": "Kahlan",
     "lastname": "Amnel",
-    "user_role": "teacher"
+    "role": "teacher"
   },
   {
     "email": "richard@rahl.com",
     "username": "richard.rahl",
     "firstname": "Richard",
     "lastname": "Rahl",
-    "user_role": "admin"
+    "role": "admin"
   },
   {
     "email": "cara@dhara.com",
     "username": "cara",
     "firstname": "Cara",
     "lastname": "Mord'sith",
-    "user_role": "student",
+    "role": "student",
     "student_id": "001"
   }
 ]

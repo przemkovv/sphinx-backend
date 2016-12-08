@@ -19,19 +19,20 @@ private:
     static constexpr char username[] = "username";
     static constexpr char email[] = "email";
     static constexpr char firstname[] = "firstname";
-    static constexpr char lastname[] = "lastanme";
+    static constexpr char lastname[] = "lastname";
     static constexpr char student_id[] = "student_id";
-    static constexpr char user_role[] = "user_role";
+    static constexpr char role[] = "role";
   };
 
 public:
-  Column<User, std::uint64_t, User_::id> id;
-  Column<User, std::string, User_::firstname> firstname;
-  Column<User, std::string, User_::lastname> lastname;
-  Column<User, std::string, User_::username> username;
-  Column<User, std::string, User_::student_id, optional_tag> student_id;
-  Column<User, std::string, User_::email> email;
-  Column<User, std::string, User_::user_role> user_role;
+  Column<0, User, std::uint64_t, User_::id> id;
+  Column<1, User, std::string, User_::firstname> firstname;
+  Column<2, User, std::string, User_::lastname> lastname;
+  Column<3, User, std::string, User_::username> username;
+  Column<4, User, std::string, User_::student_id, optional_tag> student_id;
+  Column<5, User, std::string, User_::email> email;
+  Column<6, User, std::string, User_::role> role;
+  constexpr static const auto N = 7;
 };
 
 //----------------------------------------------------------------------
@@ -44,9 +45,11 @@ private:
   };
 
 public:
-  Column<Course, std::uint64_t, Course_::id> id;
-  Column<Course, std::string, Course_::name> name;
-  Column<Course, std::string, Course_::description, optional_tag> description;
+  Column<0, Course, std::uint64_t, Course_::id> id;
+  Column<1, Course, std::string, Course_::name> name;
+  Column<2, Course, std::string, Course_::description, optional_tag>
+      description;
+  constexpr static const auto N = 3;
 };
 
 //----------------------------------------------------------------------
@@ -60,12 +63,15 @@ private:
   };
 
 public:
-  Column<Module, std::uint64_t, Module_::id> id;
-  ForeignKey<Course, decltype(Course::id), Module, Module_::course_id>
+  Column<0, Module, std::uint64_t, Module_::id> id;
+  ForeignKey<1, Course, decltype(Course::id), Module, Module_::course_id>
       course_id;
   // Column<Module, std::int64_t, Module_::course_id> course_id;
-  Column<Module, std::string, Module_::name> name;
-  Column<Module, std::string, Module_::description, optional_tag> description;
+  Column<2, Module, std::string, Module_::name> name;
+  Column<3, Module, std::string, Module_::description, optional_tag>
+      description;
+
+  constexpr static const auto N = 4;
 };
 
 } // namespace Sphinx::Backend::Model
@@ -81,11 +87,15 @@ template <>
 struct Insert<Backend::Model::User> {
   using User = Backend::Model::User;
 
-  static constexpr auto columns = {decltype(User::username)::name,
-                                   decltype(User::email)::name};
+  static constexpr auto columns = {
+      decltype(User::firstname)::name, decltype(User::lastname)::name,
+      decltype(User::username)::name,  decltype(User::student_id)::name,
+      decltype(User::email)::name,     decltype(User::role)::name};
   static auto values(const User &data)
   {
-    return std::make_tuple(data.username.value, data.email.value);
+    return std::make_tuple(data.firstname.value, data.lastname.value,
+                           data.username.value, data.student_id.value,
+                           data.email.value, data.role.value);
   }
   using id_column = decltype(User::id);
 };
@@ -128,24 +138,29 @@ struct Insert<Backend::Model::Module> {
 
 //----------------------------------------------------------------------
 
-template <>
-struct ColumnsId<Backend::Model::User> {
-  int id;
-  int username;
-  int email;
-};
-template <>
-struct ColumnsId<Backend::Model::Course> {
-  int id;
-  int name;
-  int description;
-};
-template <>
-struct ColumnsId<Backend::Model::Module> {
-  int id;
-  int course_id;
-  int name;
-  int description;
-};
+
+// template <>
+// struct ColumnsId<Backend::Model::User> {
+  // int id;
+  // int firstname;
+  // int lastname;
+  // int student_id;
+  // int username;
+  // int email;
+  // int role;
+// };
+// template <>
+// struct ColumnsId<Backend::Model::Course> {
+  // int id;
+  // int name;
+  // int description;
+// };
+// template <>
+// struct ColumnsId<Backend::Model::Module> {
+  // int id;
+  // int course_id;
+  // int name;
+  // int description;
+// };
 
 } // namespace Sphinx::Backend::Model::Meta

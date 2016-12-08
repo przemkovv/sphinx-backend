@@ -28,8 +28,12 @@ Meta::ColumnsId<Backend::Model::User> get_columns_id(PGresult *res)
 {
   using E = Backend::Model::User;
   return {PQfnumber(res, decltype(E::id)::name),
+          PQfnumber(res, decltype(E::firstname)::name),
+          PQfnumber(res, decltype(E::lastname)::name),
+          PQfnumber(res, decltype(E::student_id)::name),
           PQfnumber(res, decltype(E::username)::name),
-          PQfnumber(res, decltype(E::email)::name)};
+          PQfnumber(res, decltype(E::email)::name),
+          PQfnumber(res, decltype(E::role)::name)};
 }
 
 //----------------------------------------------------------------------
@@ -40,9 +44,10 @@ Backend::Model::Course get_row<Backend::Model::Course>(
     int row_id)
 {
   Backend::Model::Course course;
-  load_field_from_res(course.id, res, row_id, cols_id.id);
-  load_field_from_res(course.name, res, row_id, cols_id.name);
-  load_field_from_res(course.description, res, row_id, cols_id.description);
+  load_field_from_res(course.id, res, row_id, cols_id[course.id.n]);
+  load_field_from_res(course.name, res, row_id, cols_id[course.name.n]);
+  load_field_from_res(course.description, res, row_id,
+                      cols_id[course.description.n]);
   return course;
 }
 
@@ -54,10 +59,12 @@ Backend::Model::Module get_row<Backend::Model::Module>(
     int row_id)
 {
   Backend::Model::Module module;
-  load_field_from_res(module.id, res, row_id, cols_id.id);
-  load_field_from_res(module.name, res, row_id, cols_id.name);
-  load_field_from_res(module.description, res, row_id, cols_id.description);
-  load_field_from_res(module.course_id, res, row_id, cols_id.course_id);
+  load_field_from_res(module.id, res, row_id, cols_id[module.id.n]);
+  load_field_from_res(module.name, res, row_id, cols_id[module.name.n]);
+  load_field_from_res(module.description, res, row_id,
+                      cols_id[module.description.n]);
+  load_field_from_res(module.course_id, res, row_id,
+                      cols_id[module.course_id.n]);
   return module;
 }
 //----------------------------------------------------------------------
@@ -68,9 +75,13 @@ Backend::Model::User get_row<Backend::Model::User>(
     int row_id)
 {
   Backend::Model::User user;
-  load_field_from_res(user.id, res, row_id, cols_id.id);
-  load_field_from_res(user.username, res, row_id, cols_id.username);
-  load_field_from_res(user.email, res, row_id, cols_id.email);
+  load_field_from_res(user.id, res, row_id, cols_id[user.id.n]);
+  load_field_from_res(user.firstname, res, row_id, cols_id[user.firstname.n]);
+  load_field_from_res(user.lastname, res, row_id, cols_id[user.lastname.n]);
+  load_field_from_res(user.student_id, res, row_id, cols_id[user.student_id.n]);
+  load_field_from_res(user.username, res, row_id, cols_id[user.username.n]);
+  load_field_from_res(user.email, res, row_id, cols_id[user.email.n]);
+  load_field_from_res(user.role, res, row_id, cols_id[user.role.n]);
   return user;
 }
 

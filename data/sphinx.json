@@ -15,6 +15,7 @@
     "dbname": "sphinx_backend"
   },
   "loggers": {
-    "Sphinx::Backend": 1
+    "Sphinx::Backend": 1,
+    "Sphinx::GLOBAL": 1
   }
 }
