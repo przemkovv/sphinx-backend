@@ -33,6 +33,12 @@ public:
   Column<5, User, std::string, User_::email> email;
   Column<6, User, std::string, User_::role> role;
   constexpr static const auto N = 7;
+
+  auto Columns()
+  {
+    return std::forward_as_tuple(id, firstname, lastname, username, student_id,
+                                 email, role);
+  }
 };
 
 //----------------------------------------------------------------------
@@ -50,6 +56,8 @@ public:
   Column<2, Course, std::string, Course_::description, optional_tag>
       description;
   constexpr static const auto N = 3;
+
+  auto Columns() { return std::forward_as_tuple(id, name, description); }
 };
 
 //----------------------------------------------------------------------
@@ -72,6 +80,10 @@ public:
       description;
 
   constexpr static const auto N = 4;
+  auto Columns()
+  {
+    return std::forward_as_tuple(id, course_id, name, description);
+  }
 };
 
 } // namespace Sphinx::Backend::Model
@@ -138,29 +150,28 @@ struct Insert<Backend::Model::Module> {
 
 //----------------------------------------------------------------------
 
-
 // template <>
 // struct ColumnsId<Backend::Model::User> {
-  // int id;
-  // int firstname;
-  // int lastname;
-  // int student_id;
-  // int username;
-  // int email;
-  // int role;
+// int id;
+// int firstname;
+// int lastname;
+// int student_id;
+// int username;
+// int email;
+// int role;
 // };
 // template <>
 // struct ColumnsId<Backend::Model::Course> {
-  // int id;
-  // int name;
-  // int description;
+// int id;
+// int name;
+// int description;
 // };
 // template <>
 // struct ColumnsId<Backend::Model::Module> {
-  // int id;
-  // int course_id;
-  // int name;
-  // int description;
+// int id;
+// int course_id;
+// int name;
+// int description;
 // };
 
 } // namespace Sphinx::Backend::Model::Meta

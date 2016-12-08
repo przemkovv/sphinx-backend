@@ -37,6 +37,8 @@ add_definitions(
   # -Wno-reserved-user-defined-literal
   # -Weffc++
   -Werror
+  # -Wno-unused-local-typedefs
+
   -DSPDLOG_FMT_EXTERNAL
   # -DSPHINX_NDEBUG
   # -flto=thin

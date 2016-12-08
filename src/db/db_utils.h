@@ -56,6 +56,27 @@ void load_field_from_res(T &field, PGresult *res, int row_id, int col_id)
 }
 
 //----------------------------------------------------------------------
+template <typename Entity, typename T>
+void load_field_from_res(T &field,
+                         PGresult *res,
+                         int row_id,
+                         const Meta::ColumnsId<Entity> &cols_id)
+{
+  field.value = get_field_c<T>(res, row_id, cols_id[field.n]);
+}
+
+//----------------------------------------------------------------------
+template <typename Entity, typename... Columns>
+void load_fields_from_res(PGresult *res,
+                          int row_id,
+                          const Meta::ColumnsId<Entity> &cols_id,
+                          Columns&... cols)
+{
+  (load_field_from_res(cols, res, row_id, cols_id), ...);
+  // field.value = get_field_c<T>(res, row_id, col_id);
+}
+
+//----------------------------------------------------------------------
 template <typename T>
 T convert_to(const char * /* data */)
 {

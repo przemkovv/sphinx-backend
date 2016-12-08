@@ -1,5 +1,6 @@
 
 #pragma once
+#include "sphinx_assert.h"
 #include <array>
 #include <optional>
 #include <tuple>
@@ -12,7 +13,8 @@ struct Insert {
 };
 
 template <typename T>
-struct ColumnsId :public std::array<int, T::N>{};
+struct ColumnsId : public std::array<int, T::N> {
+};
 
 template <typename T>
 struct Table {
@@ -128,4 +130,23 @@ struct ForeignKey : public Column<N,
 
   std::optional<referenced_table> referenced_value;
 };
+
+template <template <int, typename, typename, auto, typename...> class C,
+          int N,
+          typename Entity,
+          typename Type,
+          auto Name,
+          typename... Traits>
+constexpr bool is_column(const C<N, Entity, Type, Name, Traits...> &c)
+{
+  using X = typename std::remove_cv_t<std::remove_reference_t<decltype(c)>>;
+  using Y = Column<N, Entity, Type, Name, Traits...>;
+  return std::is_same_v<X, Y>;
+}
+template <typename T>
+constexpr bool is_column(T &&)
+{
+  return false;
+}
+
 } // namespace Sphinx::Db

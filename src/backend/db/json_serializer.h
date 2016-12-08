@@ -16,13 +16,37 @@ namespace Sphinx::Db::Json {
 template <typename T>
 nlohmann::json to_json(const T &value)
 {
-  return {value};
+  /* clang-format off */
+  if constexpr(is_column(value))
+  {
+    if constexpr(is_optional(value))
+    {
+      if (value.value)
+        return {value.name, *value.value};
+      else
+        return {value.name, nullptr};
+    }
+    else {
+      return {value.name, value.value};
+    }
+  }
+  else {
+    return {value};
+  }
+  /* clang-format on */
+}
+
+template <typename... T>
+nlohmann::json to_json(const T &... value)
+{
+  return {to_json(value)...};
 }
 
 //----------------------------------------------------------------------
 template <template <typename, typename> typename C, typename E, typename A>
 nlohmann::json to_json(const C<E, A> &c)
 {
+  global_logger->debug("to_json<Container>");
   nlohmann::json json;
   std::transform(c.begin(), c.end(), std::back_inserter(json),
                  [](const auto &entity) { return to_json(entity); });
@@ -33,10 +57,8 @@ nlohmann::json to_json(const C<E, A> &c)
 template <>
 inline nlohmann::json to_json(const Backend::Model::Course &course)
 {
-  return {
-      {course.id.name, course.id.value},
-      {course.name.name, course.name.value},
-      {course.description.name, course.description.value.value_or(nullptr)}};
+  global_logger->debug("to_json<Course>: {}", course.name.value);
+  return to_json(course.id, course.name, course.description);
 }
 
 //----------------------------------------------------------------------
@@ -44,30 +66,16 @@ template <>
 inline nlohmann::json to_json(const Backend::Model::User &user)
 {
   global_logger->debug("to_json<User>: {}", user.firstname.value);
-  nlohmann::json json_user{{user.id.name, user.id.value},
-                           {user.firstname.name, user.firstname.value},
-                           {user.lastname.name, user.lastname.value},
-                           {user.username.name, user.username.value},
-                           {user.email.name, user.email.value},
-                           {user.role.name, user.role.value}};
-  if (user.student_id.value) {
-    json_user[user.student_id.name] = *user.student_id.value;
-  }
-  else {
-    json_user[user.student_id.name] = nullptr;
-  }
-  return json_user;
+  return to_json(user.id, user.firstname, user.lastname, user.username,
+                 user.email, user.role, user.student_id);
 }
 
 //----------------------------------------------------------------------
 template <>
 inline nlohmann::json to_json(const Backend::Model::Module &module)
 {
-  return {
-      {module.id.name, module.id.value},
-      {module.course_id.name, module.course_id.value},
-      {module.name.name, module.name.value},
-      {module.description.name, module.description.value.value_or(nullptr)}};
+  global_logger->debug("to_json<Module>: {}", module.name.value);
+  return to_json(module.id, module.course_id, module.name, module.description);
 }
 
 //----------------------------------------------------------------------
@@ -105,6 +113,7 @@ void load_from_json(Db::Column<N, E, T, Name, Traits...> &column,
 template <>
 inline Backend::Model::Course from_json(const nlohmann::json &data)
 {
+  global_logger->debug("from_json<Course>");
   Backend::Model::Course entity;
   load_from_json(entity.name, data);
   load_from_json(entity.description, data);
@@ -114,6 +123,7 @@ inline Backend::Model::Course from_json(const nlohmann::json &data)
 template <>
 inline Backend::Model::Module from_json(const nlohmann::json &data)
 {
+  global_logger->debug("from_json<Module>");
   Backend::Model::Module entity;
   load_from_json(entity.name, data);
   load_from_json(entity.description, data);
@@ -124,6 +134,7 @@ inline Backend::Model::Module from_json(const nlohmann::json &data)
 template <>
 inline Backend::Model::User from_json(const nlohmann::json &data)
 {
+  global_logger->debug("from_json<User>");
   Backend::Model::User entity;
   load_from_json(entity.username, data);
   load_from_json(entity.firstname, data);
