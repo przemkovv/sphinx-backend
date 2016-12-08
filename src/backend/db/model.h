@@ -34,7 +34,7 @@ public:
   Column<6, User, std::string, User_::role> role;
   constexpr static const auto N = 7;
 
-  auto Columns()
+  auto get_columns() const
   {
     return std::forward_as_tuple(id, firstname, lastname, username, student_id,
                                  email, role);
@@ -57,7 +57,7 @@ public:
       description;
   constexpr static const auto N = 3;
 
-  auto Columns() { return std::forward_as_tuple(id, name, description); }
+  auto get_columns() const { return std::forward_as_tuple(id, name, description); }
 };
 
 //----------------------------------------------------------------------
@@ -80,7 +80,7 @@ public:
       description;
 
   constexpr static const auto N = 4;
-  auto Columns()
+  auto get_columns() const 
   {
     return std::forward_as_tuple(id, course_id, name, description);
   }

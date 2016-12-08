@@ -42,6 +42,12 @@ nlohmann::json to_json(const T &... value)
   return {to_json(value)...};
 }
 
+template <typename... T>
+nlohmann::json to_json(const std::tuple<T ...>& value)
+{
+  return std::apply(to_json<T...>, value);
+}
+
 //----------------------------------------------------------------------
 template <template <typename, typename> typename C, typename E, typename A>
 nlohmann::json to_json(const C<E, A> &c)
@@ -58,7 +64,7 @@ template <>
 inline nlohmann::json to_json(const Backend::Model::Course &course)
 {
   global_logger->debug("to_json<Course>: {}", course.name.value);
-  return to_json(course.id, course.name, course.description);
+  return to_json(course.get_columns());
 }
 
 //----------------------------------------------------------------------
@@ -66,8 +72,7 @@ template <>
 inline nlohmann::json to_json(const Backend::Model::User &user)
 {
   global_logger->debug("to_json<User>: {}", user.firstname.value);
-  return to_json(user.id, user.firstname, user.lastname, user.username,
-                 user.email, user.role, user.student_id);
+  return to_json(user.get_columns());
 }
 
 //----------------------------------------------------------------------
@@ -75,7 +80,10 @@ template <>
 inline nlohmann::json to_json(const Backend::Model::Module &module)
 {
   global_logger->debug("to_json<Module>: {}", module.name.value);
-  return to_json(module.id, module.course_id, module.name, module.description);
+return to_json(module.id,
+        // module.course_id,
+        module.name,
+        module.description);
 }
 
 //----------------------------------------------------------------------
