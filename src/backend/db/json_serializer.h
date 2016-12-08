@@ -98,7 +98,7 @@ void load_from_json(Db::Column<N, E, T, Name, Traits...> &column,
         return;
       }
     }
-  column.value = data[N].template get<T>();
+  column.value = data[Name].template get<T>();
 }
 
 //----------------------------------------------------------------------
