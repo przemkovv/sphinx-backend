@@ -131,6 +131,7 @@ struct ForeignKey : public Column<N,
   std::optional<referenced_table> referenced_value;
 };
 
+//----------------------------------------------------------------------
 template <template <int, typename, typename, auto, typename...> class C,
           int N,
           typename Entity,
@@ -143,6 +144,23 @@ constexpr bool is_column(const C<N, Entity, Type, Name, Traits...> &c)
   using Y = Column<N, Entity, Type, Name, Traits...>;
   return std::is_convertible_v<X, Y>;
 }
+
+//----------------------------------------------------------------------
+template <template <int, typename, typename,  typename, auto, typename...> class C,
+          int N,
+          typename ParentTable,
+          typename PK,
+          typename Entity,
+          auto Name,
+          typename... Traits>
+constexpr bool is_column(const C<N, ParentTable, PK, Entity, Name, Traits...> &c)
+{
+  using X = typename std::remove_cv_t<std::remove_reference_t<decltype(c)>>;
+  using Y = Column<N, Entity, typename PK::type, Name, foreignkey_tag, Traits...>;
+  return std::is_convertible_v<X, Y>;
+}
+
+//----------------------------------------------------------------------
 template <typename T>
 constexpr bool is_column(T &&)
 {

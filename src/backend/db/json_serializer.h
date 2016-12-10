@@ -81,7 +81,7 @@ inline nlohmann::json to_json(const Backend::Model::Module &module)
 {
   global_logger->debug("to_json<Module>: {}", module.name.value);
 return to_json(module.id,
-        // module.course_id,
+        module.course_id,
         module.name,
         module.description);
 }
