@@ -39,7 +39,7 @@ public:
     return std::forward_as_tuple(id, firstname, lastname, username, student_id,
                                  email, role);
   }
-  auto get_columns() 
+  auto get_columns()
   {
     return std::forward_as_tuple(id, firstname, lastname, username, student_id,
                                  email, role);
@@ -68,7 +68,7 @@ public:
   {
     return std::forward_as_tuple(id, title, description, owner_id);
   }
-  auto get_columns() 
+  auto get_columns()
   {
     return std::forward_as_tuple(id, title, description, owner_id);
   }
@@ -98,7 +98,7 @@ public:
   {
     return std::forward_as_tuple(id, course_id, name, description);
   }
-  auto get_columns() 
+  auto get_columns()
   {
     return std::forward_as_tuple(id, course_id, name, description);
   }

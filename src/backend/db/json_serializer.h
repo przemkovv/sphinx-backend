@@ -46,7 +46,7 @@ nlohmann::json to_json(const T &value)
   }
   else if constexpr (Meta::is_entity_v<T>) {
     return to_json(value.get_columns());
-  } 
+  }
   else {
     return to_json(value);
 

@@ -6,6 +6,7 @@ template <>
 Meta::ColumnsId<Backend::Model::Module> get_columns_id(PGresult *res)
 {
   using E = Backend::Model::Module;
+  using Columns = decltype(std::declval<E>().get_columns());
   return {PQfnumber(res, decltype(E::id)::name),
           PQfnumber(res, decltype(E::course_id)::name),
           PQfnumber(res, decltype(E::name)::name),
