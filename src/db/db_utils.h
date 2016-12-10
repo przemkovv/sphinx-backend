@@ -38,21 +38,23 @@ std::optional<T> get_field_optional(PGresult *res, int row_id, int col_id)
 template <typename T>
 auto get_field_c(PGresult *res, int row_id, int col_id)
 {
-  if
-    constexpr(is_optional_v<T>)
-    {
-      return get_field_optional<typename T::type>(res, row_id, col_id);
-    }
+  /* clang-format off */
+  if constexpr(is_optional_v<T>)
+  {
+    return get_field_optional<typename T::type>(res, row_id, col_id);
+  }
   else {
     return get_field<typename T::type>(res, row_id, col_id);
   }
+  /* clang-format on */
 }
 
 //----------------------------------------------------------------------
 template <typename T>
 void load_field_from_res(T &field, PGresult *res, int row_id, int col_id)
 {
-  field.value = get_field_c<T>(res, row_id, col_id);
+  if (col_id != -1)
+    field.value = get_field_c<T>(res, row_id, col_id);
 }
 
 //----------------------------------------------------------------------
