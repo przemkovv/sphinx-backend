@@ -18,7 +18,7 @@ Meta::ColumnsId<Backend::Model::Course> get_columns_id(PGresult *res)
 {
   using E = Backend::Model::Course;
   return {PQfnumber(res, decltype(E::id)::name),
-          PQfnumber(res, decltype(E::name)::name),
+          PQfnumber(res, decltype(E::title)::name),
           PQfnumber(res, decltype(E::description)::name)};
 }
 
@@ -44,7 +44,7 @@ Backend::Model::Course get_row<Backend::Model::Course>(
     int row_id)
 {
   Backend::Model::Course course;
-  load_fields_from_res(res, row_id, cols_id, course.id, course.name,
+  load_fields_from_res(res, row_id, cols_id, course.id, course.title,
                        course.description);
   return course;
 }

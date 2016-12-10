@@ -1,7 +1,7 @@
 #pragma once
 
-#include "logger.h"        // for Logger
 #include "db_utils.h"      // for make_value_list, ValueList, get_c...
+#include "logger.h"        // for Logger
 #include "model_meta.h"    // for Columns
 #include "sphinx_assert.h" // for SPHINX_ASSERT
 #include <algorithm>       // for move
@@ -79,7 +79,11 @@ public:
   {
     auto pq_args = make_pq_args(args);
 
-    logger_->info("Executing query: {}", query);
+    std::string args_str = std::accumulate(
+        args.begin(), args.end(), std::string{""},
+        [](auto a, auto b) { return fmt::format("{}, \"{}\"", a, *b); });
+
+    logger_->info("Executing query: {}\nparams: {}", query, args_str);
 
     auto result = PQexecParams(conn_.get(), query.data(),
                                static_cast<int>(pq_args.size()), nullptr,

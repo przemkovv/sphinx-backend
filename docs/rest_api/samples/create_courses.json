@@ -1,0 +1,26 @@
+
+[
+  {
+    "title": "C++ Programming",
+    "description": "C++",
+    "owner_id": 1,
+    "modules": [
+      {
+        "title": "Conditional expressions",
+        "description": "if, switch",
+        "order": 1
+      },
+      {
+        "title": "Loops",
+        "description": "for, while, do-while, range-for",
+        "order": 2
+      }
+    ]
+  },
+  {
+    "title": "Java Programming",
+    "description": "Java",
+    "owner_id": 2
+  }
+]
+

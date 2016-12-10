@@ -102,7 +102,7 @@ template <>
 void BackendApp::create_entity<Model::Course>(const nlohmann::json &data)
 {
   auto course = from_json<Model::Course>(data);
-  logger()->debug("Creating course {} {}", course.name.value,
+  logger()->debug("Creating course {} {}", course.title.value,
                   course.description.value.value_or("EMPTY"));
   dao_.create_course(course);
 }

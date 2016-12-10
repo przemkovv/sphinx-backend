@@ -12,7 +12,7 @@ using Sphinx::Db::optional_tag;
 using Sphinx::Db::autoincrement_tag;
 
 //----------------------------------------------------------------------
-struct User {
+struct User : Sphinx::Db::Meta::Table<User> {
 private:
   struct User_ {
     static constexpr char id[] = "id";
@@ -25,7 +25,7 @@ private:
   };
 
 public:
-  Column<0, User, std::uint64_t, User_::id> id;
+  Column<0, User, std::uint64_t, User_::id, optional_tag> id;
   Column<1, User, std::string, User_::firstname> firstname;
   Column<2, User, std::string, User_::lastname> lastname;
   Column<3, User, std::string, User_::username> username;
@@ -39,6 +39,11 @@ public:
     return std::forward_as_tuple(id, firstname, lastname, username, student_id,
                                  email, role);
   }
+  auto get_columns() 
+  {
+    return std::forward_as_tuple(id, firstname, lastname, username, student_id,
+                                 email, role);
+  }
 };
 
 //----------------------------------------------------------------------
@@ -46,18 +51,27 @@ struct Course {
 private:
   struct Course_ {
     static constexpr char id[] = "id";
-    static constexpr char name[] = "name";
+    static constexpr char title[] = "title";
     static constexpr char description[] = "description";
+    static constexpr char owner_id[] = "owner_id";
   };
 
 public:
-  Column<0, Course, std::uint64_t, Course_::id> id;
-  Column<1, Course, std::string, Course_::name> name;
+  Column<0, Course, std::uint64_t, Course_::id, optional_tag> id;
+  Column<1, Course, std::string, Course_::title> title;
   Column<2, Course, std::string, Course_::description, optional_tag>
       description;
-  constexpr static const auto N = 3;
+  ForeignKey<3, User, decltype(User::id), Course, Course_::owner_id> owner_id;
+  constexpr static const auto N = 4;
 
-  auto get_columns() const { return std::forward_as_tuple(id, name, description); }
+  auto get_columns() const
+  {
+    return std::forward_as_tuple(id, title, description, owner_id);
+  }
+  auto get_columns() 
+  {
+    return std::forward_as_tuple(id, title, description, owner_id);
+  }
 };
 
 //----------------------------------------------------------------------
@@ -71,16 +85,20 @@ private:
   };
 
 public:
-  Column<0, Module, std::uint64_t, Module_::id> id;
+  Column<0, Module, std::uint64_t, Module_::id, optional_tag> id;
   ForeignKey<1, Course, decltype(Course::id), Module, Module_::course_id>
       course_id;
-  // Column<Module, std::int64_t, Module_::course_id> course_id;
   Column<2, Module, std::string, Module_::name> name;
   Column<3, Module, std::string, Module_::description, optional_tag>
       description;
 
   constexpr static const auto N = 4;
-  auto get_columns() const 
+
+  auto get_columns() const
+  {
+    return std::forward_as_tuple(id, course_id, name, description);
+  }
+  auto get_columns() 
   {
     return std::forward_as_tuple(id, course_id, name, description);
   }
@@ -120,11 +138,13 @@ template <>
 struct Insert<Backend::Model::Course> {
   using Course = Backend::Model::Course;
 
-  static constexpr auto columns = {decltype(Course::name)::name,
-                                   decltype(Course::description)::name};
+  static constexpr auto columns = {decltype(Course::title)::name,
+                                   decltype(Course::description)::name,
+                                   decltype(Course::owner_id)::name};
   static auto values(const Course &data)
   {
-    return std::make_tuple(data.name.value, data.description.value);
+    return std::make_tuple(data.title.value, data.description.value,
+                           data.owner_id.value);
   }
   using id_column = decltype(Course::id);
 };

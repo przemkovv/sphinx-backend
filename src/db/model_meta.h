@@ -39,6 +39,8 @@ template <typename Column, typename Entity>
 constexpr auto is_column_belongs_to_entity =
     std::is_same_v<Entity, typename Column::entity>;
 
+template <typename Entity>
+constexpr auto is_entity_v = std::is_base_of_v<Table<Entity>, Entity>;
 } // namespace Sphinx::Db::Meta
 
 //----------------------------------------------------------------------
@@ -146,17 +148,20 @@ constexpr bool is_column(const C<N, Entity, Type, Name, Traits...> &c)
 }
 
 //----------------------------------------------------------------------
-template <template <int, typename, typename,  typename, auto, typename...> class C,
+template <template <int, typename, typename, typename, auto, typename...>
+          class C,
           int N,
           typename ParentTable,
           typename PK,
           typename Entity,
           auto Name,
           typename... Traits>
-constexpr bool is_column(const C<N, ParentTable, PK, Entity, Name, Traits...> &c)
+constexpr bool
+is_column(const C<N, ParentTable, PK, Entity, Name, Traits...> &c)
 {
   using X = typename std::remove_cv_t<std::remove_reference_t<decltype(c)>>;
-  using Y = Column<N, Entity, typename PK::type, Name, foreignkey_tag, Traits...>;
+  using Y =
+      Column<N, Entity, typename PK::type, Name, foreignkey_tag, Traits...>;
   return std::is_convertible_v<X, Y>;
 }
 
@@ -166,5 +171,7 @@ constexpr bool is_column(T &&)
 {
   return false;
 }
+
+//----------------------------------------------------------------------
 
 } // namespace Sphinx::Db
