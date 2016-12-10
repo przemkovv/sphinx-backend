@@ -85,6 +85,7 @@ std::string BackendApp::get_users()
   auto json_users = to_json(users);
   return json_users.dump(dump_indent_);
 }
+        
 
 //----------------------------------------------------------------------
 template <>

@@ -5,7 +5,6 @@
 #include "db_connection.h" // for DbConnection, connection_config
 #include "model.h"         // for Module, Course, User
 #include "model_expr.h"
-#include "model_utils.h"
 #include <algorithm> // for move
 #include <optional>
 #include <vector> // for vector

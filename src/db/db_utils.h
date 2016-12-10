@@ -70,7 +70,7 @@ template <typename Entity, typename... Columns>
 void load_fields_from_res(PGresult *res,
                           int row_id,
                           const Meta::ColumnsId<Entity> &cols_id,
-                          Columns&... cols)
+                          Columns &... cols)
 {
   (load_field_from_res(cols, res, row_id, cols_id), ...);
   // field.value = get_field_c<T>(res, row_id, col_id);
@@ -117,19 +117,34 @@ template <>
 std::optional<std::string> to_optional_string(std::nullptr_t /* null */);
 
 //----------------------------------------------------------------------
-template <typename T>
-Meta::ColumnsId<T> get_columns_id(PGresult * /* res */)
+template <typename Col, typename IDs>
+void get_column_id(PGresult *res, const Col &, IDs &ids)
 {
-  static_assert(assert_false<T>::value, "Not implemented");
+  ids[Col::n] = PQfnumber(res, Col::name);
 }
 
 //----------------------------------------------------------------------
 template <typename T>
-T get_row(PGresult * /* res */,
-          const Meta::ColumnsId<T> & /*cols_id*/,
-          int /*row_id*/)
+Meta::ColumnsId<T> get_columns_id(PGresult *res)
 {
-  static_assert(assert_false<T>::value, "Not implemented");
+  T entity;
+  Meta::ColumnsId<T> ids;
+  auto func = [&ids, &res](const auto &col) { get_column_id(res, col, ids); };
+  auto cols = entity.get_columns();
+  Sphinx::Utils::for_each_in_tuple(cols, func);
+  return ids;
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+T get_row(PGresult *res, const Meta::ColumnsId<T> &cols_id, int row_id)
+{
+  T entity;
+  auto func = [&res, &row_id, &cols_id](auto &... cols) {
+    load_fields_from_res(res, row_id, cols_id, cols...);
+  };
+  std::apply(func, entity.get_columns());
+  return entity;
 }
 
 //----------------------------------------------------------------------

@@ -47,7 +47,7 @@ public:
 };
 
 //----------------------------------------------------------------------
-struct Course {
+struct Course : Sphinx::Db::Meta::Table<Course>{
 private:
   struct Course_ {
     static constexpr char id[] = "id";
@@ -75,7 +75,7 @@ public:
 };
 
 //----------------------------------------------------------------------
-struct Module {
+struct Module : Sphinx::Db::Meta::Table<Module> {
 private:
   struct Module_ {
     static constexpr char id[] = "id";
