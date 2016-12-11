@@ -67,20 +67,20 @@ private:
 
   //----------------------------------------------------------------------
   template <typename T>
-  bool is_entity_exists(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id)
+  bool is_entity_exists(typename Meta::IdColumn<T>::type entity_id)
   {
     return dao_.exists<T>(entity_id);
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T get_entity(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id)
+  T get_entity(typename Meta::IdColumn<T>::type entity_id)
   {
     auto entity = dao_.get_by_id<T>(entity_id);
     return entity;
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T update_entity(typename Sphinx::Db::Meta::IdColumn<T>::type /* entity_id */,
+  T update_entity(typename Meta::IdColumn<T>::type /* entity_id */,
                   const nlohmann::json & /* entity_json */)
   {
     NOT_IMPLEMENTED_YET();
@@ -127,7 +127,7 @@ private:
   void create_subentities(Entity &entity)
   {
     auto func = [this](auto &subentities3) {
-        this->create_entities(subentities3);
+      this->create_entities(subentities3);
     };
     for_each_subentity(entity, func);
   }
@@ -164,17 +164,16 @@ private:
     auto links = entity.get_many_links();
 
     auto func = [this, &data, &entity](auto &link) {
-      constexpr auto field_name = Sphinx::Db::LinkMany<decltype(link)>::name;
+      using Sphinx::Db::LinkMany;
+      constexpr auto field_name = LinkMany<decltype(link)>::name;
       if (data.count(field_name) == 0) {
         link = std::nullopt;
       }
       else {
-        using RemoteEntity =
-            typename Sphinx::Db::LinkMany<decltype(link)>::remote_entity;
+        using RemoteEntity = typename LinkMany<decltype(link)>::remote_entity;
         link = this->deserialize_entities<RemoteEntity>(data[field_name]);
       }
     };
-
     Sphinx::Utils::for_each_in_tuple(links, func);
   }
 
@@ -184,15 +183,15 @@ private:
                                       const bool include_subentities = false)
   {
     std::vector<T> entities;
-    auto func = [this,
-                 &include_subentities](const nlohmann::json &entity_data) {
+    auto func = [this, &include_subentities](const auto &entity_data) {
+      using Sphinx::Db::Json::from_json;
       if (include_subentities) {
-        auto entity = Sphinx::Db::Json::from_json<T>(entity_data);
+        auto entity = from_json<T>(entity_data);
         deserialize_subentities(entity_data, entity);
         return entity;
       }
       else {
-        return Sphinx::Db::Json::from_json<T>(entity_data);
+        return from_json<T>(entity_data);
       }
     };
     if (data.is_array()) {

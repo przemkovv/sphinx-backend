@@ -129,10 +129,9 @@ struct ForeignKey : public Column<N,
   using referenced_table = ParentTable;
   using referenced_table_primary_key = PK;
 
-  static_assert(
-      Db::Meta::is_column_belongs_to_entity<referenced_table_primary_key,
-                                            referenced_table>,
-      "Primary Key origin has to be ParentTable");
+  static_assert(Meta::is_column_belongs_to_entity<referenced_table_primary_key,
+                                                  referenced_table>,
+                "Primary Key origin has to be ParentTable");
 
   std::optional<referenced_table> referenced_value;
 };
@@ -178,9 +177,6 @@ constexpr bool is_column(T &&)
 
 //----------------------------------------------------------------------
 
-
-
-
 //----------------------------------------------------------------------
 
 template <typename T>
@@ -207,9 +203,9 @@ struct LinkManyType {
   static_assert(assert_false<LocalMember>::value, "Not implemented");
 };
 
-
 //----------------------------------------------------------------------
 template <typename LocalMember>
-using LinkMany = typename LinkManyType<std::remove_reference_t<LocalMember>>::type;
+using LinkMany =
+    typename LinkManyType<std::remove_reference_t<LocalMember>>::type;
 
 } // namespace Sphinx::Db
