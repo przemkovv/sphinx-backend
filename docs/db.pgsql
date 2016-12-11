@@ -78,4 +78,6 @@ CREATE TABLE tests (
 
 SELECT * FROM users;
 SELECT * FROM courses;
+SELECT * FROM modules;
+
 

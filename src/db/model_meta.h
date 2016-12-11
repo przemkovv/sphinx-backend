@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sphinx_assert.h"
 #include <array>
 #include <optional>
 #include <tuple>
@@ -176,5 +177,39 @@ constexpr bool is_column(T &&)
 }
 
 //----------------------------------------------------------------------
+
+
+
+
+//----------------------------------------------------------------------
+
+template <typename T>
+using LinkManyFieldType = std::optional<T>;
+
+//----------------------------------------------------------------------
+template <typename T, typename RemoteKey, typename LocalKey, auto Name>
+struct LinkManyInfo {
+
+  using type = T;
+  using remote_key = RemoteKey;
+  using remote_entity = typename RemoteKey::entity;
+  using local_key = LocalKey;
+  using local_entity = typename LocalKey::entity;
+  static constexpr auto name = Name;
+};
+
+struct LinkOne {
+};
+
+template <typename LocalMember>
+struct LinkManyType {
+  typedef typename LocalMember::a b;
+  static_assert(assert_false<LocalMember>::value, "Not implemented");
+};
+
+
+//----------------------------------------------------------------------
+template <typename LocalMember>
+using LinkMany = typename LinkManyType<std::remove_reference_t<LocalMember>>::type;
 
 } // namespace Sphinx::Db

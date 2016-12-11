@@ -59,9 +59,9 @@ public:
   std::vector<Model::Module> get_modules();
   std::vector<Model::Module>
   get_modules(Meta::IdColumn_t<Model::Course> course_id);
-  void create_user(const Model::User &user);
-  void create_course(const Model::Course &course);
-  void create_module(const Model::Module &module);
+  Meta::IdColumn_t<Model::User> create_user(const Model::User &user);
+  Meta::IdColumn_t<Model::Course> create_course(const Model::Course &course);
+  Meta::IdColumn_t<Model::Module> create_module(const Model::Module &module);
 
 private:
   Logger logger_;

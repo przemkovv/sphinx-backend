@@ -88,29 +88,31 @@ std::string BackendApp::get_users()
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity(const Model::Module &module)
+Meta::IdColumn_t<Model::Module>
+BackendApp::create_entity(const Model::Module &module)
 {
   logger()->debug("Creating module {} {} {}", module.course_id.value,
-                  module.name.value,
+                  module.title.value,
                   module.description.value.value_or("EMPTY"));
-  dao_.create_module(module);
+  return dao_.create_module(module);
 }
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity(const Model::Course &course)
+Meta::IdColumn_t<Model::Course>
+BackendApp::create_entity(const Model::Course &course)
 {
   logger()->debug("Creating course {} {}", course.title.value,
                   course.description.value.value_or("EMPTY"));
-  dao_.create_course(course);
+  return dao_.create_course(course);
 }
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity(const Model::User &user)
+Meta::IdColumn_t<Model::User> BackendApp::create_entity(const Model::User &user)
 {
   logger()->debug("Creating user {} {}", user.username.value, user.email.value);
-  dao_.create_user(user);
+  return dao_.create_user(user);
 }
 //----------------------------------------------------------------------
 
@@ -176,9 +178,9 @@ void BackendApp::add_courses_routes()
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
-      auto t = deserialize_entities<Model::Course>(req.body);
+      auto t = deserialize_entities<Model::Course>(req.body, true);
+      create_entities<Model::Course>(req.body);
       return to_json(t).dump(dump_indent_);
-      // create_entities<Model::Course>(req.body);
     }
     return "nothing"s;
   });

@@ -1,9 +1,9 @@
 
 #include "dao.h"
 #include "db/model.h"      // for User, Module, Course
+#include <exception>       // for exception
 #include <memory>          // for __shared_ptr_access
 #include <spdlog/spdlog.h> // for logger
-#include <exception>        // for exception
 
 //----------------------------------------------------------------------
 namespace Sphinx::Backend::Db {
@@ -33,24 +33,30 @@ std::vector<Model::Module>
 }
 
 //----------------------------------------------------------------------
-void DAO::create_course(const Model::Course &course)
+Db::Meta::IdColumn_t<Model::Course>
+DAO::create_course(const Model::Course &course)
 {
   auto last_id = db_connection_.insert(course);
   logger_->debug("Created course with last id: {}", last_id);
+  return last_id;
 }
 
 //----------------------------------------------------------------------
-void DAO::create_module(const Model::Module &module)
+Db::Meta::IdColumn_t<Model::Module>
+DAO::create_module(const Model::Module &module)
 {
   auto last_id = db_connection_.insert(module);
   logger_->debug("Created module with last id: {}", last_id);
+  return last_id;
 }
 
 //----------------------------------------------------------------------
-void DAO::create_user(const Model::User &user)
+Db::Meta::IdColumn_t<Model::User>
+DAO::create_user(const Model::User &user)
 {
   auto last_id = db_connection_.insert(user);
   logger_->debug("Created user with last id: {}", last_id);
+  return last_id;
 }
 
 } // namespace Sphinx::Backend::Db
