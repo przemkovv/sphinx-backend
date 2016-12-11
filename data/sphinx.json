@@ -1,6 +1,6 @@
 {
   "debug": {
-    "dump_level": 0
+    "dump_level": 1
   },
   "server": {
     "port": 9998,

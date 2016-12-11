@@ -4,6 +4,7 @@
 #include <optional>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 namespace Sphinx::Db::Meta {
 
@@ -16,11 +17,14 @@ struct ColumnsId : public std::array<int, T::N> {
 };
 
 template <typename T>
-struct Table {
+struct Entity {
 };
 
+template <typename E>
+using Entities = std::vector<E>;
+
 template <typename T>
-constexpr auto TableName = Table<T>::name;
+constexpr auto EntityName = Entity<T>::name;
 
 template <typename T>
 constexpr auto InsertColumns = Insert<T>::columns;
@@ -38,8 +42,8 @@ template <typename Column, typename Entity>
 constexpr auto is_column_belongs_to_entity =
     std::is_same_v<Entity, typename Column::entity>;
 
-template <typename Entity>
-constexpr auto is_entity_v = std::is_base_of_v<Table<Entity>, Entity>;
+template <typename E>
+constexpr auto is_entity_v = std::is_base_of_v<Entity<E>, E>;
 } // namespace Sphinx::Db::Meta
 
 //----------------------------------------------------------------------

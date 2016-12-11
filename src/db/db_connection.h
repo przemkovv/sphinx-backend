@@ -123,7 +123,7 @@ public:
   template <typename T>
   std::vector<T> get_all()
   {
-    auto result = exec(fmt::format("SELECT * FROM {0}", Meta::TableName<T>));
+    auto result = exec(fmt::format("SELECT * FROM {0}", Meta::EntityName<T>));
     return get_rows<T>(std::move(result));
   }
   //----------------------------------------------------------------------
@@ -131,7 +131,7 @@ public:
   std::vector<T> get_all_where(const Condition &condition)
   {
     auto result = exec(fmt::format("SELECT * FROM {0} WHERE {1}",
-                                   Meta::TableName<T>, condition.str("$1")),
+                                   Meta::EntityName<T>, condition.str("$1")),
                        condition.value);
     return get_rows<T>(std::move(result));
   }
@@ -141,7 +141,7 @@ public:
   {
     auto result =
         exec(fmt::format("SELECT * FROM {table_name} WHERE {column} = {value}",
-                         "table_name"_a = Meta::TableName<T>,
+                         "table_name"_a = Meta::EntityName<T>,
                          "column"_a = Meta::IdColumn<T>::name, "value"_a = id));
     return get_row<T>(std::move(result));
   }
@@ -157,7 +157,7 @@ public:
   {
     auto result = exec(fmt::format(
         "SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {column} = {value})",
-        "table_name"_a = Meta::TableName<T>,
+        "table_name"_a = Meta::EntityName<T>,
         "column"_a = Meta::IdColumn<T>::name, "value"_a = id));
 
     return get_scalar<bool>(std::move(result));
@@ -197,7 +197,7 @@ public:
                           return a + ", " + fmt::format("${}", ++n);
                         });
 
-    constexpr auto table_name = Meta::TableName<T>;
+    constexpr auto table_name = Meta::EntityName<T>;
     constexpr auto id_column = Meta::IdColumn<T>::name;
     auto query = fmt::format("INSERT INTO {0} ({1}) VALUES ({2}) RETURNING {3}",
                              table_name, field_list, field_ids, id_column);

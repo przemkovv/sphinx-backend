@@ -5,6 +5,7 @@
 
 #include "db.h"
 #include "db/dao.h"
+#include "db/json_serializer.h"
 #include "model_meta.h"
 #include <crow.h>
 #include <nlohmann/json.hpp>
@@ -76,32 +77,48 @@ private:
   }
   template <typename T>
   T update_entity(typename Sphinx::Db::Meta::IdColumn<T>::type /* entity_id */,
-                  const nlohmann::json &/* entity_json */)
+                  const nlohmann::json & /* entity_json */)
   {
     NOT_IMPLEMENTED_YET();
   }
   template <typename T>
-  void create_entity(const nlohmann::json &entity_json)
+  void create_entity(const T &/* entity */)
   {
     static_assert(assert_false<T>::value, "Not implemented");
   }
+
   template <typename T>
   void create_entities(const nlohmann::json &data)
   {
-    if (data.is_array()) {
-      for (const auto &entity_json : data) {
-        create_entity<T>(entity_json);
-      }
-    }
-    else {
-      create_entity<T>(data);
-    }
+    auto entities = deserialize_entities<T>(data);
+    std::for_each(entities.begin(), entities.end(),
+                  [this](const auto &entity) { this->create_entity(entity); });
   }
 
   template <typename T>
   void create_entities(const std::string &data)
   {
     return create_entities<T>(nlohmann::json::parse(data));
+  }
+
+  template <typename T>
+  std::vector<T> deserialize_entities(const nlohmann::json &data)
+  {
+    std::vector<T> entities;
+    if (data.is_array()) {
+      entities.reserve(data.size());
+      std::transform(data.begin(), data.end(), std::back_inserter(entities),
+                     Sphinx::Db::Json::from_json<T>);
+    }
+    else {
+      entities.emplace_back(Sphinx::Db::Json::from_json<T>(data));
+    }
+    return entities;
+  }
+  template <typename T>
+  std::vector<T> deserialize_entities(const std::string &data)
+  {
+    return deserialize_entities<T>(nlohmann::json::parse(data));
   }
 
   std::string find_users(std::string name);

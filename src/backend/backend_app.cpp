@@ -85,14 +85,12 @@ std::string BackendApp::get_users()
   auto json_users = to_json(users);
   return json_users.dump(dump_indent_);
 }
-        
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity<Model::Module>(const nlohmann::json &data)
+void BackendApp::create_entity(const Model::Module &module)
 {
-  auto module = from_json<Model::Module>(data);
-  logger()->debug("Creating course {} {} {}", module.course_id.value,
+  logger()->debug("Creating module {} {} {}", module.course_id.value,
                   module.name.value,
                   module.description.value.value_or("EMPTY"));
   dao_.create_module(module);
@@ -100,9 +98,8 @@ void BackendApp::create_entity<Model::Module>(const nlohmann::json &data)
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity<Model::Course>(const nlohmann::json &data)
+void BackendApp::create_entity(const Model::Course &course)
 {
-  auto course = from_json<Model::Course>(data);
   logger()->debug("Creating course {} {}", course.title.value,
                   course.description.value.value_or("EMPTY"));
   dao_.create_course(course);
@@ -110,9 +107,8 @@ void BackendApp::create_entity<Model::Course>(const nlohmann::json &data)
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity<Model::User>(const nlohmann::json &data)
+void BackendApp::create_entity(const Model::User &user)
 {
-  auto user = from_json<Model::User>(data);
   logger()->debug("Creating user {} {}", user.username.value, user.email.value);
   dao_.create_user(user);
 }
@@ -180,7 +176,9 @@ void BackendApp::add_courses_routes()
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
-      create_entities<Model::Course>(req.body);
+      auto t = deserialize_entities<Model::Course>(req.body);
+      return to_json(t).dump(dump_indent_);
+      // create_entities<Model::Course>(req.body);
     }
     return "nothing"s;
   });

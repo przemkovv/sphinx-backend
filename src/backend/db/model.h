@@ -13,8 +13,15 @@ namespace Sphinx::Backend::Model {
 using Sphinx::Db::optional_tag;
 using Sphinx::Db::autoincrement_tag;
 
+struct User;
+struct Module;
+struct Course;
+using Users = Sphinx::Db::Meta::Entities<User>;
+using Modules = Sphinx::Db::Meta::Entities<Module>;
+using Courses = Sphinx::Db::Meta::Entities<Course>;
+
 //----------------------------------------------------------------------
-struct User : Sphinx::Db::Meta::Table<User> {
+struct User : Sphinx::Db::Meta::Entity<User> {
 private:
   struct User_ {
     static constexpr char id[] = "id";
@@ -48,8 +55,9 @@ public:
   }
 };
 
+
 //----------------------------------------------------------------------
-struct Course : Sphinx::Db::Meta::Table<Course> {
+struct Course : Sphinx::Db::Meta::Entity<Course> {
 private:
   struct Course_ {
     static constexpr char id[] = "id";
@@ -74,10 +82,12 @@ public:
   {
     return std::forward_as_tuple(id, title, description, owner_id);
   }
+
+  std::optional<std::vector<Module>> modules;
 };
 
 //----------------------------------------------------------------------
-struct Module : Sphinx::Db::Meta::Table<Module> {
+struct Module : Sphinx::Db::Meta::Entity<Module> {
 private:
   struct Module_ {
     static constexpr char id[] = "id";
@@ -113,7 +123,7 @@ namespace Sphinx::Db::Meta {
 //----------------------------------------------------------------------
 
 template <>
-constexpr auto TableName<Backend::Model::User> = "users";
+constexpr auto EntityName<Backend::Model::User> = "users";
 
 template <>
 struct Insert<Backend::Model::User> {
@@ -135,7 +145,7 @@ struct Insert<Backend::Model::User> {
 
 //----------------------------------------------------------------------
 template <>
-constexpr auto TableName<Backend::Model::Course> = "courses";
+constexpr auto EntityName<Backend::Model::Course> = "courses";
 
 template <>
 struct Insert<Backend::Model::Course> {
@@ -154,7 +164,7 @@ struct Insert<Backend::Model::Course> {
 
 //----------------------------------------------------------------------
 template <>
-constexpr auto TableName<Backend::Model::Module> = "modules";
+constexpr auto EntityName<Backend::Model::Module> = "modules";
 
 template <>
 struct Insert<Backend::Model::Module> {
