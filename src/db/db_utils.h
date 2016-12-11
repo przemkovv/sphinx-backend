@@ -1,13 +1,17 @@
 #pragma once
 
-#include "model_meta.h"
-#include "sphinx_assert.h"
-#include "utils.h"
-
-#include <fmt/format.h>
-#include <tuple>
-
-#include <libpq-fe.h>
+#include "model_meta.h"    // for ColumnsId
+#include "sphinx_assert.h" // for assert_false
+#include "utils.h"         // for for_each_in_tuple
+#include <algorithm>       // for forward
+#include <cstddef>         // for nullptr_t
+#include <fmt/format.h>    // for MemoryWriter
+#include <libpq-fe.h>      // for PGresult, PQgetisnull, PQgetvalue, PQfnumber
+#include <optional>        // for optional
+#include <stdint.h>        // for int64_t, uint64_t
+#include <string>          // for basic_string, string
+#include <tuple>           // for apply
+#include <vector>          // for vector
 
 namespace Sphinx::Db {
 
@@ -38,21 +42,23 @@ std::optional<T> get_field_optional(PGresult *res, int row_id, int col_id)
 template <typename T>
 auto get_field_c(PGresult *res, int row_id, int col_id)
 {
-  if
-    constexpr(is_optional_v<T>)
-    {
-      return get_field_optional<typename T::type>(res, row_id, col_id);
-    }
+  /* clang-format off */
+  if constexpr(is_optional_v<T>)
+  {
+    return get_field_optional<typename T::type>(res, row_id, col_id);
+  }
   else {
     return get_field<typename T::type>(res, row_id, col_id);
   }
+  /* clang-format on */
 }
 
 //----------------------------------------------------------------------
 template <typename T>
 void load_field_from_res(T &field, PGresult *res, int row_id, int col_id)
 {
-  field.value = get_field_c<T>(res, row_id, col_id);
+  if (col_id != -1)
+    field.value = get_field_c<T>(res, row_id, col_id);
 }
 
 //----------------------------------------------------------------------
@@ -70,7 +76,7 @@ template <typename Entity, typename... Columns>
 void load_fields_from_res(PGresult *res,
                           int row_id,
                           const Meta::ColumnsId<Entity> &cols_id,
-                          Columns&... cols)
+                          Columns &... cols)
 {
   (load_field_from_res(cols, res, row_id, cols_id), ...);
   // field.value = get_field_c<T>(res, row_id, col_id);
@@ -117,19 +123,34 @@ template <>
 std::optional<std::string> to_optional_string(std::nullptr_t /* null */);
 
 //----------------------------------------------------------------------
-template <typename T>
-Meta::ColumnsId<T> get_columns_id(PGresult * /* res */)
+template <typename Col, typename IDs>
+void get_column_id(PGresult *res, const Col &, IDs &ids)
 {
-  static_assert(assert_false<T>::value, "Not implemented");
+  ids[Col::n] = PQfnumber(res, Col::name);
 }
 
 //----------------------------------------------------------------------
 template <typename T>
-T get_row(PGresult * /* res */,
-          const Meta::ColumnsId<T> & /*cols_id*/,
-          int /*row_id*/)
+Meta::ColumnsId<T> get_columns_id(PGresult *res)
 {
-  static_assert(assert_false<T>::value, "Not implemented");
+  T entity;
+  Meta::ColumnsId<T> ids;
+  auto func = [&ids, &res](const auto &col) { get_column_id(res, col, ids); };
+  auto cols = entity.get_columns();
+  Sphinx::Utils::for_each_in_tuple(cols, func);
+  return ids;
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+T get_row(PGresult *res, const Meta::ColumnsId<T> &cols_id, int row_id)
+{
+  T entity;
+  auto func = [&res, &row_id, &cols_id](auto &... cols) {
+    load_fields_from_res(res, row_id, cols_id, cols...);
+  };
+  std::apply(func, entity.get_columns());
+  return entity;
 }
 
 //----------------------------------------------------------------------

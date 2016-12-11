@@ -1,7 +1,9 @@
 #pragma once
 
-#include "model_meta.h" // for ColumnsId (ptr only), Insert (ptr only), Column
-#include <tuple>
+#include "model_meta.h" // for Column, Column<>::name, ForeignKey, optional...
+#include <stdint.h>     // for uint64_t
+#include <string>       // for string
+#include <tuple>        // for forward_as_tuple, make_tuple
 
 using Sphinx::Db::Column;
 using Sphinx::Db::ForeignKey;
@@ -39,7 +41,7 @@ public:
     return std::forward_as_tuple(id, firstname, lastname, username, student_id,
                                  email, role);
   }
-  auto get_columns() 
+  auto get_columns()
   {
     return std::forward_as_tuple(id, firstname, lastname, username, student_id,
                                  email, role);
@@ -47,7 +49,7 @@ public:
 };
 
 //----------------------------------------------------------------------
-struct Course {
+struct Course : Sphinx::Db::Meta::Table<Course> {
 private:
   struct Course_ {
     static constexpr char id[] = "id";
@@ -68,14 +70,14 @@ public:
   {
     return std::forward_as_tuple(id, title, description, owner_id);
   }
-  auto get_columns() 
+  auto get_columns()
   {
     return std::forward_as_tuple(id, title, description, owner_id);
   }
 };
 
 //----------------------------------------------------------------------
-struct Module {
+struct Module : Sphinx::Db::Meta::Table<Module> {
 private:
   struct Module_ {
     static constexpr char id[] = "id";
@@ -98,7 +100,7 @@ public:
   {
     return std::forward_as_tuple(id, course_id, name, description);
   }
-  auto get_columns() 
+  auto get_columns()
   {
     return std::forward_as_tuple(id, course_id, name, description);
   }

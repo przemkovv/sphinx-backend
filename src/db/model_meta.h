@@ -1,6 +1,5 @@
-
 #pragma once
-#include "sphinx_assert.h"
+
 #include <array>
 #include <optional>
 #include <tuple>

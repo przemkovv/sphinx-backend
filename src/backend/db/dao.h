@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "logger.h"        // for make_logger, Logger
+#include "db/model.h"
 #include "db_connection.h" // for DbConnection, connection_config
-#include "model.h"         // for Module, Course, User
+#include "logger.h"        // for make_logger, Logger
 #include "model_expr.h"
-#include "model_utils.h"
-#include <algorithm> // for move
-#include <optional>
-#include <vector> // for vector
+#include "model_meta.h" // for IdColumn, IdColumn_t, Meta
+#include <algorithm>    // for move
+#include <optional>     // for optional
+#include <vector>       // for vector
 
 namespace Sphinx::Backend::Db {
 
