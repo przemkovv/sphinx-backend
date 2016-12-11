@@ -123,6 +123,7 @@ struct Insert<Backend::Model::User> {
       decltype(User::firstname)::name, decltype(User::lastname)::name,
       decltype(User::username)::name,  decltype(User::student_id)::name,
       decltype(User::email)::name,     decltype(User::role)::name};
+
   static auto values(const User &data)
   {
     return std::make_tuple(data.firstname.value, data.lastname.value,

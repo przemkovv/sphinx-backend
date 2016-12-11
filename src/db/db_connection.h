@@ -123,8 +123,7 @@ public:
   template <typename T>
   std::vector<T> get_all()
   {
-    auto result =
-        exec(fmt::format("SELECT * FROM {0}", std::string{Meta::TableName<T>}));
+    auto result = exec(fmt::format("SELECT * FROM {0}", Meta::TableName<T>));
     return get_rows<T>(std::move(result));
   }
   //----------------------------------------------------------------------
@@ -198,8 +197,8 @@ public:
                           return a + ", " + fmt::format("${}", ++n);
                         });
 
-    std::string table_name = Meta::TableName<T>;
-    std::string id_column = Meta::IdColumn<T>::name;
+    constexpr auto table_name = Meta::TableName<T>;
+    constexpr auto id_column = Meta::IdColumn<T>::name;
     auto query = fmt::format("INSERT INTO {0} ({1}) VALUES ({2}) RETURNING {3}",
                              table_name, field_list, field_ids, id_column);
     return query;
