@@ -97,10 +97,9 @@ private:
   template <typename Entity>
   void update_subentities(Entity &entity, Meta::IdColumn_t<Entity> id)
   {
-    auto subentities_links = entity.get_many_links();
     auto func = [&id](auto &subentities2) {
-      using RemoteKey =
-          typename Sphinx::Db::LinkMany<decltype(subentities2)>::remote_key;
+      using Sphinx::Db::LinkMany;
+      using RemoteKey = typename LinkMany<decltype(subentities2)>::remote_key;
       constexpr auto n = RemoteKey::n;
       if (subentities2) {
         for (auto &subentity : *subentities2) {
@@ -108,7 +107,7 @@ private:
         }
       }
     };
-    Sphinx::Utils::for_each_in_tuple(subentities_links, func);
+    for_each_subentity(entity, func);
   }
 
   //----------------------------------------------------------------------
@@ -116,21 +115,22 @@ private:
   void for_each_subentity(Entity &entity, Func &&func)
   {
     auto subentities_links = entity.get_many_links();
-    Sphinx::Utils::for_each_in_tuple(
-        subentities_links, [func = std::move(func)](auto &subentities) {
-          if (subentities)
-            func(*subentities);
-        });
+    Utils::for_each_in_tuple(
+        subentities_links,
+        [func = std::move(func)](auto &subentities) { func(subentities); });
   }
+
   //----------------------------------------------------------------------
   template <typename Entity>
   void create_subentities(Entity &entity)
   {
     auto func = [this](auto &subentities3) {
-      this->create_entities(subentities3);
+      if (subentities3)
+        this->create_entities(*subentities3);
     };
     for_each_subentity(entity, func);
   }
+
   //----------------------------------------------------------------------
   template <typename T>
   void create_entities(std::vector<T> &entities)
@@ -142,6 +142,7 @@ private:
 
     });
   }
+
   //----------------------------------------------------------------------
   template <typename T>
   void create_entities(const nlohmann::json &data)
