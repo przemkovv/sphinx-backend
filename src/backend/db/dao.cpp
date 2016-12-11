@@ -1,8 +1,9 @@
 
 #include "dao.h"
-#include <exception>       // for exception
+#include "db/model.h"      // for User, Module, Course
 #include <memory>          // for __shared_ptr_access
 #include <spdlog/spdlog.h> // for logger
+#include <exception>        // for exception
 
 //----------------------------------------------------------------------
 namespace Sphinx::Backend::Db {
@@ -26,7 +27,7 @@ std::vector<Model::Module> DAO::get_modules()
 
 //----------------------------------------------------------------------
 std::vector<Model::Module>
-DAO::get_modules(Meta::IdColumn_t<Model::Course> /* course_id */)
+    DAO::get_modules(Meta::IdColumn_t<Model::Course> /* course_id */)
 {
   return db_connection_.get_all<Model::Module>();
 }

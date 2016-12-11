@@ -1,17 +1,17 @@
 
 #pragma once
 
-#include "logger.h"
-#include "model.h"         // for Module, Course, User, Column
-#include "model_meta.h"    // for Column<>::type, Column, nullopt
-#include "sphinx_assert.h" // for assert_false
-#include "utils.h"
-#include <algorithm> // for transform
-#include <iterator>  // for back_inserter
-#include <memory>
-#include <nlohmann/json.hpp> // for basic_json, json
-#include <optional>          // for optional, nullopt
-#include <tuple>
+#include "logger.h"          // for Logger, global_logger
+#include "model_meta.h"      // for Column, is_optional, is_column
+#include "utils.h"           // for for_each_in_tuple
+#include <algorithm>         // for transform
+#include <iterator>          // for back_inserter
+#include <memory>            // for __shared_ptr_access
+#include <nlohmann/json.hpp> // for json
+#include <optional>          // for nullopt
+#include <spdlog/spdlog.h>   // for logger
+#include <tuple>             // for tuple, apply
+#include <vector>            // for vector
 
 namespace Sphinx::Db::Json {
 

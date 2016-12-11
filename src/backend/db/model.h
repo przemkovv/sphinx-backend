@@ -1,7 +1,9 @@
 #pragma once
 
-#include "model_meta.h" // for ColumnsId (ptr only), Insert (ptr only), Column
-#include <tuple>
+#include "model_meta.h" // for Column, Column<>::name, ForeignKey, optional...
+#include <stdint.h>     // for uint64_t
+#include <string>       // for string
+#include <tuple>        // for forward_as_tuple, make_tuple
 
 using Sphinx::Db::Column;
 using Sphinx::Db::ForeignKey;
@@ -47,7 +49,7 @@ public:
 };
 
 //----------------------------------------------------------------------
-struct Course : Sphinx::Db::Meta::Table<Course>{
+struct Course : Sphinx::Db::Meta::Table<Course> {
 private:
   struct Course_ {
     static constexpr char id[] = "id";

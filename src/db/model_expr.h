@@ -1,8 +1,7 @@
 #pragma once
 
-#include "model_meta.h"
-
 #include <fmt/format.h>
+#include <string>
 
 namespace Sphinx::Db {
 
@@ -32,7 +31,10 @@ struct condition {
   const Column &col;
   const value_type value;
 
-  condition(const Column &c, const Operator &/* op */, value_type val) : col(c), value(val) {}
+  condition(const Column &c, const Operator & /* op */, value_type val)
+    : col(c), value(val)
+  {
+  }
 
   std::string str(std::string placeholder = "") const
   {
@@ -41,7 +43,8 @@ struct condition {
     if (placeholder.empty())
       return fmt::format("{0} {1} '{2}'", column_name, operator_name, value);
     else
-      return fmt::format("{0} {1} {2}", column_name, operator_name, placeholder);
+      return fmt::format("{0} {1} {2}", column_name, operator_name,
+                         placeholder);
   }
 };
 }
