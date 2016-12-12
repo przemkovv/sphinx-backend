@@ -7,11 +7,14 @@
 #include <tuple>        // for forward_as_tuple, make_tuple
 #include <vector>       // for vector
 
+#include <boost/hana/filter.hpp>
+
 namespace {
 using Sphinx::Db::Column;
 using Sphinx::Db::ForeignKey;
 using Sphinx::Db::LinkManyFieldType;
 using Sphinx::Db::optional_tag;
+using Sphinx::Db::primarykey_tag;
 using Sphinx::Db::autoincrement_tag;
 }
 
@@ -38,7 +41,7 @@ private:
   };
 
 public:
-  Column<0, User, std::uint64_t, User_::id, optional_tag> id;
+  Column<0, User, std::uint64_t, User_::id, primarykey_tag> id;
   Column<1, User, std::string, User_::firstname> firstname;
   Column<2, User, std::string, User_::lastname> lastname;
   Column<3, User, std::string, User_::username> username;
@@ -74,7 +77,7 @@ public:
   };
 
 public:
-  Column<0, Course, std::uint64_t, Course_::id, optional_tag> id;
+  Column<0, Course, std::uint64_t, Course_::id, primarykey_tag> id;
   Column<1, Course, std::string, Course_::title> title;
   Column<2, Course, std::string, Course_::description, optional_tag>
       description;
@@ -107,7 +110,7 @@ private:
   };
 
 public:
-  Column<0, Module, std::uint64_t, Module_::id, optional_tag> id;
+  Column<0, Module, std::uint64_t, Module_::id, primarykey_tag> id;
   ForeignKey<1, Course, decltype(Course::id), Module, Module_::course_id>
       course_id;
   Column<2, Module, std::string, Module_::title> title;

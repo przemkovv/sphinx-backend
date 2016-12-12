@@ -85,7 +85,10 @@ void load_from_json(Db::Column<N, E, T, Name, Traits...> &column,
                     const nlohmann::json &data)
 {
   /* clang-format off */
-  if constexpr(Db::is_optional(column))
+  if constexpr(Db::is_primarykey(column)) {
+    return;
+  } 
+  else if constexpr(Db::is_optional(column))
   {
     if (data.count(column.name) == 0 || data[column.name].is_null()) {
       column.value = std::nullopt;

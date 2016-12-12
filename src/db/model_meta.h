@@ -57,6 +57,8 @@ constexpr bool contains_v<T, std::tuple<Traits...>> =
     std::disjunction_v<std::is_same<T, Traits>...>;
 
 //----------------------------------------------------------------------
+struct primarykey_tag {
+};
 struct optional_tag {
 };
 struct autoincrement_tag {
@@ -69,6 +71,8 @@ template <typename... Traits>
 constexpr bool has_optional_v = contains_v<optional_tag, Traits...>;
 
 //----------------------------------------------------------------------
+template <typename C>
+constexpr bool is_primarykey_v = contains_v<primarykey_tag, typename C::traits>;
 template <typename C>
 constexpr bool is_optional_v = contains_v<optional_tag, typename C::traits>;
 template <typename C>
@@ -90,6 +94,11 @@ constexpr bool is_foreignkey(C &&)
   return is_foreignkey_v<typename std::remove_reference_t<C>>;
 }
 
+template <typename C>
+constexpr bool is_primarykey(C &&)
+{
+  return is_primarykey_v<typename std::remove_reference_t<C>>;
+}
 template <typename C>
 constexpr bool is_optional(C &&)
 {
