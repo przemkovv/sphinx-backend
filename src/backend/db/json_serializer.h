@@ -33,7 +33,7 @@ nlohmann::json to_json(const T &value)
   /* clang-format off */
   if constexpr(is_column(value))
   {
-    if constexpr(is_optional(value))
+    if constexpr(is_optional_c(value))
     {
       if (value.value)
         return {value.name, *value.value};
@@ -85,16 +85,16 @@ void load_from_json(Db::Column<N, E, T, Name, Traits...> &column,
                     const nlohmann::json &data)
 {
   /* clang-format off */
-  if constexpr(Db::is_primarykey(column)) {
+  if constexpr(Db::is_primarykey_c(column)) {
     return;
   } 
-  else if constexpr(Db::is_optional(column))
+  else if constexpr(Db::is_optional_c(column))
   {
     if (data.count(column.name) == 0 || data[column.name].is_null()) {
       column.value = std::nullopt;
       return;
     }
-  } else if constexpr(Db::is_foreignkey(column)) {
+  } else if constexpr(Db::is_foreignkey_c(column)) {
     if (data.count(column.name) == 0) {
       return;
     }

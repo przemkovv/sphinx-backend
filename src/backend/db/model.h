@@ -1,13 +1,14 @@
 #pragma once
 
 #include "model_meta.h" // for Column, Column<>::name, ForeignKey, optional...
-#include <optional>     // for optional
-#include <stdint.h>     // for uint64_t
-#include <string>       // for string
-#include <tuple>        // for forward_as_tuple, make_tuple
-#include <vector>       // for vector
+#include <array>
+#include <optional> // for optional
+#include <stdint.h> // for uint64_t
+#include <string>   // for string
+#include <tuple>    // for forward_as_tuple, make_tuple
+#include <vector>   // for vector
 
-#include <boost/hana/filter.hpp>
+#include <boost/hana/define_struct.hpp>
 
 namespace {
 using Sphinx::Db::Column;
@@ -41,13 +42,16 @@ private:
   };
 
 public:
-  Column<0, User, std::uint64_t, User_::id, primarykey_tag> id;
-  Column<1, User, std::string, User_::firstname> firstname;
-  Column<2, User, std::string, User_::lastname> lastname;
-  Column<3, User, std::string, User_::username> username;
-  Column<4, User, std::string, User_::student_id, optional_tag> student_id;
-  Column<5, User, std::string, User_::email> email;
-  Column<6, User, std::string, User_::role> role;
+  BOOST_HANA_DEFINE_STRUCT(
+      User,
+      (Column<0, User, std::uint64_t, User_::id, primarykey_tag>, id),
+      (Column<1, User, std::string, User_::firstname>, firstname),
+      (Column<2, User, std::string, User_::lastname>, lastname),
+      (Column<3, User, std::string, User_::username>, username),
+      (Column<4, User, std::string, User_::student_id, optional_tag>,
+       student_id),
+      (Column<5, User, std::string, User_::email>, email),
+      (Column<6, User, std::string, User_::role>, role));
   constexpr static const auto N = 7;
 
   auto get_columns() const
@@ -77,11 +81,14 @@ public:
   };
 
 public:
-  Column<0, Course, std::uint64_t, Course_::id, primarykey_tag> id;
-  Column<1, Course, std::string, Course_::title> title;
-  Column<2, Course, std::string, Course_::description, optional_tag>
-      description;
-  ForeignKey<3, User, decltype(User::id), Course, Course_::owner_id> owner_id;
+  BOOST_HANA_DEFINE_STRUCT(
+      Course,
+      (Column<0, Course, std::uint64_t, Course_::id, primarykey_tag>, id),
+      (Column<1, Course, std::string, Course_::title>, title),
+      (Column<2, Course, std::string, Course_::description, optional_tag>,
+       description),
+      (ForeignKey<3, User, decltype(User::id), Course, Course_::owner_id>,
+       owner_id));
   constexpr static const auto N = 4;
 
   auto get_columns() const
@@ -110,12 +117,14 @@ private:
   };
 
 public:
-  Column<0, Module, std::uint64_t, Module_::id, primarykey_tag> id;
-  ForeignKey<1, Course, decltype(Course::id), Module, Module_::course_id>
-      course_id;
-  Column<2, Module, std::string, Module_::title> title;
-  Column<3, Module, std::string, Module_::description, optional_tag>
-      description;
+  BOOST_HANA_DEFINE_STRUCT(
+      Module,
+      (Column<0, Module, std::uint64_t, Module_::id, primarykey_tag>, id),
+      (ForeignKey<1, Course, decltype(Course::id), Module, Module_::course_id>,
+       course_id),
+      (Column<2, Module, std::string, Module_::title>, title),
+      (Column<3, Module, std::string, Module_::description, optional_tag>,
+       description));
 
   constexpr static const auto N = 4;
 
@@ -136,7 +145,6 @@ public:
 namespace Sphinx::Db::Meta {
 
 //----------------------------------------------------------------------
-
 template <>
 constexpr auto EntityName<Backend::Model::User> = "users";
 
@@ -166,6 +174,9 @@ template <>
 struct Insert<Backend::Model::Course> {
   using Course = Backend::Model::Course;
 
+  // static constexpr auto columns = {decltype(Course::title)::name,
+  // decltype(Course::description)::name,
+  // decltype(Course::owner_id)::name};
   static constexpr auto columns = {decltype(Course::title)::name,
                                    decltype(Course::description)::name,
                                    decltype(Course::owner_id)::name};
