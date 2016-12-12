@@ -1,9 +1,11 @@
 #pragma once
 
 #include "model_meta.h" // for Column, Column<>::name, ForeignKey, optional...
+#include <optional>     // for optional
 #include <stdint.h>     // for uint64_t
 #include <string>       // for string
 #include <tuple>        // for forward_as_tuple, make_tuple
+#include <vector>       // for vector
 
 namespace {
 using Sphinx::Db::Column;
@@ -55,13 +57,8 @@ public:
     return std::forward_as_tuple(id, firstname, lastname, username, student_id,
                                  email, role);
   }
-  auto get_many_links() const {
-    return std::forward_as_tuple();
-  }
-  auto get_many_links() {
-    return std::forward_as_tuple();
-  }
-
+  auto get_many_links() const { return std::forward_as_tuple(); }
+  auto get_many_links() { return std::forward_as_tuple(); }
 };
 
 //----------------------------------------------------------------------
@@ -95,12 +92,8 @@ public:
 
   LinkManyFieldType<Modules> modules;
 
-  auto get_many_links() const {
-    return std::forward_as_tuple(modules);
-  }
-  auto get_many_links() {
-    return std::forward_as_tuple(modules);
-  }
+  auto get_many_links() const { return std::forward_as_tuple(modules); }
+  auto get_many_links() { return std::forward_as_tuple(modules); }
 };
 
 //----------------------------------------------------------------------
@@ -131,12 +124,8 @@ public:
   {
     return std::forward_as_tuple(id, course_id, title, description);
   }
-  auto get_many_links() const {
-    return std::forward_as_tuple();
-  }
-  auto get_many_links() {
-    return std::forward_as_tuple();
-  }
+  auto get_many_links() const { return std::forward_as_tuple(); }
+  auto get_many_links() { return std::forward_as_tuple(); }
 };
 
 } // namespace Sphinx::Backend::Model

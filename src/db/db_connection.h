@@ -4,7 +4,6 @@
 #include "logger.h"        // for Logger
 #include "model_meta.h"    // for Columns
 #include "sphinx_assert.h" // for SPHINX_ASSERT
-#include <algorithm>       // for move
 #include <cstddef>         // for size_t
 #include <exception>       // for exception
 #include <fmt/format.h>    // for format, UdlArg, operator""_a
