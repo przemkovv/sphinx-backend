@@ -5,6 +5,8 @@
 
 #include "db.h"
 #include "db/dao.h"
+#include "db/json_serializer.h"
+#include "db/model_relations.h"
 #include "model_meta.h"
 #include <crow.h>
 #include <nlohmann/json.hpp>
@@ -63,45 +65,154 @@ private:
   std::string get_modules();
   std::string get_modules(typename Meta::IdColumn_t<Model::Course> course_id);
 
+  //----------------------------------------------------------------------
   template <typename T>
-  bool is_entity_exists(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id)
+  bool is_entity_exists(typename Meta::IdColumn<T>::type entity_id)
   {
     return dao_.exists<T>(entity_id);
   }
+  //----------------------------------------------------------------------
   template <typename T>
-  T get_entity(typename Sphinx::Db::Meta::IdColumn<T>::type entity_id)
+  T get_entity(typename Meta::IdColumn<T>::type entity_id)
   {
     auto entity = dao_.get_by_id<T>(entity_id);
     return entity;
   }
+  //----------------------------------------------------------------------
   template <typename T>
-  T update_entity(typename Sphinx::Db::Meta::IdColumn<T>::type /* entity_id */,
-                  const nlohmann::json &/* entity_json */)
+  T update_entity(typename Meta::IdColumn<T>::type /* entity_id */,
+                  const nlohmann::json & /* entity_json */)
   {
     NOT_IMPLEMENTED_YET();
   }
+  //----------------------------------------------------------------------
   template <typename T>
-  void create_entity(const nlohmann::json &entity_json)
+  Meta::IdColumn_t<T> create_entity(const T & /* entity */)
   {
     static_assert(assert_false<T>::value, "Not implemented");
   }
+
+  //----------------------------------------------------------------------
+
+  template <typename Entity>
+  void update_subentities(Entity &entity, Meta::IdColumn_t<Entity> id)
+  {
+    auto func = [&id](auto &subentities2) {
+      using Sphinx::Db::LinkMany;
+      using RemoteKey = typename LinkMany<decltype(subentities2)>::remote_key;
+      constexpr auto n = RemoteKey::n;
+      if (subentities2) {
+        for (auto &subentity : *subentities2) {
+          std::get<n>(subentity.get_columns()).value = id;
+        }
+      }
+    };
+    for_each_subentity(entity, func);
+  }
+
+  //----------------------------------------------------------------------
+  template <typename Entity, typename Func>
+  void for_each_subentity(Entity &entity, Func &&func)
+  {
+    auto subentities_links = entity.get_many_links();
+    Utils::for_each_in_tuple(
+        subentities_links,
+        [func = std::move(func)](auto &subentities) { func(subentities); });
+  }
+
+  //----------------------------------------------------------------------
+  template <typename Entity>
+  void create_subentities(Entity &entity)
+  {
+    auto func = [this](auto &subentities3) {
+      if (subentities3)
+        this->create_entities(*subentities3);
+    };
+    for_each_subentity(entity, func);
+  }
+
+  //----------------------------------------------------------------------
+  template <typename T>
+  void create_entities(std::vector<T> &entities)
+  {
+    std::for_each(entities.begin(), entities.end(), [this](auto &entity) {
+      auto entity_id = this->create_entity(entity);
+      this->update_subentities(entity, entity_id);
+      this->create_subentities(entity);
+
+    });
+  }
+
+  //----------------------------------------------------------------------
   template <typename T>
   void create_entities(const nlohmann::json &data)
   {
-    if (data.is_array()) {
-      for (const auto &entity_json : data) {
-        create_entity<T>(entity_json);
-      }
-    }
-    else {
-      create_entity<T>(data);
-    }
+    auto entities = deserialize_entities<T>(data, true);
+    create_entities(entities);
   }
 
+  //----------------------------------------------------------------------
   template <typename T>
   void create_entities(const std::string &data)
   {
     return create_entities<T>(nlohmann::json::parse(data));
+  }
+
+  //----------------------------------------------------------------------
+  template <typename T>
+  void deserialize_subentities(const nlohmann::json &data, T &entity)
+  {
+    auto links = entity.get_many_links();
+
+    auto func = [this, &data, &entity](auto &link) {
+      using Sphinx::Db::LinkMany;
+      constexpr auto field_name = LinkMany<decltype(link)>::name;
+      if (data.count(field_name) == 0) {
+        link = std::nullopt;
+      }
+      else {
+        using RemoteEntity = typename LinkMany<decltype(link)>::remote_entity;
+        link = this->deserialize_entities<RemoteEntity>(data[field_name]);
+      }
+    };
+    Sphinx::Utils::for_each_in_tuple(links, func);
+  }
+
+  //----------------------------------------------------------------------
+  template <typename T>
+  std::vector<T> deserialize_entities(const nlohmann::json &data,
+                                      const bool include_subentities = false)
+  {
+    std::vector<T> entities;
+    auto func = [this, &include_subentities](const auto &entity_data) {
+      using Sphinx::Db::Json::from_json;
+      if (include_subentities) {
+        auto entity = from_json<T>(entity_data);
+        deserialize_subentities(entity_data, entity);
+        return entity;
+      }
+      else {
+        return from_json<T>(entity_data);
+      }
+    };
+    if (data.is_array()) {
+      entities.reserve(data.size());
+      std::transform(data.begin(), data.end(), std::back_inserter(entities),
+                     func);
+    }
+    else {
+      entities.emplace_back(func(data));
+    }
+    return entities;
+  }
+
+  //----------------------------------------------------------------------
+  template <typename T>
+  std::vector<T> deserialize_entities(const std::string &data,
+                                      const bool include_subentities = false)
+  {
+    return deserialize_entities<T>(nlohmann::json::parse(data),
+                                   include_subentities);
   }
 
   std::string find_users(std::string name);

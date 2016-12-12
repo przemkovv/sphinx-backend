@@ -85,36 +85,34 @@ std::string BackendApp::get_users()
   auto json_users = to_json(users);
   return json_users.dump(dump_indent_);
 }
-        
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity<Model::Module>(const nlohmann::json &data)
+Meta::IdColumn_t<Model::Module>
+BackendApp::create_entity(const Model::Module &module)
 {
-  auto module = from_json<Model::Module>(data);
-  logger()->debug("Creating course {} {} {}", module.course_id.value,
-                  module.name.value,
+  logger()->debug("Creating module {} {} {}", module.course_id.value,
+                  module.title.value,
                   module.description.value.value_or("EMPTY"));
-  dao_.create_module(module);
+  return dao_.create_module(module);
 }
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity<Model::Course>(const nlohmann::json &data)
+Meta::IdColumn_t<Model::Course>
+BackendApp::create_entity(const Model::Course &course)
 {
-  auto course = from_json<Model::Course>(data);
   logger()->debug("Creating course {} {}", course.title.value,
                   course.description.value.value_or("EMPTY"));
-  dao_.create_course(course);
+  return dao_.create_course(course);
 }
 
 //----------------------------------------------------------------------
 template <>
-void BackendApp::create_entity<Model::User>(const nlohmann::json &data)
+Meta::IdColumn_t<Model::User> BackendApp::create_entity(const Model::User &user)
 {
-  auto user = from_json<Model::User>(data);
   logger()->debug("Creating user {} {}", user.username.value, user.email.value);
-  dao_.create_user(user);
+  return dao_.create_user(user);
 }
 //----------------------------------------------------------------------
 
@@ -180,7 +178,9 @@ void BackendApp::add_courses_routes()
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
+      auto t = deserialize_entities<Model::Course>(req.body, true);
       create_entities<Model::Course>(req.body);
+      return to_json(t).dump(dump_indent_);
     }
     return "nothing"s;
   });

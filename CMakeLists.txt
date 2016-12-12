@@ -15,6 +15,8 @@ add_definitions(
   -g
   -O1
   -gsplit-dwarf
+  -gdwarf-4
+  -ggdb
   -Wall
   -Wextra
   -Wshadow

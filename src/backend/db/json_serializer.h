@@ -91,6 +91,10 @@ void load_from_json(Db::Column<N, E, T, Name, Traits...> &column,
       column.value = std::nullopt;
       return;
     }
+  } else if constexpr(Db::is_foreignkey(column)) {
+    if (data.count(column.name) == 0) {
+      return;
+    }
   }
   column.value = data[Name].template get<T>();
   /* clang-format on */

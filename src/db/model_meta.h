@@ -1,9 +1,11 @@
 #pragma once
 
+#include "sphinx_assert.h"
 #include <array>
 #include <optional>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 namespace Sphinx::Db::Meta {
 
@@ -16,11 +18,14 @@ struct ColumnsId : public std::array<int, T::N> {
 };
 
 template <typename T>
-struct Table {
+struct Entity {
 };
 
+template <typename E>
+using Entities = std::vector<E>;
+
 template <typename T>
-constexpr auto TableName = Table<T>::name;
+constexpr auto EntityName = Entity<T>::name;
 
 template <typename T>
 constexpr auto InsertColumns = Insert<T>::columns;
@@ -38,8 +43,8 @@ template <typename Column, typename Entity>
 constexpr auto is_column_belongs_to_entity =
     std::is_same_v<Entity, typename Column::entity>;
 
-template <typename Entity>
-constexpr auto is_entity_v = std::is_base_of_v<Table<Entity>, Entity>;
+template <typename E>
+constexpr auto is_entity_v = std::is_base_of_v<Entity<E>, E>;
 } // namespace Sphinx::Db::Meta
 
 //----------------------------------------------------------------------
@@ -124,10 +129,9 @@ struct ForeignKey : public Column<N,
   using referenced_table = ParentTable;
   using referenced_table_primary_key = PK;
 
-  static_assert(
-      Db::Meta::is_column_belongs_to_entity<referenced_table_primary_key,
-                                            referenced_table>,
-      "Primary Key origin has to be ParentTable");
+  static_assert(Meta::is_column_belongs_to_entity<referenced_table_primary_key,
+                                                  referenced_table>,
+                "Primary Key origin has to be ParentTable");
 
   std::optional<referenced_table> referenced_value;
 };
@@ -172,5 +176,36 @@ constexpr bool is_column(T &&)
 }
 
 //----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+
+template <typename T>
+using LinkManyFieldType = std::optional<T>;
+
+//----------------------------------------------------------------------
+template <typename T, typename RemoteKey, typename LocalKey, auto Name>
+struct LinkManyInfo {
+
+  using type = T;
+  using remote_key = RemoteKey;
+  using remote_entity = typename RemoteKey::entity;
+  using local_key = LocalKey;
+  using local_entity = typename LocalKey::entity;
+  static constexpr auto name = Name;
+};
+
+struct LinkOne {
+};
+
+template <typename LocalMember>
+struct LinkManyType {
+  typedef typename LocalMember::a b;
+  static_assert(assert_false<LocalMember>::value, "Not implemented");
+};
+
+//----------------------------------------------------------------------
+template <typename LocalMember>
+using LinkMany =
+    typename LinkManyType<std::remove_reference_t<LocalMember>>::type;
 
 } // namespace Sphinx::Db

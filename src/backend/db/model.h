@@ -1,20 +1,31 @@
 #pragma once
 
 #include "model_meta.h" // for Column, Column<>::name, ForeignKey, optional...
+#include <optional>     // for optional
 #include <stdint.h>     // for uint64_t
 #include <string>       // for string
 #include <tuple>        // for forward_as_tuple, make_tuple
+#include <vector>       // for vector
 
+namespace {
 using Sphinx::Db::Column;
 using Sphinx::Db::ForeignKey;
+using Sphinx::Db::LinkManyFieldType;
+using Sphinx::Db::optional_tag;
+using Sphinx::Db::autoincrement_tag;
+}
 
 namespace Sphinx::Backend::Model {
 
-using Sphinx::Db::optional_tag;
-using Sphinx::Db::autoincrement_tag;
+struct User;
+struct Module;
+struct Course;
+using Users = Sphinx::Db::Meta::Entities<User>;
+using Modules = Sphinx::Db::Meta::Entities<Module>;
+using Courses = Sphinx::Db::Meta::Entities<Course>;
 
 //----------------------------------------------------------------------
-struct User : Sphinx::Db::Meta::Table<User> {
+struct User : Sphinx::Db::Meta::Entity<User> {
 private:
   struct User_ {
     static constexpr char id[] = "id";
@@ -46,16 +57,20 @@ public:
     return std::forward_as_tuple(id, firstname, lastname, username, student_id,
                                  email, role);
   }
+  auto get_many_links() const { return std::forward_as_tuple(); }
+  auto get_many_links() { return std::forward_as_tuple(); }
 };
 
 //----------------------------------------------------------------------
-struct Course : Sphinx::Db::Meta::Table<Course> {
-private:
+struct Course : Sphinx::Db::Meta::Entity<Course> {
+public:
   struct Course_ {
     static constexpr char id[] = "id";
     static constexpr char title[] = "title";
     static constexpr char description[] = "description";
     static constexpr char owner_id[] = "owner_id";
+
+    static constexpr char modules[] = "modules";
   };
 
 public:
@@ -74,15 +89,20 @@ public:
   {
     return std::forward_as_tuple(id, title, description, owner_id);
   }
+
+  LinkManyFieldType<Modules> modules;
+
+  auto get_many_links() const { return std::forward_as_tuple(modules); }
+  auto get_many_links() { return std::forward_as_tuple(modules); }
 };
 
 //----------------------------------------------------------------------
-struct Module : Sphinx::Db::Meta::Table<Module> {
+struct Module : Sphinx::Db::Meta::Entity<Module> {
 private:
   struct Module_ {
     static constexpr char id[] = "id";
     static constexpr char course_id[] = "course_id";
-    static constexpr char name[] = "name";
+    static constexpr char title[] = "title";
     static constexpr char description[] = "description";
   };
 
@@ -90,7 +110,7 @@ public:
   Column<0, Module, std::uint64_t, Module_::id, optional_tag> id;
   ForeignKey<1, Course, decltype(Course::id), Module, Module_::course_id>
       course_id;
-  Column<2, Module, std::string, Module_::name> name;
+  Column<2, Module, std::string, Module_::title> title;
   Column<3, Module, std::string, Module_::description, optional_tag>
       description;
 
@@ -98,12 +118,14 @@ public:
 
   auto get_columns() const
   {
-    return std::forward_as_tuple(id, course_id, name, description);
+    return std::forward_as_tuple(id, course_id, title, description);
   }
   auto get_columns()
   {
-    return std::forward_as_tuple(id, course_id, name, description);
+    return std::forward_as_tuple(id, course_id, title, description);
   }
+  auto get_many_links() const { return std::forward_as_tuple(); }
+  auto get_many_links() { return std::forward_as_tuple(); }
 };
 
 } // namespace Sphinx::Backend::Model
@@ -113,7 +135,7 @@ namespace Sphinx::Db::Meta {
 //----------------------------------------------------------------------
 
 template <>
-constexpr auto TableName<Backend::Model::User> = "users";
+constexpr auto EntityName<Backend::Model::User> = "users";
 
 template <>
 struct Insert<Backend::Model::User> {
@@ -135,7 +157,7 @@ struct Insert<Backend::Model::User> {
 
 //----------------------------------------------------------------------
 template <>
-constexpr auto TableName<Backend::Model::Course> = "courses";
+constexpr auto EntityName<Backend::Model::Course> = "courses";
 
 template <>
 struct Insert<Backend::Model::Course> {
@@ -154,47 +176,23 @@ struct Insert<Backend::Model::Course> {
 
 //----------------------------------------------------------------------
 template <>
-constexpr auto TableName<Backend::Model::Module> = "modules";
+constexpr auto EntityName<Backend::Model::Module> = "modules";
 
 template <>
 struct Insert<Backend::Model::Module> {
   using Module = Backend::Model::Module;
 
   static constexpr auto columns = {decltype(Module::course_id)::name,
-                                   decltype(Module::name)::name,
+                                   decltype(Module::title)::name,
                                    decltype(Module::description)::name};
   static auto values(const Module &data)
   {
-    return std::make_tuple(data.course_id.value, data.name.value,
+    return std::make_tuple(data.course_id.value, data.title.value,
                            data.description.value);
   }
   using id_column = decltype(Module::id);
 };
 
 //----------------------------------------------------------------------
-
-// template <>
-// struct ColumnsId<Backend::Model::User> {
-// int id;
-// int firstname;
-// int lastname;
-// int student_id;
-// int username;
-// int email;
-// int role;
-// };
-// template <>
-// struct ColumnsId<Backend::Model::Course> {
-// int id;
-// int name;
-// int description;
-// };
-// template <>
-// struct ColumnsId<Backend::Model::Module> {
-// int id;
-// int course_id;
-// int name;
-// int description;
-// };
 
 } // namespace Sphinx::Backend::Model::Meta
