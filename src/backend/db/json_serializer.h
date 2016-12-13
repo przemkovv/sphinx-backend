@@ -86,46 +86,43 @@ nlohmann::json to_json(const std::vector<T> &c)
 }
 
 //----------------------------------------------------------------------
-template <int N, typename E, typename T, auto Name, typename... Traits>
-void load_from_json(Db::Column<N, E, T, Name, Traits...> &column,
-                    const nlohmann::json &data)
-{
-  /* clang-format off */
-  if constexpr(Db::is_primarykey_c(column)) {
-    return;
-  } 
-  else if constexpr(Db::is_optional_c(column))
-  {
-    if (data.count(column.name) == 0 || data[column.name].is_null()) {
-      column.value = std::nullopt;
-      return;
-    }
-  } else if constexpr(Db::is_foreignkey_c(column)) {
-    if (data.count(column.name) == 0) {
-      return;
-    }
-  }
-  column.value = data[Name].template get<T>();
-  /* clang-format on */
-}
-
-//----------------------------------------------------------------------
 template <typename E>
 E from_json(const nlohmann::json &data)
 {
+  /* clang-format off */
   E entity;
-  auto func = [&data](auto &col) { load_from_json(col, data); };
-  auto cols = entity.get_columns();
-  Sphinx::Utils::for_each_in_tuple(cols, func);
-  return entity;
-}
+  namespace hana = boost::hana;
+  hana::for_each(
+      hana::accessors<E>(),
+      hana::fuse([&data, &entity](const auto &name, const auto &member) {
+        using member_type = std::remove_reference_t<decltype(member(entity))>;
+        auto &m = member(entity);
+        constexpr auto n = hana::to<const char *>(name);
+        auto get_value = [&data,&n]() {
+          return data[n].template get<typename member_type::type>();
+        };
+        if constexpr(Db::is_primarykey_v<member_type>)
+        {
+          if (data.count(n) != 0 && !data[n].is_null()) {
+            Sphinx::global_logger->warn("The field {}::{} is a primary key, "
+                                        "value '{}' will not be deserialized",
+                                        Meta::EntityName<E>, n, get_value());
+          }
+          return;
+        }
+        else if constexpr(Db::is_optional_v<member_type> ||
+                          Db::is_foreignkey_v<member_type>)
+        {
+          if (data.count(n) == 0 || data[n].is_null()) {
+            m.value = {};
+            return;
+          }
+        }
+        m.value = get_value();
 
-//----------------------------------------------------------------------
-template <int N, typename E, typename T, auto Name, typename... Ts>
-auto from_json(const nlohmann::json &data,
-               const Db::Column<N, E, T, Name, Ts...> &column)
-{
-  return data[column.name].template get<T>();
+      }));
+  return entity;
+  /* clang-format on */
 }
 
 } // namespace Sphinx::Db
