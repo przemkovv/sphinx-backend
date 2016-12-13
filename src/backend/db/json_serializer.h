@@ -13,44 +13,50 @@
 #include <tuple>             // for tuple, apply
 #include <vector>            // for vector
 
+#include <boost/hana/accessors.hpp>
+#include <boost/hana/for_each.hpp>
+#include <boost/hana/fuse.hpp>
+#include <boost/hana/members.hpp>
+
 namespace Sphinx::Db::Json {
 
-// TODO: sth weird is with ordering of the these template functions. If I
-// uncomment the vector overload, the code is not compiling.
 template <typename T>
 nlohmann::json to_json(const T &value);
 template <typename... T>
 nlohmann::json to_json(const T &... value);
 template <typename... T>
 nlohmann::json to_json(const std::tuple<T...> &value);
-// template <typename T>
-// nlohmann::json to_json(const std::vector<T> &c);
+template <typename T>
+nlohmann::json to_json(const std::vector<T> &c);
 
 //----------------------------------------------------------------------
 template <typename T>
 nlohmann::json to_json(const T &value)
 {
   /* clang-format off */
-  if constexpr(is_column(value))
-  {
-    if constexpr(is_optional_c(value))
-    {
-      if (value.value)
-        return {value.name, *value.value};
-      else
-        return {value.name, nullptr};
-    }
-    else {
-      return {value.name, value.value};
-    }
+  if constexpr(Meta::is_entity_v<T>) {
+    nlohmann::json data;
+    namespace hana = boost::hana;
+    hana::for_each(
+        hana::accessors<T>(),
+        hana::fuse([&data, &value](const auto &name, const auto &member) {
+          using type = std::remove_reference_t<decltype(member(T{}))>;
+          constexpr auto n = hana::to<const char *>(name);
+          if constexpr(is_optional_v<type>) {
+            const auto &v = member(value);
+            if (v.value)
+              data.emplace(n, *v.value);
+            else
+              data.emplace(n, nullptr);
+          }
+          else {
+            data.emplace(n, member(value).value);
+          }
+        }));
+    return data;
   }
-  else if constexpr (Meta::is_entity_v<T>) {
-    return to_json(value.get_columns());
-  }
-  else {
-    return to_json(value);
-
-  }
+  else
+    return {value};
   /* clang-format on */
 }
 
