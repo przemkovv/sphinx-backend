@@ -27,13 +27,13 @@ std::vector<Model::Module> DAO::get_modules()
 
 //----------------------------------------------------------------------
 std::vector<Model::Module>
-    DAO::get_modules(Meta::IdColumn_t<Model::Course> /* course_id */)
+    DAO::get_modules(Meta::IdColumnType<Model::Course> /* course_id */)
 {
   return db_connection_.get_all<Model::Module>();
 }
 
 //----------------------------------------------------------------------
-Db::Meta::IdColumn_t<Model::Course>
+Db::Meta::IdColumnType<Model::Course>
 DAO::create_course(const Model::Course &course)
 {
   auto last_id = db_connection_.insert(course);
@@ -42,7 +42,7 @@ DAO::create_course(const Model::Course &course)
 }
 
 //----------------------------------------------------------------------
-Db::Meta::IdColumn_t<Model::Module>
+Db::Meta::IdColumnType<Model::Module>
 DAO::create_module(const Model::Module &module)
 {
   auto last_id = db_connection_.insert(module);
@@ -51,7 +51,7 @@ DAO::create_module(const Model::Module &module)
 }
 
 //----------------------------------------------------------------------
-Db::Meta::IdColumn_t<Model::User>
+Db::Meta::IdColumnType<Model::User>
 DAO::create_user(const Model::User &user)
 {
   auto last_id = db_connection_.insert(user);

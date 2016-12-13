@@ -63,31 +63,31 @@ private:
   std::string get_users();
   std::string get_courses();
   std::string get_modules();
-  std::string get_modules(typename Meta::IdColumn_t<Model::Course> course_id);
+  std::string get_modules(typename Meta::IdColumnType<Model::Course> course_id);
 
   //----------------------------------------------------------------------
   template <typename T>
-  bool is_entity_exists(typename Meta::IdColumn<T>::type entity_id)
+  bool is_entity_exists(typename Meta::IdColumnType<T> entity_id)
   {
     return dao_.exists<T>(entity_id);
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T get_entity(typename Meta::IdColumn<T>::type entity_id)
+  T get_entity(typename Meta::IdColumnType<T> entity_id)
   {
     auto entity = dao_.get_by_id<T>(entity_id);
     return entity;
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T update_entity(typename Meta::IdColumn<T>::type /* entity_id */,
+  T update_entity(typename Meta::IdColumnType<T> /* entity_id */,
                   const nlohmann::json & /* entity_json */)
   {
     NOT_IMPLEMENTED_YET();
   }
   //----------------------------------------------------------------------
   template <typename T>
-  Meta::IdColumn_t<T> create_entity(const T & /* entity */)
+  Meta::IdColumnType<T> create_entity(const T & /* entity */)
   {
     static_assert(assert_false<T>::value, "Not implemented");
   }
@@ -95,7 +95,7 @@ private:
   //----------------------------------------------------------------------
 
   template <typename Entity>
-  void update_subentities(Entity &entity, Meta::IdColumn_t<Entity> id)
+  void update_subentities(Entity &entity, Meta::IdColumnType<Entity> id)
   {
     auto func = [&id](auto &subentities2) {
       using Sphinx::Db::LinkMany;

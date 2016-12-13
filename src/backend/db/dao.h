@@ -5,7 +5,7 @@
 #include "db_connection.h" // for DbConnection, connection_config
 #include "logger.h"        // for make_logger, Logger
 #include "model_expr.h"
-#include "model_meta.h" // for IdColumn, IdColumn_t, Meta
+#include "model_meta.h" // for IdColumn, IdColumnType, Meta
 #include <algorithm>    // for move
 #include <optional>     // for optional
 #include <vector>       // for vector
@@ -43,13 +43,13 @@ public:
   }
   //----------------------------------------------------------------------
   template <typename T>
-  bool exists(typename Sphinx::Db::Meta::IdColumn<T>::type id)
+  bool exists(typename Sphinx::Db::Meta::IdColumnType<T> id)
   {
     return db_connection_.exists<T>(id);
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T get_by_id(typename Sphinx::Db::Meta::IdColumn<T>::type id)
+  T get_by_id(typename Sphinx::Db::Meta::IdColumnType<T> id)
   {
     return db_connection_.get_by_id<T>(id);
   }
@@ -58,10 +58,10 @@ public:
   std::vector<Model::Course> get_courses();
   std::vector<Model::Module> get_modules();
   std::vector<Model::Module>
-  get_modules(Meta::IdColumn_t<Model::Course> course_id);
-  Meta::IdColumn_t<Model::User> create_user(const Model::User &user);
-  Meta::IdColumn_t<Model::Course> create_course(const Model::Course &course);
-  Meta::IdColumn_t<Model::Module> create_module(const Model::Module &module);
+  get_modules(Meta::IdColumnType<Model::Course> course_id);
+  Meta::IdColumnType<Model::User> create_user(const Model::User &user);
+  Meta::IdColumnType<Model::Course> create_course(const Model::Course &course);
+  Meta::IdColumnType<Model::Module> create_module(const Model::Module &module);
 
 private:
   Logger logger_;

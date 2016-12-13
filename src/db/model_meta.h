@@ -7,6 +7,10 @@
 #include <type_traits>
 #include <vector>
 
+#include <boost/hana/accessors.hpp>
+#include <boost/hana/filter.hpp>
+#include <boost/hana/find.hpp>
+
 namespace Sphinx::Db::Meta {
 
 template <typename T>
@@ -26,15 +30,6 @@ using Entities = std::vector<E>;
 
 template <typename T>
 constexpr auto EntityName = Entity<T>::name;
-
-template <typename T>
-constexpr auto InsertColumns = Insert<T>::columns;
-
-template <typename T>
-using IdColumn = typename Insert<T>::id_column;
-
-template <typename T>
-using IdColumn_t = typename Insert<T>::id_column::type;
 
 template <typename T>
 using EntityType = T;
@@ -233,4 +228,61 @@ template <typename LocalMember>
 using LinkMany =
     typename LinkManyType<std::remove_reference_t<LocalMember>>::type;
 
+//----------------------------------------------------------------------
+template <typename Entity>
+constexpr auto get_insert_columns()
+{
+  namespace hana = boost::hana;
+  return hana::filter(hana::accessors<Entity>(), [](auto column) {
+    auto &c = hana::second(column);
+    using type = std::remove_reference_t<decltype((c(Entity{})))>;
+    return std::negation<is_primarykey<type>>{};
+  });
+}
+//----------------------------------------------------------------------
+template <typename Entity>
+constexpr auto get_id_column_ptr()
+{
+  namespace hana = boost::hana;
+  return hana::find_if(hana::accessors<Entity>(),
+                       [](auto column) {
+                         auto &c = hana::second(column);
+                         using type =
+                             std::remove_reference_t<decltype(c(Entity{}))>;
+                         return is_primarykey<type>{};
+                       })
+      .value();
+}
+
+template <typename Entity>
+constexpr auto get_id_column()
+{
+  namespace hana = boost::hana;
+  return hana::second(get_id_column_ptr<Entity>());
+}
+
+template <typename Entity>
+constexpr auto get_id_column_name()
+{
+  namespace hana = boost::hana;
+  return hana::to<const char *>(hana::first(get_id_column_ptr<Entity>()));
+}
+
+template <typename Entity>
+using id_column_t =
+    std::remove_reference_t<decltype(get_id_column<Entity>()(Entity{}))>;
+
 } // namespace Sphinx::Db
+
+namespace Sphinx::Db::Meta {
+
+template <typename T>
+using IdColumn = std::remove_reference_t<decltype(get_id_column<T>()(T{}))>;
+
+template <typename Entity>
+using IdColumnType = typename IdColumn<Entity>::type;
+
+template <typename Entity>
+constexpr auto IdColumnName = get_id_column_name<Entity>();
+
+} // namespace Sphinx::Db::Meta
