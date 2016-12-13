@@ -13,6 +13,13 @@
 #include <tuple>           // for apply
 #include <vector>          // for vector
 
+#include <boost/hana/accessors.hpp>
+#include <boost/hana/for_each.hpp>
+#include <boost/hana/fuse.hpp>
+#include <boost/hana/members.hpp>
+#include <boost/hana/transform.hpp>
+#include <boost/hana/unpack.hpp>
+
 namespace Sphinx::Db {
 
 using ValueList = std::vector<std::optional<std::string>>;
@@ -133,12 +140,24 @@ void get_column_id(PGresult *res, const Col &, IDs &ids)
 template <typename T>
 Meta::ColumnsId<T> get_columns_id(PGresult *res)
 {
-  T entity;
-  Meta::ColumnsId<T> ids;
-  auto func = [&ids, &res](const auto &col) { get_column_id(res, col, ids); };
-  auto cols = entity.get_columns();
-  Sphinx::Utils::for_each_in_tuple(cols, func);
-  return ids;
+  // T entity;
+  // Meta::ColumnsId<T> ids;
+
+  namespace hana = boost::hana;
+
+  return hana::unpack(
+      hana::transform(hana::accessors<T>(),
+                      hana::fuse([&res](const auto &name, const auto &) {
+                        constexpr auto n = hana::to<const char *>(name);
+                        return PQfnumber(res, n);
+                      })),
+      [](auto... ids) { return Meta::ColumnsId<T>{ids...}; });
+
+  // auto func = [&ids, &res](const auto &col) { get_column_id(res, col, ids);
+  // };
+  // auto cols = entity.get_columns();
+  // Sphinx::Utils::for_each_in_tuple(cols, func);
+  // return ids;
 }
 
 //----------------------------------------------------------------------

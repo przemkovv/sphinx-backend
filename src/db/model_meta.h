@@ -7,11 +7,15 @@
 #include <type_traits>
 #include <vector>
 
+#include <boost/hana/integral_constant.hpp>
 #include <boost/hana/accessors.hpp>
+#include <boost/hana/equal.hpp>
 #include <boost/hana/filter.hpp>
-#include <boost/hana/find.hpp>
+#include <boost/hana/find_if.hpp>
+#include <boost/hana/fuse.hpp>
 #include <boost/hana/members.hpp>
 #include <boost/hana/unpack.hpp>
+#include <boost/hana/value.hpp>
 
 namespace Sphinx::Db::Meta {
 
@@ -113,14 +117,13 @@ constexpr bool is_optional_c(C &&)
 
 //----------------------------------------------------------------------
 
-template <int N, typename Entity, typename Type, auto Name, typename... Traits>
+template <int N, typename Entity, typename Type, typename... Traits>
 struct Column {
   using entity = Entity;
   using type = Type;
 
   using traits = std::tuple<Traits...>;
 
-  static constexpr auto name = Name;
   static constexpr auto n = N;
 
   std::conditional_t<has_optional_v<traits>, std::optional<type>, type> value;
@@ -131,14 +134,9 @@ template <int N,
           typename ParentTable,
           typename PK,
           typename Entity,
-          auto Name,
           typename... Traits>
-struct ForeignKey : public Column<N,
-                                  Entity,
-                                  typename PK::type,
-                                  Name,
-                                  foreignkey_tag,
-                                  Traits...> {
+struct ForeignKey
+    : public Column<N, Entity, typename PK::type, foreignkey_tag, Traits...> {
 
   using referenced_table = ParentTable;
   using referenced_table_primary_key = PK;
@@ -151,34 +149,29 @@ struct ForeignKey : public Column<N,
 };
 
 //----------------------------------------------------------------------
-template <template <int, typename, typename, auto, typename...> class C,
+template <template <int, typename, typename, typename...> class C,
           int N,
           typename Entity,
           typename Type,
-          auto Name,
           typename... Traits>
-constexpr bool is_column(const C<N, Entity, Type, Name, Traits...> &c)
+constexpr bool is_column(const C<N, Entity, Type, Traits...> &c)
 {
   using X = typename std::remove_cv_t<std::remove_reference_t<decltype(c)>>;
-  using Y = Column<N, Entity, Type, Name, Traits...>;
+  using Y = Column<N, Entity, Type, Traits...>;
   return std::is_convertible_v<X, Y>;
 }
 
 //----------------------------------------------------------------------
-template <template <int, typename, typename, typename, auto, typename...>
-          class C,
+template <template <int, typename, typename, typename, typename...> class C,
           int N,
           typename ParentTable,
           typename PK,
           typename Entity,
-          auto Name,
           typename... Traits>
-constexpr bool
-is_column(const C<N, ParentTable, PK, Entity, Name, Traits...> &c)
+constexpr bool is_column(const C<N, ParentTable, PK, Entity, Traits...> &c)
 {
   using X = typename std::remove_cv_t<std::remove_reference_t<decltype(c)>>;
-  using Y =
-      Column<N, Entity, typename PK::type, Name, foreignkey_tag, Traits...>;
+  using Y = Column<N, Entity, typename PK::type, foreignkey_tag, Traits...>;
   return std::is_convertible_v<X, Y>;
 }
 
@@ -276,6 +269,22 @@ constexpr auto get_id_column_name()
 {
   namespace hana = boost::hana;
   return hana::to<const char *>(hana::first(get_hana_id_column<Entity>()));
+}
+
+template <typename Column>
+constexpr auto get_column_name()
+{
+  namespace hana = boost::hana;
+  using Entity = typename Column::entity;
+  auto m = hana::find_if(
+               hana::accessors<Entity>(), hana::fuse([](auto, auto member) {
+                 using type =
+                     std::remove_reference_t<decltype(member(Entity{}))>;
+                 return hana::bool_c<hana::equal(type::n , Column::n)>;
+                 }))
+               .value();
+
+  return hana::to<const char *>(hana::first(m));
 }
 
 } // namespace Sphinx::Db

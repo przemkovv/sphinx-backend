@@ -42,16 +42,15 @@ private:
   };
 
 public:
-  BOOST_HANA_DEFINE_STRUCT(
-      User,
-      (Column<0, User, std::uint64_t, User_::id, primarykey_tag>, id),
-      (Column<1, User, std::string, User_::firstname>, firstname),
-      (Column<2, User, std::string, User_::lastname>, lastname),
-      (Column<3, User, std::string, User_::username>, username),
-      (Column<4, User, std::string, User_::student_id, optional_tag>,
-       student_id),
-      (Column<5, User, std::string, User_::email>, email),
-      (Column<6, User, std::string, User_::role>, role));
+  BOOST_HANA_DEFINE_STRUCT(User,
+                           (Column<0, User, std::uint64_t, primarykey_tag>, id),
+                           (Column<1, User, std::string>, firstname),
+                           (Column<2, User, std::string>, lastname),
+                           (Column<3, User, std::string>, username),
+                           (Column<4, User, std::string, optional_tag>,
+                            student_id),
+                           (Column<5, User, std::string>, email),
+                           (Column<6, User, std::string>, role));
   constexpr static const auto N = 7;
 
   auto get_columns() const
@@ -83,12 +82,10 @@ public:
 public:
   BOOST_HANA_DEFINE_STRUCT(
       Course,
-      (Column<0, Course, std::uint64_t, Course_::id, primarykey_tag>, id),
-      (Column<1, Course, std::string, Course_::title>, title),
-      (Column<2, Course, std::string, Course_::description, optional_tag>,
-       description),
-      (ForeignKey<3, User, decltype(User::id), Course, Course_::owner_id>,
-       owner_id));
+      (Column<0, Course, std::uint64_t, primarykey_tag>, id),
+      (Column<1, Course, std::string>, title),
+      (Column<2, Course, std::string, optional_tag>, description),
+      (ForeignKey<3, User, decltype(User::id), Course>, owner_id));
   constexpr static const auto N = 4;
 
   auto get_columns() const
@@ -119,12 +116,10 @@ private:
 public:
   BOOST_HANA_DEFINE_STRUCT(
       Module,
-      (Column<0, Module, std::uint64_t, Module_::id, primarykey_tag>, id),
-      (ForeignKey<1, Course, decltype(Course::id), Module, Module_::course_id>,
-       course_id),
-      (Column<2, Module, std::string, Module_::title>, title),
-      (Column<3, Module, std::string, Module_::description, optional_tag>,
-       description));
+      (Column<0, Module, std::uint64_t, primarykey_tag>, id),
+      (ForeignKey<1, Course, decltype(Course::id), Module>, course_id),
+      (Column<2, Module, std::string>, title),
+      (Column<3, Module, std::string, optional_tag>, description));
 
   constexpr static const auto N = 4;
 
