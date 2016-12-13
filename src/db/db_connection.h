@@ -217,14 +217,14 @@ public:
   auto insert(const T &data)
   {
     auto query = prepare_insert_query<T>();
-    auto insert_params = make_value_list(Meta::Insert<T>::values(data));
+    auto insert_params = make_value_list(get_values_to_insert(data));
     return insert<T>(query, insert_params);
   }
 
   //----------------------------------------------------------------------
   template <typename T>
   typename Meta::IdColumnType<T> insert(const std::string &query,
-                                          const ValueList &insert_params)
+                                        const ValueList &insert_params)
   {
     auto res = exec(query, insert_params);
 

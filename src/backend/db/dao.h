@@ -37,19 +37,19 @@ public:
   }
   //----------------------------------------------------------------------
   template <typename T>
-  std::optional<T> find_by_id(typename T::Columns::id_column_t id)
+  std::optional<T> find_by_id(typename Meta::IdColumnType<T> id)
   {
     return db_connection_.find_by_id<T>(id);
   }
   //----------------------------------------------------------------------
   template <typename T>
-  bool exists(typename Sphinx::Db::Meta::IdColumnType<T> id)
+  bool exists(typename Meta::IdColumnType<T> id)
   {
     return db_connection_.exists<T>(id);
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T get_by_id(typename Sphinx::Db::Meta::IdColumnType<T> id)
+  T get_by_id(typename Meta::IdColumnType<T> id)
   {
     return db_connection_.get_by_id<T>(id);
   }

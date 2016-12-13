@@ -10,12 +10,10 @@
 #include <boost/hana/accessors.hpp>
 #include <boost/hana/filter.hpp>
 #include <boost/hana/find.hpp>
+#include <boost/hana/members.hpp>
+#include <boost/hana/unpack.hpp>
 
 namespace Sphinx::Db::Meta {
-
-template <typename T>
-struct Insert {
-};
 
 template <typename T>
 struct ColumnsId : public std::array<int, T::N> {
@@ -30,9 +28,6 @@ using Entities = std::vector<E>;
 
 template <typename T>
 constexpr auto EntityName = Entity<T>::name;
-
-template <typename T>
-using EntityType = T;
 
 template <typename Column, typename Entity>
 constexpr auto is_column_belongs_to_entity =
@@ -127,7 +122,6 @@ struct Column {
 
   static constexpr auto name = Name;
   static constexpr auto n = N;
-  constexpr operator int() { return n; }
 
   std::conditional_t<has_optional_v<traits>, std::optional<type>, type> value;
 };
@@ -241,7 +235,23 @@ constexpr auto get_insert_columns()
 }
 //----------------------------------------------------------------------
 template <typename Entity>
-constexpr auto get_id_column_ptr()
+constexpr auto get_values_to_insert(Entity &&entity)
+{
+  namespace hana = boost::hana;
+  return hana::unpack(
+      hana::filter(hana::members(entity),
+                   [](auto &&column) {
+                     using type = std::remove_reference_t<decltype(column)>;
+                     return std::negation<is_primarykey<type>>{};
+                   }),
+      [](auto &&... columns) {
+        auto value_of = [](auto &&column) { return column.value; };
+        return std::make_tuple(value_of(columns)...);
+      });
+}
+//----------------------------------------------------------------------
+template <typename Entity>
+constexpr auto get_hana_id_column()
 {
   namespace hana = boost::hana;
   return hana::find_if(hana::accessors<Entity>(),
@@ -258,19 +268,15 @@ template <typename Entity>
 constexpr auto get_id_column()
 {
   namespace hana = boost::hana;
-  return hana::second(get_id_column_ptr<Entity>());
+  return hana::second(get_hana_id_column<Entity>());
 }
 
 template <typename Entity>
 constexpr auto get_id_column_name()
 {
   namespace hana = boost::hana;
-  return hana::to<const char *>(hana::first(get_id_column_ptr<Entity>()));
+  return hana::to<const char *>(hana::first(get_hana_id_column<Entity>()));
 }
-
-template <typename Entity>
-using id_column_t =
-    std::remove_reference_t<decltype(get_id_column<Entity>()(Entity{}))>;
 
 } // namespace Sphinx::Db
 

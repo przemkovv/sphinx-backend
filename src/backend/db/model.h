@@ -148,64 +148,13 @@ namespace Sphinx::Db::Meta {
 template <>
 constexpr auto EntityName<Backend::Model::User> = "users";
 
-template <>
-struct Insert<Backend::Model::User> {
-  using User = Backend::Model::User;
-
-  static constexpr auto columns = {
-      decltype(User::firstname)::name, decltype(User::lastname)::name,
-      decltype(User::username)::name,  decltype(User::student_id)::name,
-      decltype(User::email)::name,     decltype(User::role)::name};
-
-  static auto values(const User &data)
-  {
-    return std::make_tuple(data.firstname.value, data.lastname.value,
-                           data.username.value, data.student_id.value,
-                           data.email.value, data.role.value);
-  }
-  using id_column = decltype(User::id);
-};
-
 //----------------------------------------------------------------------
 template <>
 constexpr auto EntityName<Backend::Model::Course> = "courses";
 
-template <>
-struct Insert<Backend::Model::Course> {
-  using Course = Backend::Model::Course;
-
-  // static constexpr auto columns = {decltype(Course::title)::name,
-  // decltype(Course::description)::name,
-  // decltype(Course::owner_id)::name};
-  static constexpr auto columns = {decltype(Course::title)::name,
-                                   decltype(Course::description)::name,
-                                   decltype(Course::owner_id)::name};
-  static auto values(const Course &data)
-  {
-    return std::make_tuple(data.title.value, data.description.value,
-                           data.owner_id.value);
-  }
-  using id_column = decltype(Course::id);
-};
-
 //----------------------------------------------------------------------
 template <>
 constexpr auto EntityName<Backend::Model::Module> = "modules";
-
-template <>
-struct Insert<Backend::Model::Module> {
-  using Module = Backend::Model::Module;
-
-  static constexpr auto columns = {decltype(Module::course_id)::name,
-                                   decltype(Module::title)::name,
-                                   decltype(Module::description)::name};
-  static auto values(const Module &data)
-  {
-    return std::make_tuple(data.course_id.value, data.title.value,
-                           data.description.value);
-  }
-  using id_column = decltype(Module::id);
-};
 
 //----------------------------------------------------------------------
 
