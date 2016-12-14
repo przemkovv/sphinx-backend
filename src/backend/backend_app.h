@@ -99,11 +99,15 @@ private:
   {
     auto func = [&id](auto &subentities2) {
       using Sphinx::Db::LinkMany;
-      using RemoteKey = typename LinkMany<decltype(subentities2)>::remote_key;
+      using Link = LinkMany<decltype(subentities2)>;
+      using RemoteKey = typename Link::remote_key;
+      using RemoteEntity = typename Link::remote_entity;
       constexpr auto n = RemoteKey::n;
       if (subentities2) {
+        auto foreign_key = Sphinx::Db::get_nth_column_ptr<RemoteEntity, n>();
         for (auto &subentity : *subentities2) {
-          std::get<n>(subentity.get_columns()).value = id;
+          get_nth_column_ptr<n>(subentity).value = id;
+          // std::get<n>(subentity.get_columns()).value = id;
         }
       }
     };

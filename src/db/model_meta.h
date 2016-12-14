@@ -271,11 +271,40 @@ constexpr auto get_id_column_name()
   return hana::to<const char *>(hana::first(get_hana_id_column<Entity>()));
 }
 
+template <typename Entity, auto N>
+constexpr auto get_nth_column_ptr(Entity &&entity)
+{
+  namespace hana = boost::hana;
+  constexpr auto n = N;
+  return hana::find_if(
+               hana::members(entity), [](auto &&member) {
+                 using type =
+                     std::remove_reference_t<decltype(member(Entity{}))>;
+                 return hana::bool_c<hana::equal(type::n , n)>;
+                 }) ;
+}
+
+template <typename Entity, auto N>
+constexpr auto get_nth_column_name()
+{
+  namespace hana = boost::hana;
+  auto m = hana::find_if(
+               hana::accessors<Entity>(), hana::fuse([](auto, auto member) {
+                 using type =
+                     std::remove_reference_t<decltype(member(Entity{}))>;
+                 return hana::bool_c<hana::equal(type::n , N)>;
+                 }))
+               .value();
+  return hana::to<const char *>(hana::first(m));
+}
+
 template <typename Column>
 constexpr auto get_column_name()
 {
   namespace hana = boost::hana;
   using Entity = typename Column::entity;
+  // TODO: calling this function causes segmentation fault of the GCC compiler
+  // return get_nth_column_name<Entity, Column::n>(); 
   auto m = hana::find_if(
                hana::accessors<Entity>(), hana::fuse([](auto, auto member) {
                  using type =
