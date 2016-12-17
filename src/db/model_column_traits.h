@@ -4,6 +4,7 @@
 
 namespace Sphinx::Db {
 
+//----------------------------------------------------------------------
 template <typename T, typename... Traits>
 struct contains : std::false_type {
 };
@@ -43,6 +44,7 @@ template <typename C>
 struct is_foreignkey : contains<foreignkey_tag, typename C::traits> {
 };
 
+//----------------------------------------------------------------------
 template <typename C>
 constexpr bool is_primarykey_v = is_primarykey<C>::value;
 template <typename C>
@@ -59,17 +61,21 @@ constexpr bool is_autoincrement_c(C &&)
   return is_autoincrement_v<typename std::remove_reference_t<C>>;
 }
 
+//----------------------------------------------------------------------
 template <typename C>
 constexpr bool is_foreignkey_c(C &&)
 {
   return is_foreignkey_v<typename std::remove_reference_t<C>>;
 }
 
+//----------------------------------------------------------------------
 template <typename C>
 constexpr bool is_primarykey_c(C &&)
 {
   return is_primarykey_v<typename std::remove_reference_t<C>>;
 }
+
+//----------------------------------------------------------------------
 template <typename C>
 constexpr bool is_optional_c(C &&)
 {

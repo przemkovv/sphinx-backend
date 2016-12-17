@@ -22,6 +22,7 @@
 
 namespace Sphinx::Db::Meta {
 
+//----------------------------------------------------------------------
 template <typename T>
 struct ColumnsId : public std::array<int, T::N> {
 };
@@ -39,19 +40,14 @@ constexpr auto EntityName = Entity<T>::name;
 template <typename E>
 constexpr auto is_entity_v = std::is_base_of_v<Entity<E>, E>;
 
-} // namespace Sphinx::Db::Meta
-
 //----------------------------------------------------------------------
-
-namespace Sphinx::Db::Meta {
-
 template <typename Entity>
 constexpr auto get_insert_columns()
 {
   namespace hana = boost::hana;
   auto is_not_pk = [](auto member_pair) {
-    auto &column = hana::second(member_pair);
-    using type = std::remove_reference_t<decltype(column(Entity{}))>;
+    auto &member_ptr = hana::second(member_pair);
+    using type = std::remove_reference_t<decltype(member_ptr(Entity{}))>;
     return std::negation<is_primarykey<type>>{};
   };
   return hana::filter(hana::accessors<Entity>(), is_not_pk);
@@ -79,8 +75,8 @@ constexpr auto get_id_column_hana_pair()
 {
   namespace hana = boost::hana;
   auto is_pk = [](auto column) {
-    auto &c = hana::second(column);
-    using type = std::remove_reference_t<decltype(c(Entity{}))>;
+    auto &member_ptr = hana::second(column);
+    using type = std::remove_reference_t<decltype(member_ptr(Entity{}))>;
     return is_primarykey<type>{};
   };
   auto pk = hana::find_if(hana::accessors<Entity>(), is_pk);
@@ -97,6 +93,7 @@ constexpr auto get_id_column_ptr()
   return hana::second(pk);
 }
 
+//----------------------------------------------------------------------
 template <typename Entity>
 constexpr auto get_id_column_name()
 {
@@ -111,8 +108,8 @@ constexpr auto get_nth_column_hana_pair()
 {
   namespace hana = boost::hana;
   auto m = hana::find_if(
-      hana::accessors<Entity>(), hana::fuse([](auto, auto member) {
-        using type = std::remove_reference_t<decltype(member(Entity{}))>;
+      hana::accessors<Entity>(), hana::fuse([](auto, auto member_ptr) {
+        using type = std::remove_reference_t<decltype(member_ptr(Entity{}))>;
         return hana::bool_c<hana::equal(type::n, N)>;
       }));
   static_assert(!hana::is_nothing(m), "Could not find member");
@@ -146,6 +143,7 @@ constexpr auto get_column_name()
   return get_nth_column_name<Entity, Column::n>();
 }
 
+//----------------------------------------------------------------------
 template <typename T>
 using IdColumn = std::remove_reference_t<decltype(get_id_column_ptr<T>()(T{}))>;
 
@@ -154,5 +152,7 @@ using IdColumnType = typename IdColumn<Entity>::type;
 
 template <typename Entity>
 constexpr auto IdColumnName = get_id_column_name<Entity>();
+
+//----------------------------------------------------------------------
 
 } // namespace Sphinx::Db::Meta
