@@ -7,6 +7,7 @@
 #include "db/dao.h"
 #include "db/json_serializer.h"
 #include "db/model_relations.h"
+#include "for_each_in_tuple.h"
 #include "model_meta.h"
 #include <crow.h>
 #include <nlohmann/json.hpp>
@@ -97,42 +98,38 @@ private:
   template <typename Entity>
   void update_subentities(Entity &entity, Meta::IdColumnType<Entity> id)
   {
-    auto func = [&id](auto &subentities2) {
+    auto set_id = [&id](auto &subentities) {
       using Sphinx::Db::LinkMany;
-      using Link = LinkMany<decltype(subentities2)>;
-      using RemoteKey = typename Link::remote_key;
-      using RemoteEntity = typename Link::remote_entity;
-      constexpr auto n = RemoteKey::n;
-      if (subentities2) {
-        auto foreign_key = Sphinx::Db::get_nth_column_ptr<RemoteEntity, n>();
-        for (auto &subentity : *subentities2) {
-          get_nth_column_ptr<n>(subentity).value = id;
-          // std::get<n>(subentity.get_columns()).value = id;
+      using Link = LinkMany<decltype(subentities)>;
+      if (subentities) {
+        auto member_ptr = Sphinx::Db::get_remote_key_member_ptr<Link>();
+        for (auto &subentity : *subentities) {
+          member_ptr(subentity).value = id;
         }
       }
     };
-    for_each_subentity(entity, func);
+    for_each_subentity_link(entity, set_id);
   }
 
   //----------------------------------------------------------------------
   template <typename Entity, typename Func>
-  void for_each_subentity(Entity &entity, Func &&func)
+  void for_each_subentity_link(Entity &entity, Func &&func)
   {
     auto subentities_links = entity.get_many_links();
     Utils::for_each_in_tuple(
         subentities_links,
-        [func = std::move(func)](auto &subentities) { func(subentities); });
+        [&func](auto &subentities_link) { func(subentities_link); });
   }
 
   //----------------------------------------------------------------------
   template <typename Entity>
   void create_subentities(Entity &entity)
   {
-    auto func = [this](auto &subentities3) {
-      if (subentities3)
-        this->create_entities(*subentities3);
+    auto func = [this](auto &subentities) {
+      if (subentities)
+        this->create_entities(*subentities);
     };
-    for_each_subentity(entity, func);
+    for_each_subentity_link(entity, func);
   }
 
   //----------------------------------------------------------------------

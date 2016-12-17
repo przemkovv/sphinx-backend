@@ -7,13 +7,16 @@
 #include <type_traits>
 #include <vector>
 
-#include <boost/hana/integral_constant.hpp>
 #include <boost/hana/accessors.hpp>
+#include <boost/hana/at_key.hpp>
 #include <boost/hana/equal.hpp>
 #include <boost/hana/filter.hpp>
 #include <boost/hana/find_if.hpp>
 #include <boost/hana/fuse.hpp>
+#include <boost/hana/integral_constant.hpp>
+#include <boost/hana/keys.hpp>
 #include <boost/hana/members.hpp>
+#include <boost/hana/optional.hpp>
 #include <boost/hana/unpack.hpp>
 #include <boost/hana/value.hpp>
 
@@ -220,100 +223,109 @@ template <typename Entity>
 constexpr auto get_insert_columns()
 {
   namespace hana = boost::hana;
-  return hana::filter(hana::accessors<Entity>(), [](auto column) {
-    auto &c = hana::second(column);
-    using type = std::remove_reference_t<decltype((c(Entity{})))>;
+  auto is_not_pk = [](auto member_pair) {
+    auto &column = hana::second(member_pair);
+    using type = std::remove_reference_t<decltype(column(Entity{}))>;
     return std::negation<is_primarykey<type>>{};
-  });
+  };
+  return hana::filter(hana::accessors<Entity>(), is_not_pk);
 }
 //----------------------------------------------------------------------
 template <typename Entity>
 constexpr auto get_values_to_insert(Entity &&entity)
 {
   namespace hana = boost::hana;
-  return hana::unpack(
-      hana::filter(hana::members(entity),
-                   [](auto &&column) {
-                     using type = std::remove_reference_t<decltype(column)>;
-                     return std::negation<is_primarykey<type>>{};
-                   }),
-      [](auto &&... columns) {
-        auto value_of = [](auto &&column) { return column.value; };
-        return std::make_tuple(value_of(columns)...);
-      });
+  auto is_not_pk = [](auto &&column) {
+    using type = std::remove_reference_t<decltype(column)>;
+    return std::negation<is_primarykey<type>>{};
+  };
+  auto to_tuple = [](auto &&... columns) {
+    auto value_of = [](auto &&column) { return column.value; };
+    return std::make_tuple(value_of(columns)...);
+  };
+
+  return hana::unpack(hana::filter(hana::members(entity), is_not_pk), to_tuple);
 }
 //----------------------------------------------------------------------
 template <typename Entity>
-constexpr auto get_hana_id_column()
+constexpr auto get_id_column_hana_pair()
 {
   namespace hana = boost::hana;
-  return hana::find_if(hana::accessors<Entity>(),
-                       [](auto column) {
-                         auto &c = hana::second(column);
-                         using type =
-                             std::remove_reference_t<decltype(c(Entity{}))>;
-                         return is_primarykey<type>{};
-                       })
-      .value();
+  auto is_pk = [](auto column) {
+    auto &c = hana::second(column);
+    using type = std::remove_reference_t<decltype(c(Entity{}))>;
+    return is_primarykey<type>{};
+  };
+  auto pk = hana::find_if(hana::accessors<Entity>(), is_pk);
+  static_assert(!hana::is_nothing(pk), "Could not find primary key");
+  return pk.value();
 }
 
+//----------------------------------------------------------------------
 template <typename Entity>
-constexpr auto get_id_column()
+constexpr auto get_id_column_ptr()
 {
   namespace hana = boost::hana;
-  return hana::second(get_hana_id_column<Entity>());
+  auto pk = get_id_column_hana_pair<Entity>();
+  return hana::second(pk);
 }
 
 template <typename Entity>
 constexpr auto get_id_column_name()
 {
   namespace hana = boost::hana;
-  return hana::to<const char *>(hana::first(get_hana_id_column<Entity>()));
+  auto pk = get_id_column_hana_pair<Entity>();
+  return hana::to<const char *>(hana::first(pk));
 }
 
-template <typename Entity, auto N>
-constexpr auto get_nth_column_ptr(Entity &&entity)
-{
-  namespace hana = boost::hana;
-  constexpr auto n = N;
-  return hana::find_if(
-               hana::members(entity), [](auto &&member) {
-                 using type =
-                     std::remove_reference_t<decltype(member(Entity{}))>;
-                 return hana::bool_c<hana::equal(type::n , n)>;
-                 }) ;
-}
-
-template <typename Entity, auto N>
-constexpr auto get_nth_column_name()
+//----------------------------------------------------------------------
+template <typename Entity, int N>
+constexpr auto get_nth_column_hana_pair()
 {
   namespace hana = boost::hana;
   auto m = hana::find_if(
-               hana::accessors<Entity>(), hana::fuse([](auto, auto member) {
-                 using type =
-                     std::remove_reference_t<decltype(member(Entity{}))>;
-                 return hana::bool_c<hana::equal(type::n , N)>;
-                 }))
-               .value();
+      hana::accessors<Entity>(), hana::fuse([](auto, auto member) {
+        using type = std::remove_reference_t<decltype(member(Entity{}))>;
+        return hana::bool_c<hana::equal(type::n, N)>;
+      }));
+  static_assert(!hana::is_nothing(m), "Could not find member");
+  return m.value();
+}
+//----------------------------------------------------------------------
+template <typename Link>
+constexpr auto get_remote_key_member_ptr()
+{
+  namespace hana = boost::hana;
+  using RemoteKey = typename Link::remote_key;
+  using RemoteEntity = typename Link::remote_entity;
+  auto m = get_nth_column_hana_pair<RemoteEntity, RemoteKey::n>();
+  return hana::second(m);
+}
+//----------------------------------------------------------------------
+template <typename Entity, int N>
+constexpr auto get_nth_column_ptr()
+{
+  namespace hana = boost::hana;
+  auto m = get_nth_column_hana_pair<Entity, N>();
+  return hana::second(m);
+}
+
+//----------------------------------------------------------------------
+template <typename Entity, int N>
+constexpr auto get_nth_column_name()
+{
+  namespace hana = boost::hana;
+  auto m = get_nth_column_hana_pair<Entity, N>();
   return hana::to<const char *>(hana::first(m));
 }
 
+//----------------------------------------------------------------------
 template <typename Column>
 constexpr auto get_column_name()
 {
   namespace hana = boost::hana;
   using Entity = typename Column::entity;
-  // TODO: calling this function causes segmentation fault of the GCC compiler
-  // return get_nth_column_name<Entity, Column::n>(); 
-  auto m = hana::find_if(
-               hana::accessors<Entity>(), hana::fuse([](auto, auto member) {
-                 using type =
-                     std::remove_reference_t<decltype(member(Entity{}))>;
-                 return hana::bool_c<hana::equal(type::n , Column::n)>;
-                 }))
-               .value();
-
-  return hana::to<const char *>(hana::first(m));
+  return get_nth_column_name<Entity, Column::n>();
 }
 
 } // namespace Sphinx::Db
@@ -321,7 +333,7 @@ constexpr auto get_column_name()
 namespace Sphinx::Db::Meta {
 
 template <typename T>
-using IdColumn = std::remove_reference_t<decltype(get_id_column<T>()(T{}))>;
+using IdColumn = std::remove_reference_t<decltype(get_id_column_ptr<T>()(T{}))>;
 
 template <typename Entity>
 using IdColumnType = typename IdColumn<Entity>::type;
