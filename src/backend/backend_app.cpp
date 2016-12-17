@@ -1,9 +1,9 @@
 
 #include "backend_app.h"
 
-#include "db/json_serializer.h"
+#include "json/json_serializer.h"
 
-#include "utils.h"
+#include "shared_lib/utils.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -12,7 +12,7 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include "sphinx_assert.h"
+#include "shared_lib/sphinx_assert.h"
 
 using namespace std::literals::string_literals;
 
@@ -73,7 +73,7 @@ std::string BackendApp::get_modules()
 }
 
 //----------------------------------------------------------------------
-std::string BackendApp::get_modules(Meta::IdColumn_t<Model::Course> course_id)
+std::string BackendApp::get_modules(Meta::IdColumnType<Model::Course> course_id)
 {
   return to_json(dao_.get_modules(course_id)).dump(dump_indent_);
 }
@@ -88,7 +88,7 @@ std::string BackendApp::get_users()
 
 //----------------------------------------------------------------------
 template <>
-Meta::IdColumn_t<Model::Module>
+Meta::IdColumnType<Model::Module>
 BackendApp::create_entity(const Model::Module &module)
 {
   logger()->debug("Creating module {} {} {}", module.course_id.value,
@@ -99,7 +99,7 @@ BackendApp::create_entity(const Model::Module &module)
 
 //----------------------------------------------------------------------
 template <>
-Meta::IdColumn_t<Model::Course>
+Meta::IdColumnType<Model::Course>
 BackendApp::create_entity(const Model::Course &course)
 {
   logger()->debug("Creating course {} {}", course.title.value,
@@ -109,7 +109,8 @@ BackendApp::create_entity(const Model::Course &course)
 
 //----------------------------------------------------------------------
 template <>
-Meta::IdColumn_t<Model::User> BackendApp::create_entity(const Model::User &user)
+Meta::IdColumnType<Model::User>
+BackendApp::create_entity(const Model::User &user)
 {
   logger()->debug("Creating user {} {}", user.username.value, user.email.value);
   return dao_.create_user(user);

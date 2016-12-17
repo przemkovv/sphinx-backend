@@ -1,12 +1,13 @@
 
 #include "dao.h"
-#include "db/model.h"      // for User, Module, Course
-#include <exception>       // for exception
+#include "model/model.h"      // for User, Module, Course
 #include <memory>          // for __shared_ptr_access
 #include <spdlog/spdlog.h> // for logger
 
+#include <boost/hana/core/to.hpp>  // for to_t::operator()
+
 //----------------------------------------------------------------------
-namespace Sphinx::Backend::Db {
+namespace Sphinx::Backend {
 
 std::vector<Model::User> DAO::get_users()
 {
@@ -27,13 +28,13 @@ std::vector<Model::Module> DAO::get_modules()
 
 //----------------------------------------------------------------------
 std::vector<Model::Module>
-    DAO::get_modules(Meta::IdColumn_t<Model::Course> /* course_id */)
+    DAO::get_modules(Meta::IdColumnType<Model::Course> /* course_id */)
 {
   return db_connection_.get_all<Model::Module>();
 }
 
 //----------------------------------------------------------------------
-Db::Meta::IdColumn_t<Model::Course>
+Db::Meta::IdColumnType<Model::Course>
 DAO::create_course(const Model::Course &course)
 {
   auto last_id = db_connection_.insert(course);
@@ -42,7 +43,7 @@ DAO::create_course(const Model::Course &course)
 }
 
 //----------------------------------------------------------------------
-Db::Meta::IdColumn_t<Model::Module>
+Db::Meta::IdColumnType<Model::Module>
 DAO::create_module(const Model::Module &module)
 {
   auto last_id = db_connection_.insert(module);
@@ -51,7 +52,7 @@ DAO::create_module(const Model::Module &module)
 }
 
 //----------------------------------------------------------------------
-Db::Meta::IdColumn_t<Model::User>
+Db::Meta::IdColumnType<Model::User>
 DAO::create_user(const Model::User &user)
 {
   auto last_id = db_connection_.insert(user);
@@ -59,4 +60,4 @@ DAO::create_user(const Model::User &user)
   return last_id;
 }
 
-} // namespace Sphinx::Backend::Db
+} // namespace Sphinx::Backend

@@ -1,23 +1,27 @@
 #pragma once
 
-#include "db_utils.h"      // for make_value_list, ValueList, get_c...
-#include "logger.h"        // for Logger
-#include "model_meta.h"    // for Columns
-#include "sphinx_assert.h" // for SPHINX_ASSERT
-#include <cstddef>         // for size_t
-#include <exception>       // for exception
-#include <fmt/format.h>    // for format, UdlArg, operator""_a
-#include <functional>      // for function
-#include <iterator>        // for next
-#include <libpq-fe.h>      // for PQerrorMessage, PGresult, PQresultS...
-#include <memory>          // for shared_ptr, __shared_ptr_access
-#include <numeric>         // for accumulate
-#include <optional>        // for optional
-#include <spdlog/spdlog.h> // for logger
-#include <stdexcept>       // for runtime_error
-#include <stdint.h>        // for uint16_t
-#include <string>          // for string
-#include <vector>          // for vector
+#include "db_utils.h"                 // for ValueList, make_value_list
+#include "model_meta.h"               // for IdColumnType, get_insert_columns
+#include "shared_lib/logger.h"        // for Logger
+#include "shared_lib/sphinx_assert.h" // for SPHINX_ASSERT
+
+#include <boost/hana/config.hpp>      // for hana
+#include <boost/hana/fwd/core/to.hpp> // for to
+#include <boost/hana/fwd/first.hpp>   // for first
+#include <boost/hana/fwd/fold.hpp>    // for fold
+#include <cstddef>                    // for size_t
+#include <exception>                  // for exception
+#include <fmt/format.h>               // for operator""_a, format, UdlArg
+#include <functional>                 // for function
+#include <libpq-fe.h>                 // for PQerrorMessage, PQntuples, PQr...
+#include <memory>                     // for shared_ptr, __shared_ptr_access
+#include <numeric>                    // for accumulate
+#include <optional>                   // for optional
+#include <spdlog/spdlog.h>            // for logger
+#include <stdexcept>                  // for runtime_error
+#include <stdint.h>                   // for uint16_t
+#include <string>                     // for basic_string, string
+#include <vector>                     // for vector
 
 namespace Sphinx::Db {
 
@@ -136,28 +140,28 @@ public:
   }
   //----------------------------------------------------------------------
   template <typename T>
-  std::optional<T> find_by_id(Meta::IdColumn_t<T> id)
+  std::optional<T> find_by_id(Meta::IdColumnType<T> id)
   {
     auto result =
         exec(fmt::format("SELECT * FROM {table_name} WHERE {column} = {value}",
                          "table_name"_a = Meta::EntityName<T>,
-                         "column"_a = Meta::IdColumn<T>::name, "value"_a = id));
+                         "column"_a = Meta::IdColumnName<T>, "value"_a = id));
     return get_row<T>(std::move(result));
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T get_by_id(typename Meta::IdColumn<T>::type id)
+  T get_by_id(typename Meta::IdColumnType<T> id)
   {
     return find_by_id<T>(id).value();
   }
   //----------------------------------------------------------------------
   template <typename T>
-  bool exists(typename Meta::IdColumn<T>::type id)
+  bool exists(typename Meta::IdColumnType<T> id)
   {
     auto result = exec(fmt::format(
         "SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {column} = {value})",
         "table_name"_a = Meta::EntityName<T>,
-        "column"_a = Meta::IdColumn<T>::name, "value"_a = id));
+        "column"_a = Meta::IdColumnName<T>, "value"_a = id));
 
     return get_scalar<bool>(std::move(result));
   }
@@ -182,22 +186,23 @@ public:
   template <typename T>
   std::string prepare_insert_query()
   {
-    auto &insert_columns = Meta::Insert<T>::columns;
+    namespace hana = boost::hana;
 
-    std::string field_list =
-        std::accumulate(std::next(insert_columns.begin()), insert_columns.end(),
-                        std::string(*insert_columns.begin()),
-                        [](auto a, auto b) { return a + ", " + b; });
+    std::string field_list = hana::fold(
+        Meta::get_insert_columns<T>(), std::string{}, [](auto a, auto b) {
+          return fmt::format("{}{},", a,
+                             hana::to<const char *>(hana::first(b)));
+        });
+    field_list.pop_back();
 
-    int n = 1;
-    std::string field_ids =
-        std::accumulate(std::next(insert_columns.begin()), insert_columns.end(),
-                        std::string{"$1"}, [n](auto a, auto /* b */) mutable {
-                          return a + ", " + fmt::format("${}", ++n);
-                        });
+    int n = 0;
+    std::string field_ids = hana::fold(
+        Meta::get_insert_columns<T>(), std::string{},
+        [n](auto a, auto) mutable { return fmt::format("{}${},", a, ++n); });
+    field_ids.pop_back();
 
     constexpr auto table_name = Meta::EntityName<T>;
-    constexpr auto id_column = Meta::IdColumn<T>::name;
+    constexpr auto id_column = Meta::IdColumnName<T>;
     auto query = fmt::format("INSERT INTO {0} ({1}) VALUES ({2}) RETURNING {3}",
                              table_name, field_list, field_ids, id_column);
     return query;
@@ -208,14 +213,14 @@ public:
   auto insert(const T &data)
   {
     auto query = prepare_insert_query<T>();
-    auto insert_params = make_value_list(Meta::Insert<T>::values(data));
+    auto insert_params = make_value_list(get_values_to_insert(data));
     return insert<T>(query, insert_params);
   }
 
   //----------------------------------------------------------------------
   template <typename T>
-  typename Meta::IdColumn<T>::type insert(const std::string &query,
-                                          const ValueList &insert_params)
+  typename Meta::IdColumnType<T> insert(const std::string &query,
+                                        const ValueList &insert_params)
   {
     auto res = exec(query, insert_params);
 
@@ -225,8 +230,8 @@ public:
     }
     if (status == PGRES_TUPLES_OK) {
 
-      using id_column_t = typename Meta::IdColumn<T>::type;
-      auto id_column = Meta::IdColumn<T>::name;
+      using id_column_t = typename Meta::IdColumnType<T>;
+      constexpr auto id_column = Meta::IdColumnName<T>;
 
       auto id_column_id = PQfnumber(res.get(), id_column);
       int row_count = PQntuples(res.get());

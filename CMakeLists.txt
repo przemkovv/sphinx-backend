@@ -110,6 +110,8 @@ ExternalProject_Add(json
   UPDATE_COMMAND ""
   )
 
+include_directories(src)
+
 add_subdirectory(src/shared_lib)
 add_subdirectory(src/db)
 add_subdirectory(src/backend)

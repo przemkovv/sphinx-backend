@@ -3,11 +3,11 @@
 
 #include "application.h"
 
-#include "db.h"
-#include "db/dao.h"
-#include "db/json_serializer.h"
-#include "db/model_relations.h"
-#include "model_meta.h"
+#include "dao.h"
+#include "db/model_meta.h"
+#include "model/model_relations.h"
+#include "shared_lib/for_each_in_tuple.h"
+#include "json/json_serializer.h"
 #include <crow.h>
 #include <nlohmann/json.hpp>
 
@@ -34,7 +34,7 @@ public:
 protected:
   Sphinx::Db::connection_config prepare_db_config();
 
-  Sphinx::Backend::Db::DAO dao_;
+  DAO dao_;
 
   crow::SimpleApp app_;
 
@@ -63,31 +63,31 @@ private:
   std::string get_users();
   std::string get_courses();
   std::string get_modules();
-  std::string get_modules(typename Meta::IdColumn_t<Model::Course> course_id);
+  std::string get_modules(typename Meta::IdColumnType<Model::Course> course_id);
 
   //----------------------------------------------------------------------
   template <typename T>
-  bool is_entity_exists(typename Meta::IdColumn<T>::type entity_id)
+  bool is_entity_exists(typename Meta::IdColumnType<T> entity_id)
   {
     return dao_.exists<T>(entity_id);
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T get_entity(typename Meta::IdColumn<T>::type entity_id)
+  T get_entity(typename Meta::IdColumnType<T> entity_id)
   {
     auto entity = dao_.get_by_id<T>(entity_id);
     return entity;
   }
   //----------------------------------------------------------------------
   template <typename T>
-  T update_entity(typename Meta::IdColumn<T>::type /* entity_id */,
+  T update_entity(typename Meta::IdColumnType<T> /* entity_id */,
                   const nlohmann::json & /* entity_json */)
   {
     NOT_IMPLEMENTED_YET();
   }
   //----------------------------------------------------------------------
   template <typename T>
-  Meta::IdColumn_t<T> create_entity(const T & /* entity */)
+  Meta::IdColumnType<T> create_entity(const T & /* entity */)
   {
     static_assert(assert_false<T>::value, "Not implemented");
   }
@@ -95,40 +95,40 @@ private:
   //----------------------------------------------------------------------
 
   template <typename Entity>
-  void update_subentities(Entity &entity, Meta::IdColumn_t<Entity> id)
+  void update_subentities(Entity &entity, Meta::IdColumnType<Entity> id)
   {
-    auto func = [&id](auto &subentities2) {
+    auto set_id = [&id](auto &subentities) {
       using Sphinx::Db::LinkMany;
-      using RemoteKey = typename LinkMany<decltype(subentities2)>::remote_key;
-      constexpr auto n = RemoteKey::n;
-      if (subentities2) {
-        for (auto &subentity : *subentities2) {
-          std::get<n>(subentity.get_columns()).value = id;
+      using Link = LinkMany<decltype(subentities)>;
+      if (subentities) {
+        auto member_ptr = Meta::get_remote_key_member_ptr<Link>();
+        for (auto &subentity : *subentities) {
+          member_ptr(subentity).value = id;
         }
       }
     };
-    for_each_subentity(entity, func);
+    for_each_subentity_link(entity, set_id);
   }
 
   //----------------------------------------------------------------------
   template <typename Entity, typename Func>
-  void for_each_subentity(Entity &entity, Func &&func)
+  void for_each_subentity_link(Entity &entity, Func &&func)
   {
     auto subentities_links = entity.get_many_links();
     Utils::for_each_in_tuple(
         subentities_links,
-        [func = std::move(func)](auto &subentities) { func(subentities); });
+        [&func](auto &subentities_link) { func(subentities_link); });
   }
 
   //----------------------------------------------------------------------
   template <typename Entity>
   void create_subentities(Entity &entity)
   {
-    auto func = [this](auto &subentities3) {
-      if (subentities3)
-        this->create_entities(*subentities3);
+    auto func = [this](auto &subentities) {
+      if (subentities)
+        this->create_entities(*subentities);
     };
-    for_each_subentity(entity, func);
+    for_each_subentity_link(entity, func);
   }
 
   //----------------------------------------------------------------------

@@ -1,17 +1,23 @@
 #pragma once
 
-#include "for_each_in_tuple.h" // for for_each_in_tuple
-#include "model_meta.h"        // for ColumnsId
-#include "sphinx_assert.h"     // for assert_false
-#include <algorithm>           // for forward
-#include <cstddef>             // for nullptr_t
-#include <fmt/format.h>        // for MemoryWriter
+#include "model_meta.h"               // for ColumnsId
+#include "shared_lib/sphinx_assert.h" // for assert_false
+#include <algorithm>                  // for forward
+#include <cstddef>                    // for nullptr_t
+#include <fmt/format.h>               // for MemoryWriter
 #include <libpq-fe.h> // for PGresult, PQgetisnull, PQgetvalue, PQfnumber
 #include <optional>   // for optional
 #include <stdint.h>   // for int64_t, uint64_t
 #include <string>     // for basic_string, string
 #include <tuple>      // for apply
 #include <vector>     // for vector
+
+#include <boost/hana/accessors.hpp>
+#include <boost/hana/for_each.hpp>
+#include <boost/hana/fuse.hpp>
+#include <boost/hana/members.hpp>
+#include <boost/hana/transform.hpp>
+#include <boost/hana/unpack.hpp>
 
 namespace Sphinx::Db {
 
@@ -133,12 +139,16 @@ void get_column_id(PGresult *res, const Col &, IDs &ids)
 template <typename T>
 Meta::ColumnsId<T> get_columns_id(PGresult *res)
 {
-  T entity;
-  Meta::ColumnsId<T> ids;
-  auto func = [&ids, &res](const auto &col) { get_column_id(res, col, ids); };
-  auto cols = entity.get_columns();
-  Sphinx::Utils::for_each_in_tuple(cols, func);
-  return ids;
+  namespace hana = boost::hana;
+
+  auto column_to_id = [&res](const auto &column) {
+    constexpr auto name = hana::to<const char *>(hana::first(column));
+    return PQfnumber(res, name);
+  };
+  auto ids_to_array = [](auto... ids) { return Meta::ColumnsId<T>{ids...}; };
+
+  return hana::unpack(hana::transform(hana::accessors<T>(), column_to_id),
+                      ids_to_array);
 }
 
 //----------------------------------------------------------------------
@@ -149,7 +159,7 @@ T get_row(PGresult *res, const Meta::ColumnsId<T> &cols_id, int row_id)
   auto func = [&res, &row_id, &cols_id](auto &... cols) {
     load_fields_from_res(res, row_id, cols_id, cols...);
   };
-  std::apply(func, entity.get_columns());
+  std::apply(func, Meta::get_columns(entity));
   return entity;
 }
 

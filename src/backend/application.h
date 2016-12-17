@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logger.h"                                      // for Logger
+#include "shared_lib/logger.h"                           // for Logger
 #include <boost/program_options/errors.hpp>              // for program_opt...
 #include <boost/program_options/options_description.hpp> // for options_des...
 #include <boost/program_options/variables_map.hpp>       // for variables_map
@@ -37,7 +37,6 @@ protected:
   auto &options_description_cli() { return options_description_cli_; }
 
 private:
-
   const std::string application_name_;
   const std::vector<std::string> args_;
   po::options_description options_description_cli_;
@@ -46,6 +45,7 @@ private:
   json config_;
 
   Logger logger_;
+
 public:
   Application(const std::string &application_name,
               const std::vector<std::string> &args);

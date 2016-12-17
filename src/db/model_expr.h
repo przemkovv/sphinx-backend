@@ -3,6 +3,8 @@
 #include <fmt/format.h>
 #include <string>
 
+#include "model_meta.h"
+
 namespace Sphinx::Db {
 
 struct lt_operator {
@@ -38,8 +40,8 @@ struct condition {
 
   std::string str(std::string placeholder = "") const
   {
-    const std::string column_name = column_t::name;
-    const std::string operator_name = operator_t::name;
+    constexpr auto column_name = Meta::get_column_name<column_t>();
+    constexpr auto operator_name = operator_t::name;
     if (placeholder.empty())
       return fmt::format("{0} {1} '{2}'", column_name, operator_name, value);
     else
