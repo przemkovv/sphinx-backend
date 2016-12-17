@@ -30,17 +30,6 @@ using Courses = Sphinx::Db::Meta::Entities<Course>;
 
 //----------------------------------------------------------------------
 struct User : Sphinx::Db::Meta::Entity<User> {
-private:
-  struct User_ {
-    static constexpr char id[] = "id";
-    static constexpr char username[] = "username";
-    static constexpr char email[] = "email";
-    static constexpr char firstname[] = "firstname";
-    static constexpr char lastname[] = "lastname";
-    static constexpr char student_id[] = "student_id";
-    static constexpr char role[] = "role";
-  };
-
 public:
   BOOST_HANA_DEFINE_STRUCT(User,
                            (Column<0, User, std::uint64_t, primarykey_tag>, id),
@@ -70,16 +59,6 @@ public:
 //----------------------------------------------------------------------
 struct Course : Sphinx::Db::Meta::Entity<Course> {
 public:
-  struct Course_ {
-    static constexpr char id[] = "id";
-    static constexpr char title[] = "title";
-    static constexpr char description[] = "description";
-    static constexpr char owner_id[] = "owner_id";
-
-    static constexpr char modules[] = "modules";
-  };
-
-public:
   BOOST_HANA_DEFINE_STRUCT(
       Course,
       (Column<0, Course, std::uint64_t, primarykey_tag>, id),
@@ -105,14 +84,6 @@ public:
 
 //----------------------------------------------------------------------
 struct Module : Sphinx::Db::Meta::Entity<Module> {
-private:
-  struct Module_ {
-    static constexpr char id[] = "id";
-    static constexpr char course_id[] = "course_id";
-    static constexpr char title[] = "title";
-    static constexpr char description[] = "description";
-  };
-
 public:
   BOOST_HANA_DEFINE_STRUCT(
       Module,
