@@ -32,25 +32,29 @@ template <typename T>
 nlohmann::json to_json(const T &value)
 {
   /* clang-format off */
-  if constexpr(Meta::is_entity_v<T>) {
+  if constexpr(Meta::is_entity_v<T>)
+  {
     nlohmann::json data;
     namespace hana = boost::hana;
-    hana::for_each(
-        hana::accessors<T>(),
-        hana::fuse([&data, &value](const auto &name, const auto &member) {
-          using type = std::remove_reference_t<decltype(member(T{}))>;
-          constexpr auto n = hana::to<const char *>(name);
-          if constexpr(is_optional_v<type>) {
-            const auto &v = member(value);
-            if (v.value)
-              data.emplace(n, *v.value);
-            else
-              data.emplace(n, nullptr);
-          }
-          else {
-            data.emplace(n, member(value).value);
-          }
-        }));
+    const auto &entity = value;
+
+    auto column_to_json = [&data, &entity](const auto &name_c,
+                                          const auto &member_ptr) {
+      using type = std::remove_reference_t<decltype(member_ptr(T{}))>;
+      constexpr auto name = hana::to<const char *>(name_c);
+      const auto &member = member_ptr(entity);
+      if constexpr(is_optional_v<type>)
+      {
+        if (member.value)
+          data.emplace(name, *member.value);
+        else
+          data.emplace(name, nullptr);
+      }
+      else {
+        data.emplace(name, member.value);
+      }
+    };
+    hana::for_each(hana::accessors<T>(), hana::fuse(column_to_json));
     return data;
   }
   else
@@ -90,37 +94,40 @@ E from_json(const nlohmann::json &data)
   /* clang-format off */
   E entity;
   namespace hana = boost::hana;
-  hana::for_each(
-      hana::accessors<E>(),
-      hana::fuse([&data, &entity](const auto &name, const auto &member) {
-        using member_type = std::remove_reference_t<decltype(member(entity))>;
-        auto &m = member(entity);
-        constexpr auto n = hana::to<const char *>(name);
-        auto get_value = [&data,&n]() {
-          return data[n].template get<typename member_type::type>();
-        };
-        if constexpr(Db::is_primarykey_v<member_type>)
-        {
-          if (data.count(n) != 0 && !data[n].is_null()) {
-            Sphinx::global_logger->warn("The field {}::{} is a primary key, "
-                                        "value '{}' will not be deserialized",
-                                        Meta::EntityName<E>, n, get_value());
-          }
-          return;
-        }
-        else if constexpr(Db::is_optional_v<member_type> ||
-                          Db::is_foreignkey_v<member_type>)
-        {
-          if (data.count(n) == 0 || data[n].is_null()) {
-            m.value = {};
-            return;
-          }
-        }
-        m.value = get_value();
 
-      }));
+  auto column_from_json = [&data, &entity](const auto &name_c,
+                                           const auto &member_ptr) {
+    auto &member = member_ptr(entity);
+    using member_type = std::remove_reference_t<decltype(member)>;
+    constexpr auto name = hana::to<const char *>(name_c);
+
+    auto get_value = [&data, &name]() {
+      return data[name].template get<typename member_type::type>();
+    };
+
+    if constexpr(Db::is_primarykey_v<member_type>)
+    {
+      if (data.count(name) != 0 && !data[name].is_null()) {
+        Sphinx::global_logger->warn("The field {}::{} is a primary key, "
+                                    "value '{}' will not be deserialized",
+                                    Meta::EntityName<E>, name, get_value());
+      }
+      return;
+    }
+    else if constexpr(Db::is_optional_v<member_type> ||
+                      Db::is_foreignkey_v<member_type>)
+    {
+      if (data.count(name) == 0 || data[name].is_null()) {
+        member.value = {};
+        return;
+      }
+    }
+    member.value = get_value();
+  };
+
+  hana::for_each(hana::accessors<E>(), hana::fuse(column_from_json));
   return entity;
-  /* clang-format on */
+  /* clang-format off */
 }
 
 } // namespace Sphinx::Db
