@@ -8,17 +8,14 @@
 #include <vector>                // for vector
 
 #include <boost/hana/accessors.hpp>
-#include <boost/hana/at_key.hpp>
 #include <boost/hana/equal.hpp>
 #include <boost/hana/filter.hpp>
 #include <boost/hana/find_if.hpp>
 #include <boost/hana/fuse.hpp>
 #include <boost/hana/integral_constant.hpp>
-#include <boost/hana/keys.hpp>
 #include <boost/hana/members.hpp>
 #include <boost/hana/optional.hpp>
 #include <boost/hana/unpack.hpp>
-#include <boost/hana/value.hpp>
 
 namespace Sphinx::Db::Meta {
 
