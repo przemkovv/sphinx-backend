@@ -40,7 +40,7 @@ struct condition {
 
   std::string str(std::string placeholder = "") const
   {
-    constexpr auto column_name = get_column_name<column_t>();
+    constexpr auto column_name = Meta::get_column_name<column_t>();
     constexpr auto operator_name = operator_t::name;
     if (placeholder.empty())
       return fmt::format("{0} {1} '{2}'", column_name, operator_name, value);

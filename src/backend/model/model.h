@@ -1,7 +1,7 @@
 #pragma once
 
-#include "model_meta.h" // for Column, Column<>::name, ForeignKey, optional...
-#include <array>
+#include "db/model_meta.h" // for Column, Column<>::name, ForeignKey, optional...
+#include "db/model_relations.h"
 #include <optional> // for optional
 #include <stdint.h> // for uint64_t
 #include <string>   // for string

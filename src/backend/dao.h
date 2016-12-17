@@ -1,16 +1,16 @@
 
 #pragma once
 
-#include "db/model.h"
-#include "db_connection.h" // for DbConnection, connection_config
-#include "logger.h"        // for make_logger, Logger
-#include "model_expr.h"
-#include "model_meta.h" // for IdColumn, IdColumnType, Meta
-#include <algorithm>    // for move
-#include <optional>     // for optional
-#include <vector>       // for vector
+#include "db/db_connection.h" // for DbConnection, connection_config
+#include "db/model_expr.h"
+#include "db/model_meta.h" // for IdColumn, IdColumnType, Meta
+#include "model/model.h"
+#include "shared_lib/logger.h" // for make_logger, Logger
+#include <algorithm>           // for move
+#include <optional>            // for optional
+#include <vector>              // for vector
 
-namespace Sphinx::Backend::Db {
+namespace Sphinx::Backend {
 
 namespace Meta = Sphinx::Db::Meta;
 
@@ -66,6 +66,6 @@ public:
 private:
   Logger logger_;
 };
-} // namespace Sphinx::Backend::Db
+} // namespace Sphinx::Backend
 
 //----------------------------------------------------------------------

@@ -1,31 +1,27 @@
 #pragma once
 
-#include "db_utils.h"      // for make_value_list, ValueList, get_c...
-#include "logger.h"        // for Logger
-#include "model_meta.h"    // for Columns
-#include "sphinx_assert.h" // for SPHINX_ASSERT
-#include <cstddef>         // for size_t
-#include <exception>       // for exception
-#include <fmt/format.h>    // for format, UdlArg, operator""_a
-#include <functional>      // for function
-#include <iterator>        // for next
-#include <libpq-fe.h>      // for PQerrorMessage, PGresult, PQresultS...
-#include <memory>          // for shared_ptr, __shared_ptr_access
-#include <numeric>         // for accumulate
-#include <optional>        // for optional
-#include <spdlog/spdlog.h> // for logger
-#include <stdexcept>       // for runtime_error
-#include <stdint.h>        // for uint16_t
-#include <string>          // for string
-#include <vector>          // for vector
+#include "db_utils.h"                 // for ValueList, make_value_list
+#include "model_meta.h"               // for IdColumnType, get_insert_columns
+#include "shared_lib/logger.h"        // for Logger
+#include "shared_lib/sphinx_assert.h" // for SPHINX_ASSERT
 
-#include <boost/hana/accessors.hpp>
-#include <boost/hana/filter.hpp>
-#include <boost/hana/fold.hpp>
-#include <boost/hana/for_each.hpp>
-#include <boost/hana/fuse.hpp>
-#include <boost/hana/remove_if.hpp>
-#include <boost/hana/unpack.hpp>
+#include <boost/hana/config.hpp>      // for hana
+#include <boost/hana/fwd/core/to.hpp> // for to
+#include <boost/hana/fwd/first.hpp>   // for first
+#include <boost/hana/fwd/fold.hpp>    // for fold
+#include <cstddef>                    // for size_t
+#include <exception>                  // for exception
+#include <fmt/format.h>               // for operator""_a, format, UdlArg
+#include <functional>                 // for function
+#include <libpq-fe.h>                 // for PQerrorMessage, PQntuples, PQr...
+#include <memory>                     // for shared_ptr, __shared_ptr_access
+#include <numeric>                    // for accumulate
+#include <optional>                   // for optional
+#include <spdlog/spdlog.h>            // for logger
+#include <stdexcept>                  // for runtime_error
+#include <stdint.h>                   // for uint16_t
+#include <string>                     // for basic_string, string
+#include <vector>                     // for vector
 
 namespace Sphinx::Db {
 
@@ -193,7 +189,7 @@ public:
     namespace hana = boost::hana;
 
     std::string field_list = hana::fold(
-        Sphinx::Db::get_insert_columns<T>(), std::string{}, [](auto a, auto b) {
+        Meta::get_insert_columns<T>(), std::string{}, [](auto a, auto b) {
           return fmt::format("{}{},", a,
                              hana::to<const char *>(hana::first(b)));
         });
@@ -201,7 +197,7 @@ public:
 
     int n = 0;
     std::string field_ids = hana::fold(
-        Sphinx::Db::get_insert_columns<T>(), std::string{},
+        Meta::get_insert_columns<T>(), std::string{},
         [n](auto a, auto) mutable { return fmt::format("{}${},", a, ++n); });
     field_ids.pop_back();
 

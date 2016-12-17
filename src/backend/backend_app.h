@@ -3,12 +3,11 @@
 
 #include "application.h"
 
-#include "db.h"
-#include "db/dao.h"
-#include "db/json_serializer.h"
-#include "db/model_relations.h"
-#include "for_each_in_tuple.h"
-#include "model_meta.h"
+#include "dao.h"
+#include "db/model_meta.h"
+#include "model/model_relations.h"
+#include "shared_lib/for_each_in_tuple.h"
+#include "json/json_serializer.h"
 #include <crow.h>
 #include <nlohmann/json.hpp>
 
@@ -35,7 +34,7 @@ public:
 protected:
   Sphinx::Db::connection_config prepare_db_config();
 
-  Sphinx::Backend::Db::DAO dao_;
+  DAO dao_;
 
   crow::SimpleApp app_;
 
@@ -102,7 +101,7 @@ private:
       using Sphinx::Db::LinkMany;
       using Link = LinkMany<decltype(subentities)>;
       if (subentities) {
-        auto member_ptr = Sphinx::Db::get_remote_key_member_ptr<Link>();
+        auto member_ptr = Meta::get_remote_key_member_ptr<Link>();
         for (auto &subentity : *subentities) {
           member_ptr(subentity).value = id;
         }

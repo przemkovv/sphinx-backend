@@ -1,9 +1,9 @@
 
 #include "backend_app.h"
 
-#include "db/json_serializer.h"
+#include "json/json_serializer.h"
 
-#include "utils.h"
+#include "shared_lib/utils.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -12,7 +12,7 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include "sphinx_assert.h"
+#include "shared_lib/sphinx_assert.h"
 
 using namespace std::literals::string_literals;
 
@@ -109,7 +109,8 @@ BackendApp::create_entity(const Model::Course &course)
 
 //----------------------------------------------------------------------
 template <>
-Meta::IdColumnType<Model::User> BackendApp::create_entity(const Model::User &user)
+Meta::IdColumnType<Model::User>
+BackendApp::create_entity(const Model::User &user)
 {
   logger()->debug("Creating user {} {}", user.username.value, user.email.value);
   return dao_.create_user(user);

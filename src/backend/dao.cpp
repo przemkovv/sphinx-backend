@@ -1,12 +1,13 @@
 
 #include "dao.h"
-#include "db/model.h"      // for User, Module, Course
-#include <exception>       // for exception
+#include "model/model.h"      // for User, Module, Course
 #include <memory>          // for __shared_ptr_access
 #include <spdlog/spdlog.h> // for logger
 
+#include <boost/hana/core/to.hpp>  // for to_t::operator()
+
 //----------------------------------------------------------------------
-namespace Sphinx::Backend::Db {
+namespace Sphinx::Backend {
 
 std::vector<Model::User> DAO::get_users()
 {
@@ -59,4 +60,4 @@ DAO::create_user(const Model::User &user)
   return last_id;
 }
 
-} // namespace Sphinx::Backend::Db
+} // namespace Sphinx::Backend
