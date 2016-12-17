@@ -1,17 +1,17 @@
 #pragma once
 
-#include "model_meta.h"    // for ColumnsId
-#include "sphinx_assert.h" // for assert_false
-#include "utils.h"         // for for_each_in_tuple
-#include <algorithm>       // for forward
-#include <cstddef>         // for nullptr_t
-#include <fmt/format.h>    // for MemoryWriter
-#include <libpq-fe.h>      // for PGresult, PQgetisnull, PQgetvalue, PQfnumber
-#include <optional>        // for optional
-#include <stdint.h>        // for int64_t, uint64_t
-#include <string>          // for basic_string, string
-#include <tuple>           // for apply
-#include <vector>          // for vector
+#include "for_each_in_tuple.h" // for for_each_in_tuple
+#include "model_meta.h"        // for ColumnsId
+#include "sphinx_assert.h"     // for assert_false
+#include <algorithm>           // for forward
+#include <cstddef>             // for nullptr_t
+#include <fmt/format.h>        // for MemoryWriter
+#include <libpq-fe.h> // for PGresult, PQgetisnull, PQgetvalue, PQfnumber
+#include <optional>   // for optional
+#include <stdint.h>   // for int64_t, uint64_t
+#include <string>     // for basic_string, string
+#include <tuple>      // for apply
+#include <vector>     // for vector
 
 #include <boost/hana/accessors.hpp>
 #include <boost/hana/for_each.hpp>
