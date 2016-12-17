@@ -139,24 +139,16 @@ void get_column_id(PGresult *res, const Col &, IDs &ids)
 template <typename T>
 Meta::ColumnsId<T> get_columns_id(PGresult *res)
 {
-  // T entity;
-  // Meta::ColumnsId<T> ids;
-
   namespace hana = boost::hana;
 
-  return hana::unpack(
-      hana::transform(hana::accessors<T>(),
-                      hana::fuse([&res](const auto &name, const auto &) {
-                        constexpr auto n = hana::to<const char *>(name);
-                        return PQfnumber(res, n);
-                      })),
-      [](auto... ids) { return Meta::ColumnsId<T>{ids...}; });
+  auto column_to_id = [&res](const auto &column) {
+    constexpr auto name = hana::to<const char *>(hana::first(column));
+    return PQfnumber(res, name);
+  };
+  auto ids_to_array = [](auto... ids) { return Meta::ColumnsId<T>{ids...}; };
 
-  // auto func = [&ids, &res](const auto &col) { get_column_id(res, col, ids);
-  // };
-  // auto cols = entity.get_columns();
-  // Sphinx::Utils::for_each_in_tuple(cols, func);
-  // return ids;
+  return hana::unpack(hana::transform(hana::accessors<T>(), column_to_id),
+                      ids_to_array);
 }
 
 //----------------------------------------------------------------------
@@ -167,7 +159,7 @@ T get_row(PGresult *res, const Meta::ColumnsId<T> &cols_id, int row_id)
   auto func = [&res, &row_id, &cols_id](auto &... cols) {
     load_fields_from_res(res, row_id, cols_id, cols...);
   };
-  std::apply(func, entity.get_columns());
+  std::apply(func, Meta::get_columns(entity));
   return entity;
 }
 

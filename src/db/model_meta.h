@@ -16,6 +16,7 @@
 #include <boost/hana/members.hpp>
 #include <boost/hana/optional.hpp>
 #include <boost/hana/unpack.hpp>
+#include <boost/hana/size.hpp>
 
 namespace Sphinx::Db::Meta {
 
@@ -49,6 +50,7 @@ constexpr auto get_insert_columns()
   };
   return hana::filter(hana::accessors<Entity>(), is_not_pk);
 }
+
 //----------------------------------------------------------------------
 template <typename Entity>
 constexpr auto get_values_to_insert(Entity &&entity)
@@ -64,6 +66,18 @@ constexpr auto get_values_to_insert(Entity &&entity)
   };
 
   return hana::unpack(hana::filter(hana::members(entity), is_not_pk), to_tuple);
+}
+
+//----------------------------------------------------------------------
+template <typename Entity>
+constexpr auto get_columns(Entity &&entity)
+{
+  namespace hana = boost::hana;
+  auto to_tuple = [](auto &&... columns) {
+    return std::forward_as_tuple(columns...);
+  };
+
+  return hana::unpack(hana::members(entity), to_tuple);
 }
 
 //----------------------------------------------------------------------

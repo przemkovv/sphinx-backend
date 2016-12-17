@@ -30,7 +30,7 @@ using Courses = Sphinx::Db::Meta::Entities<Course>;
 
 //----------------------------------------------------------------------
 struct User : Sphinx::Db::Meta::Entity<User> {
-public:
+
   BOOST_HANA_DEFINE_STRUCT(User,
                            (Column<0, User, std::uint64_t, primarykey_tag>, id),
                            (Column<1, User, std::string>, firstname),
@@ -42,23 +42,13 @@ public:
                            (Column<6, User, std::string>, role));
   constexpr static const auto N = 7;
 
-  auto get_columns() const
-  {
-    return std::forward_as_tuple(id, firstname, lastname, username, student_id,
-                                 email, role);
-  }
-  auto get_columns()
-  {
-    return std::forward_as_tuple(id, firstname, lastname, username, student_id,
-                                 email, role);
-  }
   auto get_many_links() const { return std::forward_as_tuple(); }
   auto get_many_links() { return std::forward_as_tuple(); }
 };
 
 //----------------------------------------------------------------------
 struct Course : Sphinx::Db::Meta::Entity<Course> {
-public:
+
   BOOST_HANA_DEFINE_STRUCT(
       Course,
       (Column<0, Course, std::uint64_t, primarykey_tag>, id),
@@ -66,15 +56,6 @@ public:
       (Column<2, Course, std::string, optional_tag>, description),
       (ForeignKey<3, User, decltype(User::id), Course>, owner_id));
   constexpr static const auto N = 4;
-
-  auto get_columns() const
-  {
-    return std::forward_as_tuple(id, title, description, owner_id);
-  }
-  auto get_columns()
-  {
-    return std::forward_as_tuple(id, title, description, owner_id);
-  }
 
   LinkManyFieldType<Modules> modules;
 
@@ -84,7 +65,7 @@ public:
 
 //----------------------------------------------------------------------
 struct Module : Sphinx::Db::Meta::Entity<Module> {
-public:
+
   BOOST_HANA_DEFINE_STRUCT(
       Module,
       (Column<0, Module, std::uint64_t, primarykey_tag>, id),
@@ -94,14 +75,6 @@ public:
 
   constexpr static const auto N = 4;
 
-  auto get_columns() const
-  {
-    return std::forward_as_tuple(id, course_id, title, description);
-  }
-  auto get_columns()
-  {
-    return std::forward_as_tuple(id, course_id, title, description);
-  }
   auto get_many_links() const { return std::forward_as_tuple(); }
   auto get_many_links() { return std::forward_as_tuple(); }
 };
