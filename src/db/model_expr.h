@@ -30,11 +30,11 @@ struct condition {
   using operator_t = Operator;
   using value_type = typename Column::type;
 
-  const Column &col;
+  // const Column &col;
   const value_type value;
 
-  condition(const Column &c, const Operator & /* op */, value_type val)
-    : col(c), value(val)
+  condition(const Column &, const Operator & /* op */, value_type val)
+    :  value(val)
   {
   }
 

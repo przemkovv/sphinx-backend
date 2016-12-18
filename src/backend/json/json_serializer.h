@@ -16,7 +16,9 @@
 #include <boost/hana/fuse.hpp>
 #include <boost/hana/members.hpp>
 
-namespace Sphinx::Db::Json {
+namespace Sphinx::Json {
+
+namespace Meta = Sphinx::Db::Meta;
 
 template <typename T>
 nlohmann::json to_json(const T &value);
@@ -32,7 +34,10 @@ template <typename T>
 nlohmann::json to_json(const T &value)
 {
   /* clang-format off */
-  if constexpr(Meta::is_entity_v<T>)
+  if constexpr(std::is_integral_v<T> || std::is_fundamental_v<T>) {
+    return {{"value", value}};
+  } else
+  if constexpr(Meta::is_entity_v<T> || Meta::is_the_entity_v<T>)
   {
     nlohmann::json data;
     namespace hana = boost::hana;
@@ -43,7 +48,7 @@ nlohmann::json to_json(const T &value)
       using type = std::remove_reference_t<decltype(member_ptr(T{}))>;
       constexpr auto name = hana::to<const char *>(name_c);
       const auto &member = member_ptr(entity);
-      if constexpr(is_optional_v<type>)
+      if constexpr(Meta::is_optional_v<type>)
       {
         if (member.value)
           data.emplace(name, *member.value);
@@ -57,8 +62,9 @@ nlohmann::json to_json(const T &value)
     hana::for_each(hana::accessors<T>(), hana::fuse(column_to_json));
     return data;
   }
-  else
+  else {
     return {value};
+  }
   /* clang-format on */
 }
 
@@ -105,7 +111,7 @@ E from_json(const nlohmann::json &data)
       return data[name].template get<typename member_type::type>();
     };
 
-    if constexpr(Db::is_primarykey_v<member_type>)
+    if constexpr(Meta::is_primarykey_v<member_type>)
     {
       if (data.count(name) != 0 && !data[name].is_null()) {
         Sphinx::global_logger->warn("The field {}::{} is a primary key, "
@@ -114,8 +120,8 @@ E from_json(const nlohmann::json &data)
       }
       return;
     }
-    else if constexpr(Db::is_optional_v<member_type> ||
-                      Db::is_foreignkey_v<member_type>)
+    else if constexpr(Meta::is_optional_v<member_type> ||
+                      Meta::is_foreignkey_v<member_type>)
     {
       if (data.count(name) == 0 || data[name].is_null()) {
         member.value = {};
@@ -130,4 +136,4 @@ E from_json(const nlohmann::json &data)
   /* clang-format off */
 }
 
-} // namespace Sphinx::Db
+} // namespace Sphinx::Json

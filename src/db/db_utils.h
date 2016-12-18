@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model_meta.h"               // for ColumnsId
+#include "shared_lib/logger.h"        // for assert_false
 #include "shared_lib/sphinx_assert.h" // for assert_false
 #include <algorithm>                  // for forward
 #include <cstddef>                    // for nullptr_t
@@ -14,6 +15,7 @@
 
 #include <boost/hana/accessors.hpp>
 #include <boost/hana/for_each.hpp>
+#include <boost/hana/functional/apply.hpp>
 #include <boost/hana/fuse.hpp>
 #include <boost/hana/members.hpp>
 #include <boost/hana/transform.hpp>
@@ -49,22 +51,15 @@ template <typename T>
 auto get_field_c(PGresult *res, int row_id, int col_id)
 {
   /* clang-format off */
-  if constexpr(is_optional_v<T>)
+  using type = typename std::remove_reference_t<T>::type;
+  if constexpr(Meta::is_optional_v<T>)
   {
-    return get_field_optional<typename T::type>(res, row_id, col_id);
+    return get_field_optional<type>(res, row_id, col_id);
   }
   else {
-    return get_field<typename T::type>(res, row_id, col_id);
+    return get_field<type>(res, row_id, col_id);
   }
   /* clang-format on */
-}
-
-//----------------------------------------------------------------------
-template <typename T>
-void load_field_from_res(T &field, PGresult *res, int row_id, int col_id)
-{
-  if (col_id != -1)
-    field.value = get_field_c<T>(res, row_id, col_id);
 }
 
 //----------------------------------------------------------------------
@@ -74,7 +69,8 @@ void load_field_from_res(T &field,
                          int row_id,
                          const Meta::ColumnsId<Entity> &cols_id)
 {
-  field.value = get_field_c<T>(res, row_id, cols_id[field.n]);
+  if (cols_id[field.n] != -1)
+    field.value = get_field_c<T>(res, row_id, cols_id[field.n]);
 }
 
 //----------------------------------------------------------------------
@@ -85,7 +81,6 @@ void load_fields_from_res(PGresult *res,
                           Columns &... cols)
 {
   (load_field_from_res(cols, res, row_id, cols_id), ...);
-  // field.value = get_field_c<T>(res, row_id, col_id);
 }
 
 //----------------------------------------------------------------------
@@ -96,6 +91,8 @@ T convert_to(const char * /* data */)
 }
 template <>
 bool convert_to(const char *data);
+template <>
+int32_t convert_to(const char *data);
 template <>
 int64_t convert_to(const char *data);
 template <>
@@ -155,11 +152,16 @@ Meta::ColumnsId<T> get_columns_id(PGresult *res)
 template <typename T>
 T get_row(PGresult *res, const Meta::ColumnsId<T> &cols_id, int row_id)
 {
-  T entity;
-  auto func = [&res, &row_id, &cols_id](auto &... cols) {
-    load_fields_from_res(res, row_id, cols_id, cols...);
+  namespace hana = boost::hana;
+  T entity{};
+  auto func = [&res, &row_id, &cols_id](auto &&col) {
+    load_field_from_res(col, res, row_id, cols_id);
   };
-  std::apply(func, Meta::get_columns(entity));
+
+  hana::for_each(hana::accessors<T>(),
+                 hana::fuse([&func, &entity](auto, auto member_ptr) {
+                   func(member_ptr(entity));
+                 }));
   return entity;
 }
 

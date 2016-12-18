@@ -15,8 +15,9 @@
 #include <boost/hana/integral_constant.hpp>
 #include <boost/hana/members.hpp>
 #include <boost/hana/optional.hpp>
-#include <boost/hana/unpack.hpp>
 #include <boost/hana/size.hpp>
+#include <boost/hana/tuple.hpp>
+#include <boost/hana/unpack.hpp>
 
 namespace Sphinx::Db::Meta {
 
@@ -27,6 +28,7 @@ struct ColumnsId : public std::array<int, T::N> {
 
 template <typename T>
 struct Entity {
+  using _type = T;
 };
 
 template <typename E>
@@ -36,7 +38,11 @@ template <typename T>
 constexpr auto EntityName = Entity<T>::name;
 
 template <typename E>
-constexpr auto is_entity_v = std::is_base_of_v<Entity<E>, E>;
+constexpr auto is_the_entity_v = std::is_same_v<E, Entity<typename E::_type>>;
+
+template <typename E>
+constexpr auto is_entity_v = std::is_base_of_v<Entity<E>, E>; //||
+// std::is_same_v<E, Entity<typename E::_type>>;
 
 //----------------------------------------------------------------------
 template <typename Entity>
@@ -69,8 +75,10 @@ constexpr auto get_values_to_insert(Entity &&entity)
 }
 
 //----------------------------------------------------------------------
+// TODO(przemkovv): Despite the fact it return tuple of references to entity
+// columns a temporary entity is created somewhere inside.
 template <typename Entity>
-constexpr auto get_columns(Entity &&entity)
+auto get_columns(Entity &&entity)
 {
   namespace hana = boost::hana;
   auto to_tuple = [](auto &&... columns) {
@@ -78,6 +86,7 @@ constexpr auto get_columns(Entity &&entity)
   };
 
   return hana::unpack(hana::members(entity), to_tuple);
+  // return hana::to_tuple(hana::members(entity));
 }
 
 //----------------------------------------------------------------------

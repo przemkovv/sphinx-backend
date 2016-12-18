@@ -1,16 +1,17 @@
 
 #include "dao.h"
-#include "model/model.h"      // for User, Module, Course
+#include "model/model.h"   // for User, Module, Course
 #include <memory>          // for __shared_ptr_access
 #include <spdlog/spdlog.h> // for logger
 
-#include <boost/hana/core/to.hpp>  // for to_t::operator()
+#include <boost/hana/core/to.hpp> // for to_t::operator()
 
 //----------------------------------------------------------------------
 namespace Sphinx::Backend {
 
 std::vector<Model::User> DAO::get_users()
 {
+
   return db_connection_.get_all<Model::User>();
 }
 
@@ -28,9 +29,12 @@ std::vector<Model::Module> DAO::get_modules()
 
 //----------------------------------------------------------------------
 std::vector<Model::Module>
-    DAO::get_modules(Meta::IdColumnType<Model::Course> /* course_id */)
+DAO::get_modules(Meta::IdColumnType<Model::Course> course_id)
 {
-  return db_connection_.get_all<Model::Module>();
+  Model::Module module;
+  auto condition = Sphinx::Db::condition{module.course_id,
+                                         Sphinx::Db::eq_operator{}, course_id};
+  return db_connection_.get_all_where<Model::Module>(condition);
 }
 
 //----------------------------------------------------------------------
@@ -52,8 +56,7 @@ DAO::create_module(const Model::Module &module)
 }
 
 //----------------------------------------------------------------------
-Db::Meta::IdColumnType<Model::User>
-DAO::create_user(const Model::User &user)
+Db::Meta::IdColumnType<Model::User> DAO::create_user(const Model::User &user)
 {
   auto last_id = db_connection_.insert(user);
   logger_->debug("Created user with last id: {}", last_id);

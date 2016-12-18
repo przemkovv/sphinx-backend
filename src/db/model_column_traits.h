@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-namespace Sphinx::Db {
+namespace Sphinx::Db::Meta {
 
 //----------------------------------------------------------------------
 template <typename T, typename... Traits>
@@ -48,7 +48,7 @@ struct is_foreignkey : contains<foreignkey_tag, typename C::traits> {
 template <typename C>
 constexpr bool is_primarykey_v = is_primarykey<C>::value;
 template <typename C>
-constexpr bool is_optional_v = is_optional<C>::value;
+constexpr bool is_optional_v = is_optional<std::remove_reference_t<C>>::value;
 template <typename C>
 constexpr bool is_autoincrement_v = is_autoincrement<C>::value;
 template <typename C>
@@ -81,4 +81,4 @@ constexpr bool is_optional_c(C &&)
 {
   return is_optional_v<typename std::remove_reference_t<C>>;
 }
-} // namespace Sphinx::Db
+} // namespace Sphinx::Db::a

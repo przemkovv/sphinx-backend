@@ -11,6 +11,12 @@ bool convert_to(const char *data)
 
 //----------------------------------------------------------------------
 template <>
+int32_t convert_to(const char *data)
+{
+  return std::stoi(data);
+}
+//----------------------------------------------------------------------
+template <>
 int64_t convert_to(const char *data)
 {
   return std::stoll(data);

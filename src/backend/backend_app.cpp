@@ -18,9 +18,6 @@ using namespace std::literals::string_literals;
 
 namespace Sphinx::Backend {
 
-using Sphinx::Db::Json::to_json;
-using Sphinx::Db::Json::from_json;
-using Sphinx::Db::Meta::IdColumn;
 
 //----------------------------------------------------------------------
 BackendApp::BackendApp(const std::string &application_name,
@@ -61,29 +58,28 @@ Sphinx::Db::connection_config BackendApp::prepare_db_config()
 }
 
 //----------------------------------------------------------------------
-std::string BackendApp::get_courses()
+Model::Courses BackendApp::get_courses()
 {
-  return to_json(dao_.get_courses()).dump(dump_indent_);
+  return dao_.get_courses();
 }
 
 //----------------------------------------------------------------------
-std::string BackendApp::get_modules()
+Model::Modules BackendApp::get_modules()
 {
-  return to_json(dao_.get_modules()).dump(dump_indent_);
+  return dao_.get_modules();
 }
 
 //----------------------------------------------------------------------
-std::string BackendApp::get_modules(Meta::IdColumnType<Model::Course> course_id)
+Model::Modules
+BackendApp::get_modules(Meta::IdColumnType<Model::Course> course_id)
 {
-  return to_json(dao_.get_modules(course_id)).dump(dump_indent_);
+  return dao_.get_modules(course_id);
 }
 
 //----------------------------------------------------------------------
-std::string BackendApp::get_users()
+Model::Users BackendApp::get_users()
 {
-  auto users = dao_.get_users();
-  auto json_users = to_json(users);
-  return json_users.dump(dump_indent_);
+  return dao_.get_users();
 }
 
 //----------------------------------------------------------------------
@@ -115,57 +111,63 @@ BackendApp::create_entity(const Model::User &user)
   logger()->debug("Creating user {} {}", user.username.value, user.email.value);
   return dao_.create_user(user);
 }
-//----------------------------------------------------------------------
 
-std::string BackendApp::find_users(std::string name)
+//----------------------------------------------------------------------
+Model::Users BackendApp::find_users(std::string name)
 {
   Model::User user;
-  return to_json(dao_.find_by_column(user.username, name)).dump(dump_indent_);
+  return dao_.find_by_column(user.username, name);
 }
+
 //----------------------------------------------------------------------
 void BackendApp::add_users_routes()
 {
   add_route("/users_search/<string>", "GET"_method,
             "POST"_method)([&](const crow::request &req, std::string name) {
     if (req.method == "GET"_method) {
-      return find_users(name);
+      const auto users = find_users(name);
+      if (users.size())
+        return response(201, users);
+      else
+        return response(204);
     }
-    return "nothing"s;
+    return response(404);
   });
 
   add_route("/users", "GET"_method,
             "POST"_method)([&](const crow::request &req) {
     if (req.method == "GET"_method) {
-      return get_users();
+      return response(200, get_users());
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
       create_entities<Model::User>(req.body);
+      return response(201);
     }
-    return "nothing"s;
+    return response(404);
   });
 
-  add_route("/users/<uint>/exists", "GET"_method,
-            "PUT"_method)([&](const crow::request &req, std::uint64_t user_id) {
+  add_route("/users/<int>/exists", "GET"_method,
+            "PUT"_method)([&](const crow::request &req, std::int32_t user_id) {
     if (req.method == "GET"_method) {
-      auto entity = is_entity_exists<Model::User>(user_id);
-      return to_json(entity).dump(dump_indent_);
+      auto exists = is_entity_exists<Model::User>(user_id);
+      return response(200, exists);
     }
-    return "nothing"s;
+    return response(404);
   });
 
-  add_route("/users/<uint>", "GET"_method,
-            "PUT"_method)([&](const crow::request &req, std::uint64_t user_id) {
+  add_route("/users/<int>", "GET"_method,
+            "PUT"_method)([&](const crow::request &req, std::int32_t user_id) {
     if (req.method == "GET"_method) {
       auto entity = get_entity<Model::User>(user_id);
-      return to_json(entity).dump(dump_indent_);
+      return response(200, entity);
     }
     else if (req.method == "PUT"_method) {
       logger()->debug("PUT body {}", req.body);
       auto entity = update_entity<Model::User>(user_id, req.body);
-      return to_json(entity).dump(dump_indent_);
+      return response(200, entity);
     }
-    return "nothing"s;
+    return response(404);
   });
 }
 
@@ -175,31 +177,32 @@ void BackendApp::add_courses_routes()
   add_route("/courses", "GET"_method,
             "POST"_method)([&](const crow::request &req) {
     if (req.method == "GET"_method) {
-      return get_courses();
+      return response(200, get_courses());
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
-      auto t = deserialize_entities<Model::Course>(req.body, true);
-      create_entities<Model::Course>(req.body);
-      return to_json(t).dump(dump_indent_);
+      auto entities = deserialize_entities<Model::Course>(req.body, true);
+      create_entities<Model::Course>(entities);
+      return response(201, entities);
     }
-    return "nothing"s;
+    return response(404);
   });
 }
 
 //----------------------------------------------------------------------
 void BackendApp::add_modules_routes()
 {
-  add_route("/courses/<uint>", "GET"_method, "POST"_method)(
-      [&](const crow::request &req, std::uint64_t course_id) {
+  add_route("/courses/<int>", "GET"_method, "POST"_method)(
+      [&](const crow::request &req, std::int32_t course_id) {
         if (req.method == "GET"_method) {
-          return get_modules(course_id);
+          return response(200, get_modules(course_id));
         }
         else if (req.method == "POST"_method) {
           logger()->debug("POST body {}", req.body);
           create_entities<Model::Module>(req.body);
+          return response(201);
         }
-        return "nothing"s;
+        return response(404);
       });
 }
 
@@ -217,13 +220,13 @@ void BackendApp::add_test_routes()
         w.write("{{{}: {}}}, ", header.first, header.second);
       }
       logger()->debug("Headers: {}", w.str());
-      return "GET"s;
+      return response(501);
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
-      return "POST"s;
+      return response(501);
     }
-    return "nothing"s;
+    return response(404);
   });
 }
 

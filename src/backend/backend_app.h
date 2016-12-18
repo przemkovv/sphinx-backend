@@ -47,6 +47,27 @@ protected:
   const int dump_indent_;
 
 private:
+  auto response(int code) { return crow::response(code); }
+  auto response(int code, const std::string &body)
+  {
+    return crow::response(code, body);
+  }
+
+  auto response(int code, const nlohmann::json &body)
+  {
+    auto r = crow::response(code, body.dump(dump_indent_));
+    r.set_header("Content-Type", "application/json");
+    return r;
+  }
+
+  template <typename T>
+  auto response(int code, const T &data)
+  {
+    const auto body = Json::to_json(data);
+    return response(code, body);
+  }
+
+  //----------------------------------------------------------------------
   template <typename... Methods>
   auto &add_route(const std::string &path, const Methods... methods)
   {
@@ -55,15 +76,18 @@ private:
                     ((" "s + crow::method_name(methods)) + ...));
     return app_.route_dynamic(REST_API_VERSION + path).methods(methods...);
   }
+
+  //----------------------------------------------------------------------
   void add_users_routes();
   void add_courses_routes();
   void add_modules_routes();
   void add_test_routes();
 
-  std::string get_users();
-  std::string get_courses();
-  std::string get_modules();
-  std::string get_modules(typename Meta::IdColumnType<Model::Course> course_id);
+  //----------------------------------------------------------------------
+  Model::Users get_users();
+  Model::Courses get_courses();
+  Model::Modules get_modules();
+  Model::Modules get_modules(Meta::IdColumnType<Model::Course> course_id);
 
   //----------------------------------------------------------------------
   template <typename T>
@@ -137,6 +161,7 @@ private:
   {
     std::for_each(entities.begin(), entities.end(), [this](auto &entity) {
       auto entity_id = this->create_entity(entity);
+      entity.id.value = entity_id;
       this->update_subentities(entity, entity_id);
       this->create_subentities(entity);
 
@@ -185,7 +210,7 @@ private:
   {
     std::vector<T> entities;
     auto func = [this, &include_subentities](const auto &entity_data) {
-      using Sphinx::Db::Json::from_json;
+      using Sphinx::Json::from_json;
       if (include_subentities) {
         auto entity = from_json<T>(entity_data);
         deserialize_subentities(entity_data, entity);
@@ -215,6 +240,6 @@ private:
                                    include_subentities);
   }
 
-  std::string find_users(std::string name);
+  Model::Users find_users(std::string name);
 };
 } // namespace Sphinx::Backend
