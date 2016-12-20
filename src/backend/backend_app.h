@@ -302,12 +302,12 @@ private:
         return from_json<T>(entity_data);
       }
     };
-    if (data.is_array()) {
+    if (data.is_array() && data.size()) {
       entities.reserve(data.size());
       std::transform(data.begin(), data.end(), std::back_inserter(entities),
                      func);
     }
-    else {
+    else if (data.is_object() && !data.empty()) {
       entities.emplace_back(func(data));
     }
     return entities;
