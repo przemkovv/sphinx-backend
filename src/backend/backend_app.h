@@ -21,6 +21,15 @@ namespace Meta = Sphinx::Db::Meta;
 
 namespace Sphinx::Backend {
 
+struct Header {
+  std::string name;
+  std::string value;
+};
+
+struct Location : Header {
+  Location(std::string uri) : Header{"Location", std::move(uri)} {}
+};
+
 class BackendApp : public Application {
 
 public:
@@ -48,6 +57,12 @@ protected:
 
 private:
   auto response(int code) { return crow::response(code); }
+  auto response(int code, const Header &header)
+  {
+    auto r = crow::response(code);
+    r.set_header(header.name, header.value);
+    return r;
+  }
   auto response(int code, const std::string &body)
   {
     return crow::response(code, body);

@@ -1,5 +1,6 @@
 
 #include "db_connection.h"
+#include "db_utils.h"  // for ValueList
 #include <algorithm>   // for move
 #include <type_traits> // for remove_reference<>::type
 

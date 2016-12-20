@@ -1,12 +1,13 @@
 #pragma once
 
-#include "db/model_meta.h" // for Column, Column<>::name, ForeignKey, optional...
-#include "db/model_relations.h"
-#include <optional> // for optional
-#include <stdint.h> // for int32_t
-#include <string>   // for string
-#include <tuple>    // for forward_as_tuple, make_tuple
-#include <vector>   // for vector
+#include "db/model_column.h"    // for Column, ForeignKey
+#include "db/model_meta.h"      // for Entity
+#include "db/model_relations.h" // for LinkManyFieldType
+#include <optional>             // for optional
+#include <stdint.h>             // for int32_t
+#include <string>               // for string
+#include <tuple>                // for forward_as_tuple
+#include <vector>               // for vector
 
 #include <boost/hana/define_struct.hpp>
 

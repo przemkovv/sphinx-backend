@@ -1,15 +1,17 @@
 
 #pragma once
 
-#include "db/model_meta.h"     // for Column, is_optional, is_column
-#include "shared_lib/logger.h" // for Logger, global_logger
-#include <algorithm>           // for transform
-#include <iterator>            // for back_inserter
-#include <memory>              // for __shared_ptr_access
-#include <nlohmann/json.hpp>   // for json
-#include <spdlog/spdlog.h>     // for logger
-#include <tuple>               // for tuple, apply
-#include <vector>              // for vector
+#include "db/model_column_traits.h" // for Meta
+#include "db/model_meta.h"          // for Column, is_optional, is_column
+#include "shared_lib/logger.h"      // for Logger, global_logger
+#include <algorithm>                // for transform
+#include <iterator>                 // for back_inserter
+#include <memory>                   // for __shared_ptr_access
+#include <nlohmann/json.hpp>        // for json
+#include <spdlog/spdlog.h>          // for logger
+#include <tuple>                    // for tuple, apply
+#include <type_traits>              // for remove_reference_t
+#include <vector>                   // for vector
 
 #include <boost/hana/accessors.hpp>
 #include <boost/hana/for_each.hpp>

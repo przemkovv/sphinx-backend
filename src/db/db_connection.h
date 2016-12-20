@@ -21,6 +21,7 @@
 #include <stdexcept>                  // for runtime_error
 #include <stdint.h>                   // for uint16_t
 #include <string>                     // for basic_string, string
+#include <type_traits>                // for remove_reference_t
 #include <vector>                     // for vector
 
 namespace Sphinx::Db {
