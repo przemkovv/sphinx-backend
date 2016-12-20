@@ -6,6 +6,7 @@
 #include "db/model_meta.h"
 #include "http_status_code.h"
 #include "model/model_relations.h"
+#include "rest_helper.h"
 #include "shared_lib/for_each_in_tuple.h"
 #include "json/json_serializer.h"
 #include <crow.h>
@@ -20,37 +21,6 @@ using namespace std::literals::string_literals;
 namespace Meta = Sphinx::Db::Meta;
 
 namespace Sphinx::Backend {
-
-struct Header {
-  std::string name;
-  std::string value;
-};
-
-struct Location : Header {
-  Location(std::string uri) : Header{"Location", std::move(uri)} {}
-};
-
-struct Response {
-  HTTPStatus status;
-  std::optional<nlohmann::json> body;
-  std::vector<Header> headers;
-
-  Response(HTTPStatus status_,
-           std::optional<nlohmann::json> body_,
-           std::vector<Header> headers_)
-    : status(status_), body(std::move(body_)), headers(std::move(headers_))
-  {
-  }
-  Response(HTTPStatus status_) : Response(status_, {}, {}) {}
-  Response(HTTPStatus status_, nlohmann::json body_)
-    : Response(status_, std::make_optional(std::move(body_)), {})
-  {
-  }
-  Response(HTTPStatus status_, std::vector<Header> headers_)
-    : Response(status_, {}, headers_)
-  {
-  }
-};
 
 class BackendApp : public Application {
 
@@ -78,18 +48,24 @@ protected:
   const int dump_indent_;
 
 private:
+  //----------------------------------------------------------------------
   auto response(int code) { return crow::response(code); }
+
+  //----------------------------------------------------------------------
   auto response(int code, const Header &header)
   {
     auto r = crow::response(code);
     r.set_header(header.name, header.value);
     return r;
   }
+
+  //----------------------------------------------------------------------
   auto response(int code, const std::string &body)
   {
     return crow::response(code, body);
   }
 
+  //----------------------------------------------------------------------
   auto response(int code, const nlohmann::json &body)
   {
     auto r = crow::response(code, body.dump(dump_indent_));
@@ -97,6 +73,7 @@ private:
     return r;
   }
 
+  //----------------------------------------------------------------------
   template <typename T>
   auto response(int code, const T &data)
   {
@@ -104,14 +81,7 @@ private:
     return response(code, body);
   }
 
-  template <typename T>
-  auto response(int code, const std::optional<T> &data)
-  {
-    if (data)
-      return response(code, *data);
-    else
-      return response(code);
-  }
+  //----------------------------------------------------------------------
   auto response(const Response &r)
   {
     auto cr = crow::response(static_cast<int>(r.status));
