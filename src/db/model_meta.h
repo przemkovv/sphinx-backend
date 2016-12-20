@@ -5,15 +5,18 @@
 #include <array>                 // for array
 #include <tuple>                 // for make_tuple
 #include <type_traits>           // for remove_reference_t, negation
-#include <vector>                // for vector
+#include <unordered_set>
+#include <vector> // for vector
 
 #include <boost/hana/accessors.hpp>
 #include <boost/hana/equal.hpp>
 #include <boost/hana/filter.hpp>
 #include <boost/hana/find_if.hpp>
+#include <boost/hana/for_each.hpp>
 #include <boost/hana/fuse.hpp>
 #include <boost/hana/integral_constant.hpp>
 #include <boost/hana/members.hpp>
+#include <boost/hana/keys.hpp>
 #include <boost/hana/optional.hpp>
 #include <boost/hana/size.hpp>
 #include <boost/hana/tuple.hpp>
@@ -161,6 +164,18 @@ constexpr auto get_column_name()
   namespace hana = boost::hana;
   using Entity = typename Column::entity;
   return get_nth_column_name<Entity, Column::n>();
+}
+
+//----------------------------------------------------------------------
+template <typename Entity>
+constexpr auto get_column_names()
+{
+  namespace hana = boost::hana;
+  std::unordered_set<std::string> names;
+  hana::for_each(hana::keys(Entity{}), [&names](const auto &name) {
+    names.emplace(hana::to<const char *>(name));
+  });
+  return names;
 }
 
 //----------------------------------------------------------------------

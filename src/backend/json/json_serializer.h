@@ -14,8 +14,10 @@
 #include <vector>                   // for vector
 
 #include <boost/hana/accessors.hpp>
+#include <boost/hana/contains.hpp>
 #include <boost/hana/for_each.hpp>
 #include <boost/hana/fuse.hpp>
+#include <boost/hana/keys.hpp>
 #include <boost/hana/members.hpp>
 
 namespace Sphinx::Json {
@@ -96,6 +98,19 @@ nlohmann::json to_json(const std::vector<T> &c)
 }
 
 //----------------------------------------------------------------------
+template <typename Entity>
+std::pair<bool, std::string> is_valid(const nlohmann::json &data)
+{
+  const auto column_names = Meta::get_column_names<Entity>();
+  for (auto it = data.begin(); it != data.end(); ++it) {
+    if (column_names.find(it.key()) != column_names.end())
+      continue;
+    else
+      return {false, it.key()};
+  }
+  return {true, {}};
+}
+//----------------------------------------------------------------------
 template <typename E>
 E from_json(const nlohmann::json &data)
 {
@@ -132,6 +147,12 @@ E from_json(const nlohmann::json &data)
     }
     member.value = get_value();
   };
+
+  if (const auto & valid = is_valid<E>(data); !valid.first) {
+    const auto message = fmt::format("Invalid JSON representation of entity. "
+                                     "Unrecognized '{}' field.", valid.second);
+    throw std::invalid_argument{message};
+  }
 
   hana::for_each(hana::accessors<E>(), hana::fuse(column_from_json));
   return entity;

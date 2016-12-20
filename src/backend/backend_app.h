@@ -261,7 +261,7 @@ private:
       auto message =
           fmt::format("Could not parse the json. Message: {}", ex.what());
       logger()->error(message);
-      return {HTTPStatus::BAD_REQUEST, {{"message", message}}};
+      return {HTTPStatus::BAD_REQUEST, {{{"message", message}}}};
     }
   }
 
@@ -290,6 +290,7 @@ private:
   std::vector<T> deserialize_entities(const nlohmann::json &data,
                                       const bool include_subentities = false)
   {
+    // TODO(przemkovv): clean up here a bit
     std::vector<T> entities;
     auto func = [this, &include_subentities](const auto &entity_data) {
       using Sphinx::Json::from_json;

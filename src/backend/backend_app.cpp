@@ -18,7 +18,6 @@ using namespace std::literals::string_literals;
 
 namespace Sphinx::Backend {
 
-
 //----------------------------------------------------------------------
 BackendApp::BackendApp(const std::string &application_name,
                        const std::vector<std::string> &args)
@@ -233,16 +232,23 @@ void BackendApp::add_test_routes()
 //----------------------------------------------------------------------
 int BackendApp::run()
 {
-  logger()->debug("Configuration file: {}", config().dump(dump_indent_));
+  try {
+    logger()->debug("Configuration file: {}", config().dump(dump_indent_));
 
-  add_users_routes();
-  add_courses_routes();
-  add_modules_routes();
-  add_test_routes();
+    add_users_routes();
+    add_courses_routes();
+    add_modules_routes();
+    add_test_routes();
 
-  app_.port(REST_API_PORT).run();
+    app_.port(REST_API_PORT).run();
 
-  return static_cast<int>(ExitCode::OK);
+    return static_cast<int>(ExitCode::OK);
+  }
+  catch (const std::exception &ex) {
+    logger()->error("Unhandled exception: {}.", ex.what());
+    logger()->error("Quiting because of error.");
+    return -1;
+  }
 }
 
 } // namespace Sphinx::Backend
