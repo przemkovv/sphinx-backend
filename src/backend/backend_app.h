@@ -1,10 +1,10 @@
-
 #pragma once
 
 #include "application.h"
 
 #include "dao.h"
 #include "db/model_meta.h"
+#include "http_status_code.h"
 #include "model/model_relations.h"
 #include "shared_lib/for_each_in_tuple.h"
 #include "json/json_serializer.h"
@@ -29,6 +29,8 @@ struct Header {
 struct Location : Header {
   Location(std::string uri) : Header{"Location", std::move(uri)} {}
 };
+
+using Response = std::pair<HTTPStatus, std::optional<nlohmann::json>>;
 
 class BackendApp : public Application {
 
@@ -80,6 +82,29 @@ private:
   {
     const auto body = Json::to_json(data);
     return response(code, body);
+  }
+
+  template <typename T>
+  auto response(int code, const std::optional<T> &data)
+  {
+    if (data)
+      return response(code, *data);
+    else
+      return response(code);
+  }
+  auto response(const Response &r)
+  {
+    return response(static_cast<int>(r.first), r.second);
+  }
+
+  //----------------------------------------------------------------------
+  template <typename Entity>
+  auto get_resource_uri(const Entity &entity)
+  {
+    const auto id = Meta::get_id_column_ptr<Entity>()(entity);
+    auto uri = fmt::format("{}/{}/{}", REST_API_VERSION,
+                           Meta::EntityName<Entity>, id.value);
+    return uri;
   }
 
   //----------------------------------------------------------------------
@@ -172,30 +197,72 @@ private:
 
   //----------------------------------------------------------------------
   template <typename T>
-  void create_entities(std::vector<T> &entities)
+  auto create_entities(std::vector<T> &entities)
   {
-    std::for_each(entities.begin(), entities.end(), [this](auto &entity) {
-      auto entity_id = this->create_entity(entity);
-      entity.id.value = entity_id;
-      this->update_subentities(entity, entity_id);
-      this->create_subentities(entity);
+    std::vector<Response> responses;
+    std::transform(
+        entities.begin(), entities.end(), std::back_inserter(responses),
+        [this](auto &entity) -> Response {
+          try {
+            auto entity_id = this->create_entity(entity);
+            entity.id.value = entity_id;
+            this->update_subentities(entity, entity_id);
+            this->create_subentities(entity);
+            return {HTTPStatus::CREATED,
+                    {{{"location", get_resource_uri(entity)}}}};
+          }
+          catch (const std::runtime_error &ex) {
+            auto message =
+                fmt::format("Could not create entity. Message: {}", ex.what());
+            logger()->error(message);
+            return {HTTPStatus::BAD_REQUEST, {{{"message", message}}}};
+          }
 
-    });
+        });
+    return responses;
   }
 
   //----------------------------------------------------------------------
   template <typename T>
-  void create_entities(const nlohmann::json &data)
+  Response create_entities(const nlohmann::json &data)
   {
     auto entities = deserialize_entities<T>(data, true);
-    create_entities(entities);
+    auto responses = create_entities(entities);
+    if (responses.size() == 0) {
+      return {HTTPStatus::NO_CONTENT, {}};
+    }
+    else if (responses.size() == 1) {
+      return responses.front();
+    }
+    else {
+      auto json = std::accumulate(
+          responses.begin(), responses.end(), nlohmann::json{},
+          [&](nlohmann::json j, const Response &response) {
+            nlohmann::json j2 = {{"status", static_cast<int>(response.first)}};
+            if (response.second) {
+              j2["response"] = *response.second;
+              j.emplace_back(std::move(j2));
+            }
+            return j;
+          });
+
+      return {HTTPStatus::MULTI_STATUS, json};
+    }
   }
 
   //----------------------------------------------------------------------
   template <typename T>
-  void create_entities(const std::string &data)
+  Response create_entities(const std::string &data)
   {
-    return create_entities<T>(nlohmann::json::parse(data));
+    try {
+      return create_entities<T>(nlohmann::json::parse(data));
+    }
+    catch (const std::invalid_argument &ex) {
+      auto message =
+          fmt::format("Could not parse the json. Message: {}", ex.what());
+      logger()->error(message);
+      return {HTTPStatus::BAD_REQUEST, {{"message", message}}};
+    }
   }
 
   //----------------------------------------------------------------------

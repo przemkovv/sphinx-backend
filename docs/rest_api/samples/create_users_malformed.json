@@ -1,0 +1,24 @@
+[
+  {
+    "email": "kahlan@amnel.com",
+    "username": "kahlan.amnel",
+    "firstname": "Kahlan",
+    "lastname": "Amnel",
+    "role": "teacher"
+  }
+  {
+    "email": "richard@rahl.com",
+    "username": "richard.rahl",
+    "firstname": "Richard",
+    "lastname": "Rahl",
+    "role": "admin"
+  
+  {
+    "email": "cara@dhara.com",
+    "username": "cara",
+    "firstname": "Cara",
+    "lastname": "Mord'sith",
+    "role": "student",
+    "student_id": "001"
+  }
+]

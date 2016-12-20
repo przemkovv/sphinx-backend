@@ -141,8 +141,8 @@ void BackendApp::add_users_routes()
     }
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
-      create_entities<Model::User>(req.body);
-      return response(201);
+      auto r = create_entities<Model::User>(req.body);
+      return response(r);
     }
     return response(404);
   });
