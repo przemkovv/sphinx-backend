@@ -30,7 +30,27 @@ struct Location : Header {
   Location(std::string uri) : Header{"Location", std::move(uri)} {}
 };
 
-using Response = std::pair<HTTPStatus, std::optional<nlohmann::json>>;
+struct Response {
+  HTTPStatus status;
+  std::optional<nlohmann::json> body;
+  std::vector<Header> headers;
+
+  Response(HTTPStatus status_,
+           std::optional<nlohmann::json> body_,
+           std::vector<Header> headers_)
+    : status(status_), body(std::move(body_)), headers(std::move(headers_))
+  {
+  }
+  Response(HTTPStatus status_) : Response(status_, {}, {}) {}
+  Response(HTTPStatus status_, nlohmann::json body_)
+    : Response(status_, std::make_optional(std::move(body_)), {})
+  {
+  }
+  Response(HTTPStatus status_, std::vector<Header> headers_)
+    : Response(status_, {}, headers_)
+  {
+  }
+};
 
 class BackendApp : public Application {
 
@@ -94,7 +114,13 @@ private:
   }
   auto response(const Response &r)
   {
-    return response(static_cast<int>(r.first), r.second);
+    auto cr = crow::response(static_cast<int>(r.status));
+    if (r.body)
+      cr.body = r.body->dump(dump_indent_);
+    for (const auto &header : r.headers) {
+      cr.set_header(header.name, header.value);
+    }
+    return cr;
   }
 
   //----------------------------------------------------------------------
@@ -208,16 +234,18 @@ private:
             entity.id.value = entity_id;
             this->update_subentities(entity, entity_id);
             this->create_subentities(entity);
-            return {HTTPStatus::CREATED,
-                    {{{"location", get_resource_uri(entity)}}}};
+            Response r{HTTPStatus::CREATED};
+            r.headers.emplace_back(Location{get_resource_uri(entity)});
+            return r;
           }
           catch (const std::runtime_error &ex) {
             auto message =
                 fmt::format("Could not create entity. Message: {}", ex.what());
             logger()->error(message);
-            return {HTTPStatus::BAD_REQUEST, {{{"message", message}}}};
+            Response r{HTTPStatus::BAD_REQUEST};
+            r.body = nlohmann::json{{"message", message}};
+            return r;
           }
-
         });
     return responses;
   }
@@ -229,7 +257,7 @@ private:
     auto entities = deserialize_entities<T>(data, true);
     auto responses = create_entities(entities);
     if (responses.size() == 0) {
-      return {HTTPStatus::NO_CONTENT, {}};
+      return {HTTPStatus::NO_CONTENT};
     }
     else if (responses.size() == 1) {
       return responses.front();
@@ -238,11 +266,14 @@ private:
       auto json = std::accumulate(
           responses.begin(), responses.end(), nlohmann::json{},
           [&](nlohmann::json j, const Response &response) {
-            nlohmann::json j2 = {{"status", static_cast<int>(response.first)}};
-            if (response.second) {
-              j2["response"] = *response.second;
-              j.emplace_back(std::move(j2));
+            nlohmann::json j2 = {{"status", static_cast<int>(response.status)}};
+            if (response.body) {
+              j2["body"] = *response.body;
             }
+            for (const auto &header : response.headers) {
+              j2[header.name] = header.value;
+            }
+            j.emplace_back(std::move(j2));
             return j;
           });
 
@@ -261,7 +292,7 @@ private:
       auto message =
           fmt::format("Could not parse the json. Message: {}", ex.what());
       logger()->error(message);
-      return {HTTPStatus::BAD_REQUEST, {{{"message", message}}}};
+      return {HTTPStatus::BAD_REQUEST, nlohmann::json{{"message", message}}};
     }
   }
 
