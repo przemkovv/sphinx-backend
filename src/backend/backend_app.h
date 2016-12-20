@@ -225,7 +225,7 @@ private:
   Response create_entities(const nlohmann::json &data)
   {
     auto entities = deserialize_entities<T>(data, true);
-    auto responses = create_entities(entities);
+    const auto responses = create_entities(entities);
     if (responses.size() == 0) {
       return {HTTPStatus::NO_CONTENT};
     }
@@ -233,21 +233,25 @@ private:
       return responses.front();
     }
     else {
-      auto json = std::accumulate(
+      auto to_json = [](const Response &response) {
+        nlohmann::json json;
+        json["status"] = static_cast<int>(response.status);
+        if (response.body) {
+          json["body"] = *response.body;
+        }
+        for (const auto &header : response.headers) {
+          json[header.name] = header.value;
+        }
+        return std::move(json);
+      };
+      const auto body = std::accumulate(
           responses.begin(), responses.end(), nlohmann::json{},
-          [&](nlohmann::json j, const Response &response) {
-            nlohmann::json j2 = {{"status", static_cast<int>(response.status)}};
-            if (response.body) {
-              j2["body"] = *response.body;
-            }
-            for (const auto &header : response.headers) {
-              j2[header.name] = header.value;
-            }
-            j.emplace_back(std::move(j2));
+          [&to_json](nlohmann::json& j, const Response &response) {
+            j.emplace_back(to_json(response));
             return j;
           });
 
-      return {HTTPStatus::MULTI_STATUS, json};
+      return {HTTPStatus::MULTI_STATUS, body};
     }
   }
 
@@ -275,12 +279,13 @@ private:
     auto func = [this, &data, &entity](auto &link) {
       using Sphinx::Db::LinkMany;
       constexpr auto field_name = LinkMany<decltype(link)>::name;
-      if (data.count(field_name) == 0) {
-        link = std::nullopt;
-      }
-      else {
+
+      if (data.count(field_name)) {
         using RemoteEntity = typename LinkMany<decltype(link)>::remote_entity;
         link = this->deserialize_entities<RemoteEntity>(data[field_name]);
+      }
+      else {
+        link = std::nullopt;
       }
     };
     Sphinx::Utils::for_each_in_tuple(links, func);
@@ -293,7 +298,7 @@ private:
   {
     // TODO(przemkovv): clean up here a bit
     std::vector<T> entities;
-    auto func = [this, &include_subentities](const auto &entity_data) {
+    auto deserialize = [this, &include_subentities](const auto &entity_data) {
       using Sphinx::Json::from_json;
       if (include_subentities) {
         auto entity = from_json<T>(entity_data);
@@ -307,10 +312,10 @@ private:
     if (data.is_array() && data.size()) {
       entities.reserve(data.size());
       std::transform(data.begin(), data.end(), std::back_inserter(entities),
-                     func);
+                     deserialize);
     }
     else if (data.is_object() && !data.empty()) {
-      entities.emplace_back(func(data));
+      entities.emplace_back(deserialize(data));
     }
     return entities;
   }
