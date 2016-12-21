@@ -76,6 +76,100 @@ BackendApp::get_modules(Meta::IdColumnType<Model::Course> course_id)
 }
 
 //----------------------------------------------------------------------
+crow::response BackendApp::response(int code)
+{
+  return crow::response(code);
+}
+
+//----------------------------------------------------------------------
+crow::response BackendApp::response(int code, const Header &header)
+{
+  auto r = crow::response(code);
+  r.set_header(header.name, header.value);
+  return r;
+}
+
+//----------------------------------------------------------------------
+crow::response BackendApp::response(int code, const std::string &body)
+{
+  return crow::response(code, body);
+}
+
+//----------------------------------------------------------------------
+crow::response BackendApp::response(int code, const nlohmann::json &body)
+{
+  auto r = crow::response(code, body.dump(dump_indent_));
+  r.set_header("Content-Type", "application/json");
+  return r;
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+crow::response BackendApp::response(int code, const T &data)
+{
+  const auto body = Json::to_json(data);
+  return response(code, body);
+}
+
+//----------------------------------------------------------------------
+crow::response BackendApp::response(const Responses &r)
+{
+  return response(merge_responses(r));
+}
+
+//----------------------------------------------------------------------
+crow::response BackendApp::response(const Response &r)
+{
+  auto cr = crow::response(static_cast<int>(r.status));
+  if (r.body)
+    cr.body = r.body->dump(dump_indent_);
+  for (const auto &header : r.headers) {
+    cr.set_header(header.name, header.value);
+  }
+  return cr;
+}
+//----------------------------------------------------------------------
+Response BackendApp::merge_responses(const Responses &responses)
+{
+  if (responses.size() == 0) {
+    return make_response(HTTPStatus::NO_CONTENT);
+  }
+  else if (responses.size() == 1) {
+    return responses.front();
+  }
+  else {
+    auto to_json = [](const Response &response) {
+      nlohmann::json json;
+      json["status"] = static_cast<int>(response.status);
+      if (response.body) {
+        json["body"] = *response.body;
+      }
+      for (const auto &header : response.headers) {
+        json[header.name] = header.value;
+      }
+      return std::move(json);
+    };
+    const auto body = ranges::accumulate(
+        responses, nlohmann::json{},
+        [&to_json](nlohmann::json &j, const Response &response) {
+          j.emplace_back(to_json(response));
+          return j;
+        });
+
+    return make_response(HTTPStatus::MULTI_STATUS, body);
+  }
+}
+//----------------------------------------------------------------------
+template <typename Entity>
+std::string BackendApp::get_resource_uri(const Entity &entity)
+{
+  const auto id = Meta::get_id_column_ptr<Entity>()(entity);
+  auto uri = fmt::format("{}/{}/{}", REST_API_VERSION, Meta::EntityName<Entity>,
+                         id.value);
+  return uri;
+}
+
+//----------------------------------------------------------------------
 Model::Users BackendApp::get_users()
 {
   return dao_.get_users();
@@ -118,6 +212,178 @@ Model::Users BackendApp::find_users(std::string name)
   return dao_.find_by_column(user.username, name);
 }
 
+//----------------------------------------------------------------------
+template <typename T>
+bool BackendApp::is_entity_exists(typename Meta::IdColumnType<T> entity_id)
+{
+  return dao_.exists<T>(entity_id);
+}
+//----------------------------------------------------------------------
+template <typename T>
+T BackendApp::get_entity(typename Meta::IdColumnType<T> entity_id)
+{
+  auto entity = dao_.get_by_id<T>(entity_id);
+  return entity;
+}
+//----------------------------------------------------------------------
+template <typename T>
+T BackendApp::update_entity(typename Meta::IdColumnType<T> /* entity_id */,
+                            const nlohmann::json & /* entity_json */)
+{
+  NOT_IMPLEMENTED_YET();
+}
+//----------------------------------------------------------------------
+template <typename T>
+Meta::IdColumnType<T> BackendApp::create_entity(const T & /* entity */)
+{
+  static_assert(assert_false<T>::value, "Not implemented");
+}
+
+//----------------------------------------------------------------------
+template <typename Entity>
+void BackendApp::update_subentities(Entity &entity,
+                                    Meta::IdColumnType<Entity> id)
+{
+  auto set_ids = [&id](auto &subentities) {
+    using Sphinx::Db::LinkMany;
+    using Link = LinkMany<decltype(subentities)>;
+    if (subentities) {
+      auto id_member_ptr = Meta::get_remote_key_member_ptr<Link>();
+      auto set_id = [&id_member_ptr, &id](auto &subentity) {
+        id_member_ptr(subentity).value = id;
+      };
+      ranges::for_each(*subentities, set_id);
+    }
+  };
+  for_each_subentity_link(entity, set_ids);
+}
+
+//----------------------------------------------------------------------
+template <typename Entity, typename Func>
+void BackendApp::for_each_subentity_link(Entity &entity, Func &&func)
+{
+  auto subentities_links = entity.get_many_links();
+  Utils::for_each_in_tuple(subentities_links, [&func](auto &subentities_link) {
+    func(subentities_link);
+  });
+}
+
+//----------------------------------------------------------------------
+template <typename Entity>
+void BackendApp::create_subentities(Entity &entity)
+{
+  auto func = [this](auto &subentities) {
+    if (subentities)
+      this->create_entities(*subentities);
+  };
+  for_each_subentity_link(entity, func);
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+Responses BackendApp::create_entities(std::vector<T> &entities)
+{
+  Responses responses =
+      entities | ranges::view::transform([this](auto &entity) {
+        try {
+          auto entity_id = this->create_entity(entity);
+          entity.id.value = entity_id;
+          this->update_subentities(entity, entity_id);
+          this->create_subentities(entity);
+          return make_response(HTTPStatus::CREATED,
+                               Location{get_resource_uri(entity)});
+        }
+        catch (const std::runtime_error &ex) {
+          auto message =
+              fmt::format("Could not create entity. Message: {}", ex.what());
+          logger()->error(message);
+          return make_response(HTTPStatus::BAD_REQUEST, {{"message", message}});
+        }
+      });
+  return responses;
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+Responses BackendApp::create_entities(const nlohmann::json &data)
+{
+  auto entities = deserialize_entities<T>(data, true);
+  const auto responses = create_entities(entities);
+  return responses;
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+Responses BackendApp::create_entities(const std::string &data)
+{
+  try {
+    return create_entities<T>(nlohmann::json::parse(data));
+  }
+  catch (const std::invalid_argument &ex) {
+    auto message =
+        fmt::format("Could not parse the json. Message: {}", ex.what());
+    logger()->error(message);
+    return {make_response(HTTPStatus::BAD_REQUEST, {{"message", message}})};
+  }
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+void BackendApp::deserialize_subentities(const nlohmann::json &data, T &entity)
+{
+  auto links = entity.get_many_links();
+
+  auto func = [this, &data, &entity](auto &link) {
+    using Sphinx::Db::LinkMany;
+    constexpr auto field_name = LinkMany<decltype(link)>::name;
+
+    if (data.count(field_name)) {
+      using RemoteEntity = typename LinkMany<decltype(link)>::remote_entity;
+      link = this->deserialize_entities<RemoteEntity>(data[field_name]);
+    }
+    else {
+      link = std::nullopt;
+    }
+  };
+  Sphinx::Utils::for_each_in_tuple(links, func);
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+std::vector<T> BackendApp::deserialize_entities(const nlohmann::json &data,
+                                                const bool include_subentities)
+{
+  // TODO(przemkovv): clean up here a bit
+  std::vector<T> entities;
+  auto deserialize = [this, &include_subentities](const auto &entity_data) {
+    using Sphinx::Json::from_json;
+    if (include_subentities) {
+      auto entity = from_json<T>(entity_data);
+      deserialize_subentities(entity_data, entity);
+      return entity;
+    }
+    else {
+      return from_json<T>(entity_data);
+    }
+  };
+  if (data.is_array() && data.size()) {
+    entities.reserve(data.size());
+    entities = data | ranges::view::transform(deserialize);
+  }
+  else if (data.is_object() && !data.empty()) {
+    entities.emplace_back(deserialize(data));
+  }
+  return entities;
+}
+
+//----------------------------------------------------------------------
+template <typename T>
+std::vector<T> BackendApp::deserialize_entities(const std::string &data,
+                                                const bool include_subentities)
+{
+  return deserialize_entities<T>(nlohmann::json::parse(data),
+                                 include_subentities);
+}
 //----------------------------------------------------------------------
 void BackendApp::add_users_routes()
 {
@@ -181,8 +447,8 @@ void BackendApp::add_courses_routes()
     else if (req.method == "POST"_method) {
       logger()->debug("POST body {}", req.body);
       auto entities = deserialize_entities<Model::Course>(req.body, true);
-      create_entities<Model::Course>(entities);
-      return response(201, entities);
+      auto r = create_entities(entities);
+      return response(r);
     }
     return response(404);
   });
@@ -198,8 +464,8 @@ void BackendApp::add_modules_routes()
         }
         else if (req.method == "POST"_method) {
           logger()->debug("POST body {}", req.body);
-          create_entities<Model::Module>(req.body);
-          return response(201);
+          auto r = create_entities<Model::Module>(req.body);
+          return response(r);
         }
         return response(404);
       });

@@ -23,6 +23,7 @@ struct Location : Header {
 using Headers = std::vector<Header>;
 
 struct Response;
+using Responses = std::vector<Response>;
 
 //----------------------------------------------------------------------
 struct Response {
