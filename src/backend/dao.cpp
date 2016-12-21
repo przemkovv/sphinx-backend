@@ -1,10 +1,9 @@
 
 #include "dao.h"
 #include "model/model.h"   // for User, Module, Course
+#include <algorithm>       // for move
 #include <memory>          // for __shared_ptr_access
 #include <spdlog/spdlog.h> // for logger
-
-#include <boost/hana/core/to.hpp> // for to_t::operator()
 
 //----------------------------------------------------------------------
 namespace Sphinx::Backend {
@@ -50,7 +49,6 @@ T DAO::get_by_id(Meta::IdColumnType<T> id)
 //----------------------------------------------------------------------
 std::vector<Model::User> DAO::get_users()
 {
-
   return db_connection_.get_all<Model::User>();
 }
 

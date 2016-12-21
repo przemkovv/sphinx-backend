@@ -6,7 +6,6 @@
 #include "db/model_meta.h" // for IdColumn, IdColumnType, Meta
 #include "model/model.h"
 #include "shared_lib/logger.h" // for make_logger, Logger
-#include <algorithm>           // for move
 #include <optional>            // for optional
 #include <vector>              // for vector
 

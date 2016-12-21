@@ -1,10 +1,12 @@
 #pragma once
 
-#include "http_status_code.h"
-#include <nlohmann/json.hpp>
-#include <optional>
-#include <string>
-#include <vector>
+#include "http_status_code.h" // for HTTPStatus
+#include <algorithm>          // for move
+#include <nlohmann/json.hpp>  // for json
+#include <optional>           // for optional
+#include <string>             // for string
+#include <type_traits>        // for remove_reference<>::type
+#include <vector>             // for vector
 
 namespace Sphinx::Backend {
 
@@ -36,7 +38,6 @@ struct Response {
            Headers headers_);
   Response(HTTPStatus status_);
   Response(HTTPStatus status_, nlohmann::json body_);
-
 };
 
 //----------------------------------------------------------------------
