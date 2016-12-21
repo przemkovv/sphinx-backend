@@ -16,11 +16,7 @@ namespace Meta = Sphinx::Db::Meta;
 
 class DAO {
 public:
-  DAO(Sphinx::Db::connection_config config)
-    : db_connection_(std::move(config)),
-      logger_(Sphinx::make_logger("Sphinx::Backend::Db::DAO"))
-  {
-  }
+  DAO(Sphinx::Db::connection_config config);
 
 private:
   Sphinx::Db::DbConnection db_connection_;

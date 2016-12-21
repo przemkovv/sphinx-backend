@@ -24,6 +24,12 @@ template Model::Module DAO::get_by_id(Meta::IdColumnType<Model::Module> id);
 template Model::Course DAO::get_by_id(Meta::IdColumnType<Model::Course> id);
 
 //----------------------------------------------------------------------
+DAO::DAO(Sphinx::Db::connection_config config)
+  : db_connection_(std::move(config)),
+    logger_(Sphinx::make_logger("Sphinx::Backend::Db::DAO"))
+{
+}
+//----------------------------------------------------------------------
 template <typename T>
 std::optional<T> DAO::find_by_id(typename Meta::IdColumnType<T> id)
 {
