@@ -11,6 +11,9 @@
 #include "json/json_serializer.h"
 #include <crow.h>
 #include <nlohmann/json.hpp>
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/transform.hpp>
 
 #include <cstdint>
 #include <string>
@@ -157,17 +160,18 @@ private:
   template <typename Entity>
   void update_subentities(Entity &entity, Meta::IdColumnType<Entity> id)
   {
-    auto set_id = [&id](auto &subentities) {
+    auto set_ids = [&id](auto &subentities) {
       using Sphinx::Db::LinkMany;
       using Link = LinkMany<decltype(subentities)>;
       if (subentities) {
-        auto member_ptr = Meta::get_remote_key_member_ptr<Link>();
-        for (auto &subentity : *subentities) {
-          member_ptr(subentity).value = id;
-        }
+        auto id_member_ptr = Meta::get_remote_key_member_ptr<Link>();
+        auto set_id = [&id_member_ptr, &id](auto &subentity) {
+          id_member_ptr(subentity).value = id;
+        };
+        ranges::for_each(*subentities, set_id);
       }
     };
-    for_each_subentity_link(entity, set_id);
+    for_each_subentity_link(entity, set_ids);
   }
 
   //----------------------------------------------------------------------
@@ -195,26 +199,22 @@ private:
   template <typename T>
   auto create_entities(std::vector<T> &entities)
   {
-    std::vector<Response> responses;
-    std::transform(
-        entities.begin(), entities.end(), std::back_inserter(responses),
-        [this](auto &entity) -> Response {
+    std::vector<Response> responses =
+        entities | ranges::view::transform([this](auto &entity) {
           try {
             auto entity_id = this->create_entity(entity);
             entity.id.value = entity_id;
             this->update_subentities(entity, entity_id);
             this->create_subentities(entity);
-            Response r{HTTPStatus::CREATED};
-            r.headers.emplace_back(Location{get_resource_uri(entity)});
-            return r;
+            return make_response(HTTPStatus::CREATED,
+                                 Location{get_resource_uri(entity)});
           }
           catch (const std::runtime_error &ex) {
             auto message =
                 fmt::format("Could not create entity. Message: {}", ex.what());
             logger()->error(message);
-            Response r{HTTPStatus::BAD_REQUEST};
-            r.body = nlohmann::json{{"message", message}};
-            return r;
+            return make_response(HTTPStatus::BAD_REQUEST,
+                                 {{"message", message}});
           }
         });
     return responses;
@@ -227,7 +227,7 @@ private:
     auto entities = deserialize_entities<T>(data, true);
     const auto responses = create_entities(entities);
     if (responses.size() == 0) {
-      return {HTTPStatus::NO_CONTENT};
+      return make_response(HTTPStatus::NO_CONTENT);
     }
     else if (responses.size() == 1) {
       return responses.front();
@@ -244,14 +244,14 @@ private:
         }
         return std::move(json);
       };
-      const auto body = std::accumulate(
-          responses.begin(), responses.end(), nlohmann::json{},
-          [&to_json](nlohmann::json& j, const Response &response) {
+      const auto body = ranges::accumulate(
+          responses, nlohmann::json{},
+          [&to_json](nlohmann::json &j, const Response &response) {
             j.emplace_back(to_json(response));
             return j;
           });
 
-      return {HTTPStatus::MULTI_STATUS, body};
+      return make_response(HTTPStatus::MULTI_STATUS, body);
     }
   }
 
@@ -311,8 +311,7 @@ private:
     };
     if (data.is_array() && data.size()) {
       entities.reserve(data.size());
-      std::transform(data.begin(), data.end(), std::back_inserter(entities),
-                     deserialize);
+      entities = data | ranges::view::transform(deserialize);
     }
     else if (data.is_object() && !data.empty()) {
       entities.emplace_back(deserialize(data));
