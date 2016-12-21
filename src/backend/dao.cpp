@@ -9,6 +9,39 @@
 //----------------------------------------------------------------------
 namespace Sphinx::Backend {
 
+template std::optional<Model::User>
+DAO::find_by_id(Meta::IdColumnType<Model::User> id);
+template std::optional<Model::Module>
+DAO::find_by_id(Meta::IdColumnType<Model::Module> id);
+template std::optional<Model::Course>
+DAO::find_by_id(Meta::IdColumnType<Model::Course> id);
+
+template bool DAO::exists<Model::User>(Meta::IdColumnType<Model::User> id);
+template bool DAO::exists<Model::Module>(Meta::IdColumnType<Model::Module> id);
+template bool DAO::exists<Model::Course>(Meta::IdColumnType<Model::Course> id);
+template Model::User DAO::get_by_id(Meta::IdColumnType<Model::User> id);
+template Model::Module DAO::get_by_id(Meta::IdColumnType<Model::Module> id);
+template Model::Course DAO::get_by_id(Meta::IdColumnType<Model::Course> id);
+
+//----------------------------------------------------------------------
+template <typename T>
+std::optional<T> DAO::find_by_id(typename Meta::IdColumnType<T> id)
+{
+  return db_connection_.find_by_id<T>(id);
+}
+//----------------------------------------------------------------------
+template <typename T>
+bool DAO::exists(Meta::IdColumnType<T> id)
+{
+  return db_connection_.exists<T>(id);
+}
+//----------------------------------------------------------------------
+template <typename T>
+T DAO::get_by_id(Meta::IdColumnType<T> id)
+{
+  return db_connection_.get_by_id<T>(id);
+}
+//----------------------------------------------------------------------
 std::vector<Model::User> DAO::get_users()
 {
 

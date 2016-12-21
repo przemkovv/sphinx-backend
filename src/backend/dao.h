@@ -28,8 +28,7 @@ private:
 public:
   //----------------------------------------------------------------------
   template <typename Column>
-  std::vector<typename Column::entity>
-  find_by_column(const Column &column, const typename Column::type &value)
+  auto find_by_column(const Column &column, const typename Column::type &value)
   {
     auto condition =
         Sphinx::Db::condition{column, Sphinx::Db::eq_operator{}, value};
@@ -37,22 +36,14 @@ public:
   }
   //----------------------------------------------------------------------
   template <typename T>
-  std::optional<T> find_by_id(typename Meta::IdColumnType<T> id)
-  {
-    return db_connection_.find_by_id<T>(id);
-  }
-  //----------------------------------------------------------------------
+  std::optional<T> find_by_id(typename Meta::IdColumnType<T> id);
+
   template <typename T>
-  bool exists(typename Meta::IdColumnType<T> id)
-  {
-    return db_connection_.exists<T>(id);
-  }
-  //----------------------------------------------------------------------
+  bool exists(Meta::IdColumnType<T> id);
+
   template <typename T>
-  T get_by_id(typename Meta::IdColumnType<T> id)
-  {
-    return db_connection_.get_by_id<T>(id);
-  }
+  T get_by_id(Meta::IdColumnType<T> id);
+
   //----------------------------------------------------------------------
   std::vector<Model::User> get_users();
   std::vector<Model::Course> get_courses();
@@ -66,6 +57,7 @@ public:
 private:
   Logger logger_;
 };
+
 } // namespace Sphinx::Backend
 
 //----------------------------------------------------------------------
