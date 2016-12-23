@@ -81,22 +81,6 @@ private:
 
 public:
   //----------------------------------------------------------------------
-  auto exec(const std::string &query)
-  {
-
-    logger_->info("Executing query: {}", query);
-
-    auto result = PQexec(conn_.get(), query.data());
-
-    int status = PQresultStatus(result);
-    if (status != PGRES_COMMAND_OK) {
-      logger_->error(PQerrorMessage(conn_.get()));
-      throw std::runtime_error(PQerrorMessage(conn_.get()));
-    }
-
-    return make_result_safe(result);
-  }
-  //----------------------------------------------------------------------
   auto exec(const std::string &query, const ValueList &args)
   {
     auto pq_args = make_pq_args(args);
