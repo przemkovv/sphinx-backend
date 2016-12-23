@@ -49,6 +49,7 @@ add_definitions(
   # -fsanitize=undefined
   )
 find_library(FMT fmt libfmt)
+find_library(RESTClient restclient-cpp librestclient-cpp)
 find_package(Threads REQUIRED)
 find_package(Boost 1.62 COMPONENTS system filesystem program_options)
 find_package(PostgreSQL REQUIRED)
@@ -115,10 +116,14 @@ include_directories(src)
 add_subdirectory(src/shared_lib)
 add_subdirectory(src/db)
 add_subdirectory(src/backend)
+add_subdirectory(src/backend_test)
 
 
 # set_property(TARGET SphinxDb PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
 # set_property(TARGET SphinxBackend PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
 # set_property(TARGET SphinxSharedLib PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
 
-add_test(NAME rest_api COMMAND abao ${CMAKE_SOURCE_DIR}/docs/rest_api/sphinx-backend-rest.raml --server http://localhost:9999)
+# add_test(NAME rest_api COMMAND abao ${CMAKE_SOURCE_DIR}/docs/rest_api/sphinx-backend-rest.raml --server http://localhost:9999)
+# add_test(NAME rest_api COMMAND pyresttest http://localhost:9998 ${CMAKE_SOURCE_DIR}/test/user_api.yaml)
+
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
