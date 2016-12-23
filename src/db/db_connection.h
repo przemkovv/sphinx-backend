@@ -36,6 +36,8 @@ struct connection_config {
   std::string password;
   std::string db_name;
 
+  std::string init_script;
+
   std::string get_connection_string() const
   {
     return fmt::format("postgresql://{user}:{password}@{host}:{port}/{db_name}",
@@ -78,6 +80,22 @@ private:
       -> std::unique_ptr<PGresult, std::function<void(PGresult *)>>;
 
 public:
+  //----------------------------------------------------------------------
+  auto exec(const std::string &query)
+  {
+
+    logger_->info("Executing query: {}", query);
+
+    auto result = PQexec(conn_.get(), query.data());
+
+    int status = PQresultStatus(result);
+    if (status != PGRES_COMMAND_OK) {
+      logger_->error(PQerrorMessage(conn_.get()));
+      throw std::runtime_error(PQerrorMessage(conn_.get()));
+    }
+
+    return make_result_safe(result);
+  }
   //----------------------------------------------------------------------
   auto exec(const std::string &query, const ValueList &args)
   {

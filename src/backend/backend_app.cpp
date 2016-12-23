@@ -5,6 +5,7 @@
 
 #include "shared_lib/utils.h"
 
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -44,6 +45,7 @@ Sphinx::Db::connection_config BackendApp::prepare_db_config()
     const auto db_password_path = "/database/password"_json_pointer;
     const auto db_user_path = "/database/user"_json_pointer;
     const auto db_dbname_path = "/database/dbname"_json_pointer;
+    const auto db_init_script_path = "/database/init_script"_json_pointer;
 
     Sphinx::Db::connection_config config;
     config.host = config_get<std::string>(db_host_path);
@@ -51,6 +53,17 @@ Sphinx::Db::connection_config BackendApp::prepare_db_config()
     config.user = config_get<std::string>(db_user_path);
     config.password = config_get<std::string>(db_password_path);
     config.db_name = config_get<std::string>(db_dbname_path);
+
+    auto init_script_path = config_get<std::string>(db_init_script_path);
+    std::ifstream init_script_file(init_script_path);
+    if (init_script_file) {
+      std::string init_script{(std::istreambuf_iterator<char>(init_script_file)),
+                              {}};
+      config.init_script = std::move(init_script);
+    }
+    else {
+      logger()->error("Could not open init script file: {}", init_script_path);
+    }
 
     return config;
   }
@@ -494,6 +507,21 @@ void BackendApp::add_test_routes()
     return response(404);
   });
 }
+//----------------------------------------------------------------------
+void BackendApp::add_maintenance_routes()
+{
+  add_route("/maintenance/database_cleanup", "GET"_method,
+            "POST"_method)([&](const crow::request &req) {
+    if (req.method == "GET"_method) {
+      return response(404);
+    }
+    else if (req.method == "POST"_method) {
+      dao_.init_database();
+      return response(200);
+    }
+    return response(404);
+  });
+}
 
 //----------------------------------------------------------------------
 int BackendApp::run()
@@ -501,6 +529,7 @@ int BackendApp::run()
   try {
     logger()->debug("Configuration file: {}", config().dump(dump_indent_));
 
+    add_maintenance_routes();
     add_users_routes();
     add_courses_routes();
     add_modules_routes();

@@ -81,6 +81,7 @@ private:
   void add_courses_routes();
   void add_modules_routes();
   void add_test_routes();
+  void add_maintenance_routes();
 
   //----------------------------------------------------------------------
   Model::Users get_users();

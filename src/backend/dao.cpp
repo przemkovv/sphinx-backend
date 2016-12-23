@@ -24,7 +24,8 @@ template Model::Course DAO::get_by_id(Meta::IdColumnType<Model::Course> id);
 
 //----------------------------------------------------------------------
 DAO::DAO(Sphinx::Db::connection_config config)
-  : db_connection_(std::move(config)),
+  : init_script_(config.init_script),
+    db_connection_(std::move(config)),
     logger_(Sphinx::make_logger("Sphinx::Backend::Db::DAO"))
 {
 }
@@ -98,6 +99,13 @@ Db::Meta::IdColumnType<Model::User> DAO::create_user(const Model::User &user)
   auto last_id = db_connection_.insert(user);
   logger_->debug("Created user with last id: {}", last_id);
   return last_id;
+}
+
+//----------------------------------------------------------------------
+void DAO::init_database()
+{
+  logger_->info("Initializing database");
+  db_connection_.exec(init_script_);
 }
 
 } // namespace Sphinx::Backend

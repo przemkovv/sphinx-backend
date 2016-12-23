@@ -1,4 +1,4 @@
-﻿-- Schema: public
+-- Schema: public
 
 DROP TABLE tests;
 DROP TABLE files;
@@ -76,8 +76,8 @@ CREATE TABLE tests (
 );
 
 
-SELECT * FROM users;
-SELECT * FROM courses;
-SELECT * FROM modules;
+--  SELECT * FROM users;
+--  SELECT * FROM courses;
+--  SELECT * FROM modules;
 
 

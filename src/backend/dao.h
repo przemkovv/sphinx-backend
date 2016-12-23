@@ -18,6 +18,7 @@ public:
   DAO(Sphinx::Db::connection_config config);
 
 private:
+  std::string init_script_;
   Sphinx::Db::DbConnection db_connection_;
 
 public:
@@ -48,6 +49,9 @@ public:
   Meta::IdColumnType<Model::User> create_user(const Model::User &user);
   Meta::IdColumnType<Model::Course> create_course(const Model::Course &course);
   Meta::IdColumnType<Model::Module> create_module(const Model::Module &module);
+
+
+  void init_database();
 
 private:
   Logger logger_;

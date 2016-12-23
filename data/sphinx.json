@@ -12,7 +12,8 @@
     "port": 5432,
     "user": "sphinx",
     "password": "sphinx.123",
-    "dbname": "sphinx_backend"
+    "dbname": "sphinx_backend",
+    "init_script": "../docs/db.pgsql"
   },
   "loggers": {
     "Sphinx::Backend": 1,
