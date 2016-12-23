@@ -105,7 +105,7 @@ Db::Meta::IdColumnType<Model::User> DAO::create_user(const Model::User &user)
 void DAO::init_database()
 {
   logger_->info("Initializing database");
-  db_connection_.exec(init_script_);
+  db_connection_.exec_script(init_script_);
 }
 
 } // namespace Sphinx::Backend

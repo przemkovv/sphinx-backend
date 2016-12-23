@@ -1,9 +1,7 @@
-[
-  {
-    "email": "nathan@rahl.com",
-    "username": "nathan.rahl",
-    "firstname": "Nathan",
-    "lastname": "Rahl",
-    "role": "teacher"
-  }
-]
+{
+  "email": "nathan@rahl.com",
+  "username": "nathan.rahl",
+  "firstname": "Nathan",
+  "lastname": "Rahl",
+  "role": "teacher"
+}

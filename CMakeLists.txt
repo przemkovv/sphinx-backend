@@ -126,4 +126,7 @@ add_subdirectory(src/backend_test)
 # add_test(NAME rest_api COMMAND abao ${CMAKE_SOURCE_DIR}/docs/rest_api/sphinx-backend-rest.raml --server http://localhost:9999)
 # add_test(NAME rest_api COMMAND pyresttest http://localhost:9998 ${CMAKE_SOURCE_DIR}/test/user_api.yaml)
 
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
+add_custom_target(check 
+  COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure 
+  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+  )
